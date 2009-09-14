@@ -16,7 +16,7 @@ import java.util.*;
  */
 public class History {
 
-    // XXX move to Vec_h.java
+    // XXX move to Vec_h.java or com.donhatchsw version
     public static boolean Vec_h__ISIDENTMAT4(int ai[][])
     {
         return ai[0][0] == 1 && ai[0][1] == 0 && ai[0][2] == 0 && ai[0][3] == 0
