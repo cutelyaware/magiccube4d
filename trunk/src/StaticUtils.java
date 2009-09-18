@@ -105,7 +105,8 @@ public class StaticUtils {
      * Utility class that initializes a meduim sized, screen-centered, exit-on-close JFrame.
      * Mostly useful for simple example main programs.
      */
-    public static class QuickFrame extends JFrame {
+    @SuppressWarnings("serial")
+	public static class QuickFrame extends JFrame {
         public QuickFrame(String title) {
             super(title);
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

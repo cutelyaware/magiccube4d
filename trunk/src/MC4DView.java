@@ -17,18 +17,19 @@ import java.util.Enumeration;
  * Copyright 2005 - Superliminal Software
  * @author Melinda Green
  */
+@SuppressWarnings("serial")
 public class MC4DView extends DoubleBufferedCanvas {
 
     public GenericGlue genericGlue = null; // caller can set this after I'm constructed
     public float viewMat4d[][] = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}}; // XXX new member, similar to viewrot-- put this somewhere
 
     public static interface TwistListener { public void twisted(MagicCube.TwistData twisted); }
-    private Vector twistListeners = new Vector();
+    private Vector<TwistListener> twistListeners = new Vector<TwistListener>();
     public void addTwistListener(TwistListener tl) { twistListeners.add(tl); }
     public void removeTwistListener(TwistListener tl) { twistListeners.remove(tl); }
     protected void fireTwistEvent(MagicCube.TwistData twist) {
-        for(Enumeration e=twistListeners.elements(); e.hasMoreElements(); )
-            ((TwistListener)e.nextElement()).twisted(twist);
+        for(Enumeration<TwistListener> e=twistListeners.elements(); e.hasMoreElements(); )
+            e.nextElement().twisted(twist);
     }
 
     private PuzzleState state;
@@ -124,17 +125,22 @@ public class MC4DView extends DoubleBufferedCanvas {
         repaint();
     }
 
-    public void cancelAnimation() {
-        animationQueue.cancelAnimation();
-    }
-
     public void animate(MagicCube.TwistData moves[], boolean applyToHist) {
         for(int i=0; i<moves.length; i++)
             animate(moves[i], applyToHist);
     }
+    
+    public void animate(History hist, boolean applyToHist) {
+        for(Enumeration<MagicCube.TwistData> moves=hist.moves(); moves.hasMoreElements(); )
+            animate(moves.nextElement(), applyToHist);
+    }
 
     public void append(char mark) {
         animationQueue.appendMark(mark);
+    }
+
+    public void cancelAnimation() {
+        animationQueue.cancelAnimation();
     }
 
     /*
@@ -490,7 +496,7 @@ if (!(genericGlue != null && genericGlue.isActive())) // indented funnily for ri
 
     private static class AnimationQueue {
         private History queueHist;
-        private Vector queue = new Vector();
+        private Vector<Object> queue = new Vector<Object>();
         private QueueItem animating; // non-null == animation in progress
         private static class QueueItem {
             public MagicCube.TwistData twist;

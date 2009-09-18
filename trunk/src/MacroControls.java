@@ -11,6 +11,7 @@ import java.awt.*;
  *
  * @author Melinda Green
  */
+@SuppressWarnings("serial")
 public class MacroControls extends JPanel {
     /**
      * Reports Macro activity.

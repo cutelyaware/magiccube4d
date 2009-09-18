@@ -54,6 +54,7 @@ import java.net.*;
  * Copyright 2005 - Superliminal Software
  * @author Melinda Green
  */
+@SuppressWarnings("serial")
 public class PropertyManager extends Properties {
     private final static String PRODUCT_NAME = "mc4d"; // wants to be passed in but would need to be environment variable.
 
@@ -259,7 +260,7 @@ public class PropertyManager extends Properties {
      */
     private static void init() {
         Properties sys = System.getProperties();
-        for(Enumeration e=sys.keys(); e.hasMoreElements(); ) {
+        for(Enumeration<Object> e=sys.keys(); e.hasMoreElements(); ) {
             String key = (String)e.nextElement();
             sysprops.setProperty(key, sys.getProperty(key));
             //System.out.println(key + " = " + sys.getProperty(key));
@@ -277,7 +278,7 @@ public class PropertyManager extends Properties {
     }
 
     /**
-     * Helper function to retrive integer values from the top properties.
+     * Helper function to retrieve integer values from the top properties.
      * @param key property name
      * @param def default value
      * @return integer value of top.getProperty(key) or default if not found or parsed.
@@ -289,7 +290,7 @@ public class PropertyManager extends Properties {
     }
     
     /**
-     * Helper function to retrive float values from the top properties.
+     * Helper function to retrieve float values from the top properties.
      * @param key property name
      * @param def default value
      * @return float value of top.getProperty(key) or default if not found or parsed.
@@ -301,7 +302,7 @@ public class PropertyManager extends Properties {
     }
     
     /**
-     * Helper function to retrive boolean values from the top properties.
+     * Helper function to retrieve boolean values from the top properties.
      * @param key property name
      * @param def default value
      * @return boolean value of top.getProperty(key) or default if not found or parsed.
@@ -319,7 +320,7 @@ public class PropertyManager extends Properties {
     }      
 
     /**
-     * Helper function to retrive color objects from properties with the format
+     * Helper function to retrieve color objects from properties with the format
      * r,g,b where each channel is a value from 0 to 255.  The color can also
      * be in hexadecimal format if it begins with "#", e.g., "#aabbcc"
      * @param key the color property name

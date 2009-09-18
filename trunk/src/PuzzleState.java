@@ -84,8 +84,7 @@ public class PuzzleState {
             colorToDir[7-color][ax] = -sign;
         }
 
-        if (false)
-        {
+        /*{
             System.out.println("int[][] colorToDir = {");
             for (int i = 0; i < 8; ++i)
                 System.out.println("    {"+colorToDir[i][0]
@@ -93,17 +92,17 @@ public class PuzzleState {
                                      +", "+colorToDir[i][2]
                                      +", "+colorToDir[i][3]+"},");
             System.out.println("};");
-        }
+        }*/
 
         String solution = NdSolve.solve(grid2String(length,stickerGrid));
         //System.out.println(solution);
         StringTokenizer toks = new StringTokenizer(solution, " ");
-        ArrayList twists = new ArrayList();
+        ArrayList<MagicCube.TwistData> twists = new ArrayList<MagicCube.TwistData>();
         while(toks.hasMoreElements()) {
             String tripplestr = (String)toks.nextElement();
             twists.add(triple2Twist(tripplestr.charAt(0)-'0', tripplestr.charAt(1)-'0', tripplestr.charAt(2)-'0', colorToDir));
         }
-        return (MagicCube.TwistData[])twists.toArray(new MagicCube.TwistData[0]);
+        return twists.toArray(new MagicCube.TwistData[0]);
     }
 
     public static String grid2String(int length, char[][][][] grid) {
@@ -305,7 +304,8 @@ public class PuzzleState {
         }
     }
 
-    private boolean isSane(int state[])
+    @SuppressWarnings("unused")
+	private boolean isSane(int state[])
     {
         int i, counts[] = new int[MagicCube.NFACES];
 

@@ -14,6 +14,7 @@ import java.io.PushbackReader;
  * Copyright 2005 - Superliminal Software
  * @author Melinda Green
  */
+@SuppressWarnings("serial")
 public class MC4DApplet extends Applet {
     public MC4DApplet() {
     }

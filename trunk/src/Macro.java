@@ -4,14 +4,14 @@ import java.io.*;
 /**
  * Contains a sequence of moves relative to a set of reference stickers.
  * Has a method that can take other sets of reference stickers in the same pattern as the definition stickers
- * and returs a set of moves the same as would be generated had the definition moves been applied relative
+ * and returns a set of moves the same as would be generated had the definition moves been applied relative
  * to the given ones instead.
  */
 public class Macro {
     public final static int MAXREFS = 3;
     private History moves = new History(3);
     private String name;
-    private int defRefs[][] = new int[MAXREFS][MagicCube.NDIMS]; // definition refreence stickers
+    private int defRefs[][] = new int[MAXREFS][MagicCube.NDIMS]; // definition reference stickers
 
     private Macro() {}
 

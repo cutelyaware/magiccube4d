@@ -21,7 +21,7 @@ public class MagicCube {
 		NFACES         = 2 * NDIMS,
         GRIPS_PER_FACE = 3 * 3 * 3,
         NGRIPS         = NFACES * GRIPS_PER_FACE,
-        LENGTH         = 3, // default
+        DEFAULT_LENGTH = 3,
         MAXLENGTH      = 5, // note: 5 uses uses lots of memory 
         MAXSTICKERS    = totalStickers(MAXLENGTH),
 		MAXVERTS       = MAXSTICKERS * 8,

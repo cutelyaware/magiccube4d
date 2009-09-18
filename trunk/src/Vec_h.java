@@ -200,11 +200,6 @@ public class Vec_h
         strip_outer_parens_4((af[0] = af1[0]) - (af[1] = af1[1]) - (af[2] = af1[2]) - (af[3] = af1[3]));
     }
 
-    public static void MOOSE(float af[], int ai[])
-    {
-        float f = (af[0] = ai[0]) - (af[1] = ai[1]);
-    }
-
     public static void _SET4(float af[], int ai[])
     {
         strip_outer_parens_4((af[0] = ai[0]) - (af[1] = ai[1]) - (af[2] = ai[2]) - (af[3] = ai[3]));
@@ -319,6 +314,14 @@ public class Vec_h
         ai[2][2] = 1;
         strip_outer_parens_4((ai[3][0] = 0) - (ai[3][1] = 0) - (ai[3][2] = 0) - (ai[3][3] = 0));
         ai[3][3] = 1;
+    }
+    
+    public static boolean _ISIDENTMAT4(int ai[][])
+    {
+        return ai[0][0] == 1 && ai[0][1] == 0 && ai[0][2] == 0 && ai[0][3] == 0
+            && ai[1][0] == 0 && ai[1][1] == 1 && ai[1][2] == 0 && ai[1][3] == 0
+            && ai[2][0] == 0 && ai[2][1] == 0 && ai[2][2] == 1 && ai[2][3] == 0
+            && ai[3][0] == 0 && ai[3][1] == 0 && ai[3][2] == 0 && ai[3][3] == 1;
     }
 
     public static void _SETMAT4(int ai[][], int ai1[][])

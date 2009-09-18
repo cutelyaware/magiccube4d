@@ -103,7 +103,7 @@ public class GenericGlue
             this.slicemask = slicemask;
         }
     }
-    java.util.Vector undoq = new java.util.Vector(); // of HistoryNode
+    java.util.Vector<HistoryNode> undoq = new java.util.Vector<HistoryNode>(); // of HistoryNode
     int undoPartSize = 0; // undoq has undo part followed by redo part
 
     //
@@ -113,8 +113,6 @@ public class GenericGlue
     GenericPipelineUtils.Frame twistingFrame = new GenericPipelineUtils.Frame();
         { twistingFrame = untwistedFrame; } // XXX HACK for now, avoid any issue about clicking in the wrong one or something
 
-
-    static private void Assert(boolean condition) { if (!condition) throw new Error("Assertion failed"); }
 
     public interface Callback { public void call(); }
 
@@ -483,7 +481,8 @@ public class GenericGlue
     {
         GenericGlue genericGlue = this;
         boolean isRotate = e.isControlDown() || isMiddleMouseButton(e);
-        if (false) // make this true to debug the pick
+        
+        /* Uncomment to debug the pick
         {
             int hit[] = GenericPipelineUtils.pick(e.getX(), e.getY(),
                                                   genericGlue.untwistedFrame,
@@ -497,7 +496,7 @@ public class GenericGlue
                 System.err.println("        face "+iFace);
                 System.err.println("        cubie "+iCubie);
             }
-        }
+        } */
 
         if (isRotate)
         {
@@ -556,11 +555,9 @@ public class GenericGlue
             {
                 int order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[iGrip];
 
-                if (false)
-                {
-                    System.err.println("    Grip "+iGrip+"");
-                    System.err.println("        order "+order);
-                }
+               
+                //System.err.println("    Grip "+iGrip+"");
+                //System.err.println("        order "+order);
 
                 if (genericGlue.iTwist < genericGlue.nTwist)
                 {
@@ -662,9 +659,10 @@ public class GenericGlue
         InterpFunc sine_interp = new InterpFunc() {
             public float func(float x) { return (float)(Math.sin((x - .5) * Math.PI) + 1) / 2; }
         };
+        /*
         InterpFunc linear_interp = new InterpFunc() {
             public float func(float x) { return x; }
-        };
+        };*/
         InterpFunc interp = sine_interp;
         //InterpFunc interp = linear_interp;
 

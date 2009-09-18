@@ -20,6 +20,7 @@ import java.awt.event.*;
  * Copyright 2005 - Superliminal Software
  * @author Melinda Green & Don Hatch
  */
+@SuppressWarnings("serial")
 public class FloatSlider extends Scrollbar {
     private final static int DEFAULT_RANGE = 1000; // number of descrete steps
     private final static int DEFAULT_VISIBLE = 20; // pixel width of thumb

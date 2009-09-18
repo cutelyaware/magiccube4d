@@ -1,7 +1,3 @@
-//
-// NOTE: FOR APPLET COMPATIBILITY THIS CLASS SHOULD NOT INCLUCE ANY POST JDK 1.2 CONSTRUCTS
-// AND SHOULD NOT BE COMPILED WITH POST JDK 1.4 COMPILERS.
-//
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\
  *                                                                     *
@@ -12,7 +8,7 @@
  * DESCRIPTION                                                         *
  *    Implements a quaternion class called "SQuat".                    *
  *    A quaternion represents a rotation about an axis.                *
- *    Squats can be concatenated together via the mult and setMult     *
+ *    SQuats can be concatenated together via the mult and setMult     *
  *    methods.                                                         *
  *                                                                     *
  *    SQuats operate in a left handed coordinate system (i.e. positive *

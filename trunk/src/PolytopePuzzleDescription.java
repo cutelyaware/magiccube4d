@@ -213,7 +213,8 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
     private FuzzyPointHashTable stickerCentersHashTable;
 
     private static void Assert(boolean condition) { if (!condition) throw new Error("Assertion failed"); }
-    private static void Assumpt(boolean condition) { if (!condition) throw new Error("Assumption failed"); }
+    @SuppressWarnings("unused")
+	private static void Assumpt(boolean condition) { if (!condition) throw new Error("Assumption failed"); }
     
 
     /**
