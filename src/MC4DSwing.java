@@ -205,7 +205,7 @@ public class MC4DSwing extends JFrame {
                 for(Enumeration<MagicCube.TwistData> moves=hist.moves(); moves.hasMoreElements(); )
                     toundo.push(moves.nextElement());
                 while( ! toundo.isEmpty()) {
-                    MagicCube.TwistData last = (MagicCube.TwistData)toundo.pop();
+                    MagicCube.TwistData last = toundo.pop();
                     MagicCube.TwistData inv = new MagicCube.TwistData(last.grip, -last.direction, last.slicemask);
                     view.animate(inv, true);
                 }
