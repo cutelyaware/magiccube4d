@@ -15,6 +15,7 @@ import javax.swing.filechooser.FileSystemView;
  * Copyright 2005 - Superliminal Software
  * @author Melinda Green
  */
+@SuppressWarnings("serial")
 public class MC4DSwing extends JFrame {
 
     //public GenericGlue genericGlue = new GenericGlue(null, 0); // don't start using generic
@@ -61,8 +62,7 @@ public class MC4DSwing extends JFrame {
         undoitem    = new MenuItem("Undo                      Ctrl+Z"),
         redoitem    = new MenuItem("Redo                      Ctrl+V"),
         cheatitem   = new MenuItem("Solve (Cheat)       Ctrl+T"),
-        solveitem   = new MenuItem("Solve (For Real)  Ctrl+L"),
-        prefsitem   = new MenuItem("Edit Prefs...           Ctrl+E");
+        solveitem   = new MenuItem("Solve (For Real)  Ctrl+L");
     
     private void updateTwistsLabel() {
         twistLabel.setText("Total Twists: " + hist.countTwists());
@@ -201,9 +201,9 @@ public class MC4DSwing extends JFrame {
                 }
                 scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
                 hist.compress(false); // so fewest moves are required and solution least resembles original moves.
-                Stack/*<MagicCube.TwistData>*/ toundo = new Stack/*<MagicCube.TwistData>*/();
-                for(Enumeration moves=hist.moves(); moves.hasMoreElements(); )
-                    toundo.push((MagicCube.TwistData)moves.nextElement());
+                Stack<MagicCube.TwistData> toundo = new Stack<MagicCube.TwistData>();
+                for(Enumeration<MagicCube.TwistData> moves=hist.moves(); moves.hasMoreElements(); )
+                    toundo.push(moves.nextElement());
                 while( ! toundo.isEmpty()) {
                     MagicCube.TwistData last = (MagicCube.TwistData)toundo.pop();
                     MagicCube.TwistData inv = new MagicCube.TwistData(last.grip, -last.direction, last.slicemask);
@@ -220,9 +220,7 @@ public class MC4DSwing extends JFrame {
                     statusLabel.setText("no solution");
                     return;
                 }
-                //int before = solution.length;
                 solution = History.compress(solution, puzzle.getLength(), true);
-                //System.out.println("compressed " + before + " twist solution to " + solution.length + " (" + (before -solution.length)*100f/before + "%)");
                 view.animate(solution, true);
                 scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
                 statusLabel.setText("twists to solve = " + solution.length);
@@ -581,7 +579,7 @@ public class MC4DSwing extends JFrame {
     private void initPuzzle(String logfilename) {
         scrambleState = SCRAMBLE_NONE;
         scale = PropertyManager.getFloat("scale", 1);
-        int initialLength = PropertyManager.getInt("length", MagicCube.LENGTH); // TODO: set from logfile
+        int initialLength = PropertyManager.getInt("length", MagicCube.DEFAULT_LENGTH); // TODO: set from logfile
         hist = new History(initialLength);
         String stateStr = "";
         if(logfilename != null) { // read the log file, possibly reinitializing initial length and hist object.
@@ -645,11 +643,10 @@ public class MC4DSwing extends JFrame {
         hist.addHistoryListener(new History.HistoryListener() {
             public void currentChanged() {
                 saveitem.setEnabled(true);
-                undoitem.setEnabled(hist.countTwists() > 0);
-                redoitem.setEnabled(hist.hasNextTwist());
-                cheatitem.setEnabled(hist.hasPreviousTwist());
+                undoitem.setEnabled(hist.countMoves(false) > 0);
+                redoitem.setEnabled(hist.hasNextMove());
+                cheatitem.setEnabled(hist.hasPreviousMove());
                 solveitem.setEnabled(!puzzle.isSolved() && polymgr.getLength()<4);
-                //System.out.println("in currentChanged, whatever that means");
                 if (genericGlue.isActive())
                 {
                     undoitem.setEnabled(true); // so I don't have to think
@@ -734,18 +731,11 @@ public class MC4DSwing extends JFrame {
         });
     } // end initPuzzle
 
-    private class PreferencesDialog extends JDialog {
-        public PreferencesDialog() {
-            super(MC4DSwing.this, "Preferences", false);
-            setBounds(200, 200, 500, 350);
-            getContentPane().add(new PreferencesEditor());
-        }
-    }
     
     /**
      * Editor for user preferences.
      */
-    private class PreferencesEditor extends JPanel {
+	private class PreferencesEditor extends JPanel {
         private FloatSlider makeSlider(float cur, float min, float max) {
             FloatSlider slider = new FloatSlider(JSlider.HORIZONTAL, cur, min, max);
             try {

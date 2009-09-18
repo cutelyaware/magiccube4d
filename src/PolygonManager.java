@@ -29,7 +29,7 @@ public class PolygonManager {
         public float func(float x) { return (float)(Math.sin((x - .5) * Math.PI) + 1) / 2; }
     };
     
-	private int length = MagicCube.LENGTH;
+	private int length = MagicCube.DEFAULT_LENGTH;
     public int getLength() { return length; }
 	private float 
 		tilt  = MagicCube.DTOR(MagicCube.TILT), 
@@ -62,7 +62,8 @@ public class PolygonManager {
     private static boolean are_CCW(float v0[], float v1[], float v2[]) {
         return twice_triangle_area(v0,v1,v2) > 0;
     }
-    private static boolean are_CW( float v0[], float v1[], float v2[]) {
+    @SuppressWarnings("unused")
+	private static boolean are_CW( float v0[], float v1[], float v2[]) {
         return twice_triangle_area(v0,v1,v2) < 0;
     }
 
@@ -70,7 +71,8 @@ public class PolygonManager {
     private static boolean short_are_CCW(float v0[], float v1[], float v2[]) {
         return short_twice_triangle_area(v0, v1, v2) < 0;
     }
-    private static boolean short_are_CW( float v0[], float v1[], float v2[]) {
+    @SuppressWarnings("unused")
+	private static boolean short_are_CW( float v0[], float v1[], float v2[]) {
         return short_twice_triangle_area(v0, v1, v2) > 0;
     }
     
@@ -180,7 +182,8 @@ public class PolygonManager {
         private float z;
         private int i;
         private static float tmpVert[] = new float[3];
-        public ZAndIndex(float qv[][], int i) {
+        @SuppressWarnings("unused")
+		public ZAndIndex(float qv[][], int i) {
             set(qv, i);
         }
         public ZAndIndex() {}
@@ -196,7 +199,8 @@ public class PolygonManager {
             return qv[0][MagicCube.Z] + qv[2][MagicCube.Z];
         }
         // a failed experiment?
-        private static float nearClosestVert(float qv[][]) {
+        @SuppressWarnings("unused")
+		private static float nearClosestVert(float qv[][]) {
             int closest = 0;
             for(int v=1; v<4; v++)
                 if(qv[v][MagicCube.Z] > qv[closest][MagicCube.Z])
@@ -1011,7 +1015,7 @@ public class PolygonManager {
     
     
     public static void main(String args[]) {
-        PolygonManager pm = new PolygonManager();
+        new PolygonManager();
     }
     
 }

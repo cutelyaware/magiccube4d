@@ -12,6 +12,7 @@ import java.awt.*;
  * Copyright 2005 - Superliminal Software
  * @author Melinda Green
  */
+@SuppressWarnings("serial")
 public class DoubleBufferedCanvas extends Canvas { 
     private Image mActiveOffscreenImage = null;
     private Dimension mOffscreenSize = new Dimension(-1,-1);

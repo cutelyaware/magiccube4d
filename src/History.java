@@ -2,28 +2,22 @@
 import java.io.*;
 import java.util.*;
 
-//
-//NOTE: FOR APPLET COMPATIBILITY THIS CLASS SHOULD NOT INCLUCE ANY POST JDK 1.2 CONSTRUCTS
-//AND SHOULD NOT BE COMPILED WITH POST JDK 1.4 COMPILERS.
-//
 
 /**
- * Maintains a sequence of moves applied to a MagicCube4D puzzle.
- * Supports undo and redo and bookmarks.
+ * Maintains a sequence of twists, rotates, and marks applied to a MagicCube4D puzzle.
+ * Supports undo, redo, macro moves.
+ * 
+ * Twists and rotates are called "moves". Rotates are represented internally as
+ * twists that affect all slices but are logically considered a different kind of move.
+ * Marks are single character delimiters that can be inserted between moves
+ * Moves and marks are called history nodes. 
+ * Macros are represented internally by a sequence of nodes bracketed by the reserved
+ * characters '[' and ']'.
  *
  * Copyright 2005 - Superliminal Software
  * @author Don Hatch
  */
 public class History {
-
-    // XXX move to Vec_h.java or com.donhatchsw version
-    public static boolean Vec_h__ISIDENTMAT4(int ai[][])
-    {
-        return ai[0][0] == 1 && ai[0][1] == 0 && ai[0][2] == 0 && ai[0][3] == 0
-            && ai[1][0] == 0 && ai[1][1] == 1 && ai[1][2] == 0 && ai[1][3] == 0
-            && ai[2][0] == 0 && ai[2][1] == 0 && ai[2][2] == 1 && ai[2][3] == 0
-            && ai[3][0] == 0 && ai[3][1] == 0 && ai[3][2] == 0 && ai[3][3] == 1;
-    }
 
     private static void randomPermutation(int perm[])
     {
@@ -55,6 +49,35 @@ public class History {
         public int slicesmask;
         public char mark;
         public HistoryNode prev, next;    /* doubly linked list */
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			HistoryNode other = (HistoryNode) obj;
+			if (dir != other.dir)
+				return false;
+			if (mark != other.mark)
+				return false;
+			if (slicesmask != other.slicesmask)
+				return false;
+			if (stickerid != other.stickerid)
+				return false;
+			return true;
+		}
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + dir;
+			result = prime * result + mark;
+			result = prime * result + slicesmask;
+			result = prime * result + stickerid;
+			return result;
+		}
     }
     private HistoryNode first, last, current;
 
@@ -63,11 +86,11 @@ public class History {
         //debug = preferences.getBoolProperty(M4D_HISTORY_DEBUG);
     }
 
-    public Enumeration moves() {
-        return new Enumeration() {
+    public Enumeration<MagicCube.TwistData> moves() {
+        return new Enumeration<MagicCube.TwistData>() {
             private HistoryNode cur = first;
             public boolean hasMoreElements() { return cur != null; }
-            public Object nextElement() {
+            public MagicCube.TwistData nextElement() {
                 MagicCube.TwistData ret = new MagicCube.TwistData(cur.stickerid, cur.dir, cur.slicesmask);
                 cur = cur.next;
                 return ret;
@@ -83,14 +106,14 @@ public class History {
             current = node.next;
             changed = true;
         }
-        if (node.prev != null)
-            node.prev.next = node.next;
-        else
+        if (node.prev == null)
             first = node.next;
-        if (node.next != null)
-            node.next.prev = node.prev;
         else
+            node.prev.next = node.next;
+        if (node.next == null)
             last = node.prev;
+        else
+            node.next.prev = node.prev;
         if(changed)
             fireCurrentChanged();
     }
@@ -105,16 +128,16 @@ public class History {
         temp.dir = dir;
         temp.slicesmask = slicesmask;
         temp.mark = mark;
-        temp.prev = (node_to_insert_before!=null ? node_to_insert_before.prev : last);
+        temp.prev = (node_to_insert_before==null ? last : node_to_insert_before.prev);
         temp.next = node_to_insert_before;
-        if (temp.next != null)
-            temp.next.prev = temp;
-        else
+        if (temp.next == null)
             last = temp;
-        if (temp.prev != null)
-            temp.prev.next = temp;
         else
+            temp.next.prev = temp;
+        if (temp.prev == null)
             first = temp;
+        else
+            temp.prev.next = temp;
     }
 
     public void deleteLast() {
@@ -128,12 +151,12 @@ public class History {
 
     public void append(int stickerid, int dir, int slicesmask) {
         if(slicesmask == 0)
-            slicesmask = 1; // 0 means slicemask 1 so keep them consistant so they always compare equal.
-        HistoryNode node = getPreviousTwist();
+            slicesmask = 1; // 0 means slicemask 1 so keep them consistent so they always compare equal.
+        HistoryNode node = getPreviousMove();
         if(!atMacroClose()
             && node != null // there is a previous twist
-            && node.stickerid == stickerid // same axis
-            && node.slicesmask == slicesmask // same slices
+            && node.stickerid == stickerid // on the same axis
+            && node.slicesmask == slicesmask // affecting the same slices
             && node.dir == -dir) // but in *opposite* direction
         {
             undo(); // just back the move out rather than append an inverse move
@@ -286,9 +309,9 @@ public class History {
     }
 
     /**
-     * @return true if history has a previous actual twist.
+     * @return true if history has a previous actual twist or rotate.
      */
-    public boolean hasPreviousTwist() {
+    public boolean hasPreviousMove() {
         for (HistoryNode node=current==null?last:current; node!=null; node=node.prev)
             if (node.stickerid != -1)
                 return true;
@@ -296,16 +319,16 @@ public class History {
     }
 
     /**
-     * @return the last actual twist.
+     * @return the last actual twist or rotate.
      */
-    public HistoryNode getPreviousTwist() {
+    public HistoryNode getPreviousMove() {
         for (HistoryNode node = current==null?last:current; node != null; node = node.prev)
             if (node.stickerid != -1)
                 return node;
         return null;
     }
 
-    public boolean hasNextTwist() {
+    public boolean hasNextMove() {
         for (HistoryNode node = current; node != null; node = node.next)
             if (node.stickerid != -1)
                 return true;
@@ -322,10 +345,10 @@ public class History {
 
     /**
      * @return next history node whether actual move or not.
-     */
+     *
     private HistoryNode getNext() {
         return (current!=null ? current.next : null);
-    }
+    }*/
 
     //
     // MARK METHODS
@@ -448,8 +471,8 @@ public class History {
         try {
             while (true) {
                 int c;
-                //while ((c = pr.read()) != -1 && Character.isWhitespace(c)) // isWhiteSpace doesn't exist in 1.4
-                while ((c = pr.read()) != -1 && " \t\n\r\f".indexOf(c) != -1)
+                while ((c = pr.read()) != -1 && Character.isWhitespace(c)) // isWhiteSpace doesn't exist in 1.4
+                //while ((c = pr.read()) != -1 && " \t\n\r\f".indexOf(c) != -1)
                     ;
                 if (c == -1)
                     return outahere();
@@ -562,8 +585,7 @@ public class History {
     // LISTENER SUPPORT
     //
     public static interface HistoryListener { public void currentChanged(); }
-    // Under JDK 1.5 this would be a Vector<HistoryListener> but we want to be 1.2 compatible for the applet version.
-    private Vector historyListeners = new Vector();
+    private Vector<HistoryListener> historyListeners = new Vector<HistoryListener>();
     public void addHistoryListener(HistoryListener listener) {
         if(historyListeners.contains(listener))
             return;
@@ -572,8 +594,8 @@ public class History {
     }
     public void removeHistoryListener(HistoryListener listener) { if(historyListeners.contains(listener)) historyListeners.remove(listener); }
     protected void fireCurrentChanged() {
-        for(Enumeration e=historyListeners.elements(); e.hasMoreElements(); )
-            ((HistoryListener)e.nextElement()).currentChanged();
+        for(Enumeration<HistoryListener> e=historyListeners.elements(); e.hasMoreElements(); )
+            e.nextElement().currentChanged();
     }
 
 
@@ -590,20 +612,30 @@ public class History {
         hist.compress(sweepRotatesForward);
         MagicCube.TwistData[] compressed = new MagicCube.TwistData[hist.countMoves(false)];
         int i=0;
-        for(java.util.Enumeration outmoves=hist.moves(); outmoves.hasMoreElements(); )
-            compressed[i++] = (MagicCube.TwistData)outmoves.nextElement();
+        for(java.util.Enumeration<MagicCube.TwistData> outmoves=hist.moves(); outmoves.hasMoreElements(); )
+            compressed[i++] = outmoves.nextElement();
         if(i != compressed.length)
             System.err.println("compress(TwistData[]) failed");
         return compressed;
     }
 
-    // kills current, if any, because I don't feel like thinking about it
+    /*
+     * Reverses both the order of the history moves and their directions.
+     * 
+     * Note: Also kills current, if any, just due to laziness.
+     */
     private void reverse()
     {
-        HistoryNode origFirst = first, origLast = last;
-        first = last = current = null;
-        for (HistoryNode node = origFirst; node != null; node = node.next)
-            insertNode(first, node.stickerid, -node.dir, node.slicesmask, node.mark);
+    	if(first == null) return;
+    	current = null; // so as to not fire change event
+        HistoryNode origFirst = first;
+        origFirst.dir *= -1; // the other nodes get reversed below but don't forget this one!
+        int count = countMoves(false);
+        for(int i=0; i<count-1; i++) {
+        	HistoryNode lastLast = last;
+        	deleteLast();
+        	insertNode(origFirst, lastLast.stickerid, -lastLast.dir, lastLast.slicesmask, lastLast.mark);
+        }
     }
 
     /**
@@ -621,7 +653,9 @@ public class History {
      */
     public void compress(boolean sweepRotatesForward) {
 
-        if (sweepRotatesForward)
+    	int startCount = this.countMoves(false);
+    	
+        if (sweepRotatesForward) // Seems broken if true. Did I break it? -MG
         {
             Assert(current == null);
             reverse();
@@ -669,7 +703,7 @@ public class History {
         };
         int current_matrix[][] = new int[4][4];
         Vec_h._IDENTMAT4(current_matrix);
-        LinkedList megaMoves = new LinkedList();
+        LinkedList<MegaMove> megaMoves = new LinkedList<MegaMove>();
         for (HistoryNode node = last; node != null; node = node.prev)
         {
             int stickerid = node.stickerid;
@@ -702,7 +736,7 @@ public class History {
             // If not, insert a new megamove for it.
             //
             MegaMove firstMegaMove = (megaMoves.isEmpty() ? null
-                                             : (MegaMove)megaMoves.getFirst());
+                                             : megaMoves.getFirst());
             if (firstMegaMove == null
              || (face != firstMegaMove.face
               && oppositeFace != firstMegaMove.face))
@@ -795,7 +829,7 @@ public class History {
             {
                 int iSlice = scratchPermutation[_iSlice];
                 int sliceTwistMat[][] = firstMegaMove.sliceTwistMats[iSlice];
-                if (!Vec_h__ISIDENTMAT4(sliceTwistMat))
+                if (!Vec_h._ISIDENTMAT4(sliceTwistMat))
                 {
                     int slicesmask = 1<<iSlice;
                     for (int jSlice = 0; jSlice < length; ++jSlice)
@@ -886,8 +920,11 @@ public class History {
                 }
             }
         }
+        int endCount = this.countMoves(false);
+        //System.out.println("compressed " + startCount+ " twist sequence to " + endCount + " (" + (startCount - endCount)*100f/startCount + "%)");
     } // end compress
 
+    
     public void oldcompress() {
         // TODO: perform on the fly, as the cheat-solve is happening, otherwise long wait if the history is long.
         HistoryNode node, nodeptr;
@@ -1082,31 +1119,65 @@ public class History {
         }
     }  // end oldcompress
 
+    private static void print(History hist) {
+    	for(Enumeration<MagicCube.TwistData> e=hist.moves(); e.hasMoreElements(); ) {
+    		MagicCube.TwistData move = e.nextElement();
+    		System.out.print(
+    				" " + move.grip.id_within_cube +
+    				"," + move.direction +
+    				"," + move.slicemask);
+    	}
+    	System.out.println();
+    }
 
     public static void main(String args[]) {
         History hist = new History(3);
         hist.append(1, 1, -1);
         hist.append(30, -1, 2);
         hist.append(100, 1, 1);
-        FileWriter fw;
         try {
+            System.out.println("before:");
+            print(hist);
+            OutputStreamWriter osw = new OutputStreamWriter(System.out);
+            
+            hist.write(osw);
+            osw.flush();
+            //hist.reverse();
+            //hist.write(osw);
+            //osw.flush();
+            
+            FileWriter fw;
             fw = new FileWriter("test.txt");
             hist.write(fw);
             fw.close();
 
             Reader fr = new FileReader("test.txt");
             PushbackReader pr = new PushbackReader(fr);
-            System.out.println("before");
             hist.read(pr);
-            fr.close();
+            pr.close();
+            fr = pr = null;
 
-            System.out.println("after");
-            fw = new FileWriter("test.txt");
-            hist.write(fw);
-            fw.close();
-            fr = new PushbackReader(new FileReader("test.txt"));
-            hist.read(pr);
-            fr.close();
+            System.out.println("after write and read back:");
+            hist.write(osw);
+            osw.flush();
+            
+            System.out.println("reversed:");
+            hist.reverse();
+            print(hist);
+            hist.write(osw);
+            osw.flush();
+
+            System.out.println("twice reversed:");
+            hist.reverse();
+            print(hist);
+            hist.write(osw);
+            osw.flush();
+
+            System.out.println("thrice reversed:");
+            hist.reverse();
+            print(hist);
+            hist.write(osw);
+            osw.flush();
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);

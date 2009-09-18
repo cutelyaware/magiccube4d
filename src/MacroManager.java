@@ -23,7 +23,7 @@ import java.io.*;
  */
 public class MacroManager {
     private String filePath;
-    private Vector/*<Macro>*/ macros = new Vector/*<Macro>*/();
+    private Vector<Macro> macros = new Vector<Macro>();
     private Macro curMacro;
     private MagicCube.Stickerspec refStickers[];
     private int nrefs;

@@ -11,6 +11,7 @@ import javax.swing.event.*;
  * Copyright 2005 - Superliminal Software
  * @author Melinda Green
  */
+@SuppressWarnings("serial")
 public class ColorButton extends JButton {
     public interface ColorChangeListener {
         public void colorChanged(Color newColor);

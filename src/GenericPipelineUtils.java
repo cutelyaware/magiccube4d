@@ -338,10 +338,7 @@ public class GenericPipelineUtils
                 float brightness = VecMath.dot(triangleNormal, unitTowardsSunVec);
                 if (brightness < 0)
                     brightness = 0;
-
-                if (false) // hard code to true to make it all max intensity
-                    brightness = 1.f;
-
+                //brightness = 1.f; // uncomment to make it all max intensity
                 frame.brightnesses[i0i1[0]][i0i1[1]] = brightness;
                 //System.out.println("brightness = "+brightness);
             }
