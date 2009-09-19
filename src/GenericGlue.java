@@ -192,7 +192,7 @@ public class GenericGlue
             {"{6}x{4}",  "1,2,2.5,3,4,5,6,7", "Hexagonal Prism Prism"},
             {"{7}x{4}",  "1,2,2.5,3,4,5,6,7", "True HEPAgonal Prism Prism"},
             {"{8}x{4}",  "1,2,2.5,3,4,5,6,7", "Octagonal Prism Prism"},
-            {"{8}x{4}",  "1,2,2.5,3,4,5,6,7", "Nonagonal Prism Prism"},
+            {"{9}x{4}",  "1,2,2.5,3,4,5,6,7", "Nonagonal Prism Prism"},
             {"{10}x{4}", "1,2,2.5,3,4,5,6,7", "Decagonal Prism Prism"},
             {"{100}x{4}","1,3",               "Onehundredagonal Prism Prism"},
             {"{3}x{3}",  "1,2,3,4,5,6,7",     ""},
@@ -218,8 +218,8 @@ public class GenericGlue
 
             // Puzzles with triangles kind of suck so far,
             // so we might want to leave them out of the menu...
-            //boolean allowPuzzlesWithTriangles = true;
-            boolean allowPuzzlesWithTriangles = false;
+            boolean allowPuzzlesWithTriangles = true;
+            //boolean allowPuzzlesWithTriangles = false;
             if (!allowPuzzlesWithTriangles)
             {
                 if (schlafli != null && schlafli.indexOf("{3") != -1)
