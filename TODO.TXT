@@ -1,0 +1,17 @@
+
+PUZZLES
+* Support from 2 to N-dimensional puzzles (yeah right!).
+* Fix the puzzles containing triangles.
+* Port the solve and compress functions to the new puzzles. 
+  First just for the appropriately sized cubes and eventually for all puzzles.
+
+
+HIGHLIGHTING
+* Disallow 360 degree twists.
+* In highlight-stickers mode, only highlight hovered-over stickers that would 
+  do something if clicked. For center-center stickers that would require the Ctrl key being held.
+
+GUI
+* Replace the AWT class usages with Swing versions.
+* Move control panel to the west.
+* Add Synthetica look-and-feel.
