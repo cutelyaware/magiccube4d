@@ -65,7 +65,8 @@ public class MC4DSwing extends JFrame {
         solveitem   = new MenuItem("Solve (For Real)  Ctrl+L");
     
     private void updateTwistsLabel() {
-        twistLabel.setText("Total Twists: " + hist.countTwists());
+    	int twists = hist.countTwists();
+        twistLabel.setText("Total Twists: " + twists);
     }
 
 
@@ -467,6 +468,7 @@ public class MC4DSwing extends JFrame {
                     initPuzzle(null);
                     viewcontainer.validate();
                     statusLabel.setText(name);
+                	genericGlue.deactivate();
                 }
             });
         }
@@ -601,8 +603,12 @@ public class MC4DSwing extends JFrame {
                     for(int i=0; i<MagicCube.NFACES; i++)
                         stateStr += reader.readLine(); // reads the puzzle state
                     hist = new History(initialLength);
-                    hist.read(new PushbackReader(reader));
-                    setTitle(MagicCube.TITLE + " - " + logfile.getName());
+                    String title = MagicCube.TITLE;
+                    if(hist.read(new PushbackReader(reader)))
+                    	title += " - " + logfile.getName();
+                    else
+                     	System.out.println("Error reading puzzle history");
+                    setTitle(title);
                 } catch (IOException e) {
                     statusLabel.setText("Failed to parse log file '" + logfilename + "'");
                 }
@@ -623,6 +629,7 @@ public class MC4DSwing extends JFrame {
         
         view = new MC4DView(puzzle, polymgr, hist);
         view.genericGlue = genericGlue; // make it share mine
+        //genericGlue.deactivate(); // to start with normal cubes
         view.setScale(scale); // XXX added-- I think this is needed, otherwise the Property's scale doesn't get applied til I hit the scale slider! -don
 
         view.setBackground(PropertyManager.getColor("background.color"));
