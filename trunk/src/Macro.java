@@ -175,8 +175,10 @@ public class Macro {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if( ! restored.moves.read(pr))
+        if( ! restored.moves.read(pr)) {
+        	System.out.println("Error reading macro history");
             return null;
+        }
         return restored;
     }
 

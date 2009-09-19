@@ -5,17 +5,22 @@ import java.util.*;
 
 /**
  * Maintains a sequence of twists, rotates, and marks applied to a MagicCube4D puzzle.
- * Supports undo, redo, macro moves.
+ * Supports undo/redo and macro moves and is able to save and restore from log files.
  * 
- * Twists and rotates are called "moves". Rotates are represented internally as
- * twists that affect all slices but are logically considered a different kind of move.
- * Marks are single character delimiters that can be inserted between moves
- * Moves and marks are called history nodes. 
- * Macros are represented internally by a sequence of nodes bracketed by the reserved
- * characters '[' and ']'.
+ * <p>DESIGN</p>
+ * <li>Twists and rotates are called "moves". Rotates are represented internally as
+ * twists that affect all slices but are logically considered a different kind of move.</li>
+ * <li>Marks are single character delimiters that can be inserted between like bookmarks.</li>
+ * <li>Moves and marks are called history nodes. </li>
+ * <li>Macros are represented internally by a sequence of nodes bracketed by the reserved
+ * characters '[' and ']'.</li>
+ * <li>There is a reference to a "current" move which may be any node or null and can be
+ * accessed via getCurrent() and controlled with the various goToXxxx() methods.</li>
+ * <li>Notification of changes to the current node can be listened to.</li>
  *
  * Copyright 2005 - Superliminal Software
  * @author Don Hatch
+ * @author Melinda Green
  */
 public class History {
 
@@ -82,7 +87,7 @@ public class History {
     private HistoryNode first, last, current;
 
     public History(int length) {
-        this.length = length;
+    	this.length = length;
         //debug = preferences.getBoolProperty(M4D_HISTORY_DEBUG);
     }
 
@@ -440,73 +445,61 @@ public class History {
                 if (node == current)
                     writer.write("c ");
                 if (node.stickerid >= 0) {
-                    int stickerid = node.stickerid;
-                    /*
-                     * If it's CW, use the opposite sticker.
-                     */
-                    if (node.dir == MagicCube.CW)
-                        stickerid = MagicCube.ROUNDDOWN(stickerid, MagicCube.GRIPS_PER_FACE) +
-                        MagicCube.GRIPS_PER_FACE - 1 - stickerid % MagicCube.GRIPS_PER_FACE;
-                    writer.write("" + (stickerid / MagicCube.GRIPS_PER_FACE));
-                    writer.write("" + (stickerid % MagicCube.GRIPS_PER_FACE));
-                    if( ! (node.slicesmask == 0 || node.slicesmask == 1))
-                        writer.write(":" + node.slicesmask);
+                	writer.write(" " + node.stickerid);
+                    writer.write("," + node.dir);
+                    writer.write("," + node.slicesmask);
                 }
                 else
                     writer.write("m" + node.mark);
                 nwritten++;
-                if (node.next != null && node.next!=current) // write a separator
-                    writer.write(nwritten % 10 == 0 ? System.getProperty("line.separator") : " ");
+                if (node.next != null && node.next!=current && nwritten % 10 == 0) // write a line break
+                    writer.write(System.getProperty("line.separator"));
             }
-            writer.write("." + System.getProperty("line.separator"));
+            writer.write("." + System.getProperty("line.separator")); // end of history marker
         } catch(IOException ioe) {
             ioe.printStackTrace();
         }
     } // end write
 
     public boolean read(PushbackReader pr) {
-        int face, stickeronface, slicesmask;
-        HistoryNode who_will_point_to_current = null; /* BLEAH! */
+        HistoryNode who_will_point_to_current = null;
         clear();
         try {
             while (true) {
                 int c;
-                while ((c = pr.read()) != -1 && Character.isWhitespace(c)) // isWhiteSpace doesn't exist in 1.4
-                //while ((c = pr.read()) != -1 && " \t\n\r\f".indexOf(c) != -1)
+                while ((c = pr.read()) != -1 && Character.isWhitespace(c))
                     ;
                 if (c == -1)
-                    return outahere();
+                    return outahere(); // premature end of file
                 if (c == '.')
-                    break;
-                //if (Character.isDigit(c)) { // isDigit doesn't exist in 1.4
-                if (c>='0'&&c<='9') {
-                    slicesmask = 1;
-                    face = c - '0';
-                    stickeronface = readInt(pr);
-                    c = pr.read();
-                    if(c == ':')
-                        slicesmask = readInt(pr);
-                    else
-                        pr.unread(c);
-                    append(face*MagicCube.GRIPS_PER_FACE + stickeronface, MagicCube.CCW, slicesmask);
-                    //System.out.println("read " + face + "->" + stickeronface + ":" + slicesmask);
+                    break; // end of history
+                if (Character.isDigit(c)) { // read a node
+                	pr.unread(c);
+                    int sticker = readInt(pr);
+                    if(pr.read() != ',')
+                    	return outahere();
+                    int direction = readInt(pr);
+                    if(pr.read() != ',')
+                    	return outahere();
+                    int slicesmask = readInt(pr);
+                    append(sticker, direction, slicesmask);
+                    System.out.println("read " + sticker + "," + direction + "," + slicesmask);
                 } else if (c == 'm') {
                     c = pr.read();
                     mark((char)c);
                 } else if (c == 'c') {
-                    who_will_point_to_current = (last != null ? last.next : first);
+                    who_will_point_to_current = last == null ? first : last.next;
                 } else {
                     System.out.println("bad hist char " + c);
                     return outahere();
                 }
             }
-            if (who_will_point_to_current != null)
-                current = who_will_point_to_current == null ? first : who_will_point_to_current.next;
-            fireCurrentChanged();
         } catch (Exception e) {
             e.printStackTrace();
             return outahere();
         }
+        current = who_will_point_to_current == null ? last.next : who_will_point_to_current.next;
+        fireCurrentChanged();
         return true;
     } // end read
 
@@ -521,27 +514,26 @@ public class History {
         int c, chars=0;
         try {
             // check the first char for negative sign
-            //do { c = pr.read(); } while(Character.isWhitespace(c)); // isWhiteSpace doesn't exist in 1.4
-            do { c = pr.read(); } while(" \t\n\r\f".indexOf(c) != -1);
+            do { c = pr.read(); } while(Character.isWhitespace(c)); // skip whitespace
             if(c == '-')
                 buf[chars++] = '-';
             else
                 pr.unread(c);
             // read the digits
-            //while((c = pr.read()) != -1 && Character.isDigit(c)) // isDigit doesn't exist in 1.4
-            while((c = pr.read()) != -1 && (c>='0'&&c<='9'))
+            while((c = pr.read()) != -1 && Character.isDigit(c)) // read digits
                 buf[chars++] = (char)c;
             pr.unread(c);
         } catch (IOException ioe) {
             throw new NumberFormatException("Read error in History.readInt");
         }
+        // convert the string to an integer
         String numstr = new String(buf, 0, chars);
         return Integer.parseInt(numstr);
     }
 
     private boolean outahere() {
-        System.err.println("Error reading history-- no history read");
-        Thread.dumpStack();
+        //System.err.println("Error reading history-- no history read");
+        //Thread.dumpStack();
         clear();
         return false;
     }
@@ -653,9 +645,9 @@ public class History {
      */
     public void compress(boolean sweepRotatesForward) {
 
-    	int startCount = this.countMoves(false);
+    	//int startCount = this.countMoves(false);
     	
-        if (sweepRotatesForward) // Seems broken if true. Did I break it? -MG
+        if (sweepRotatesForward)
         {
             Assert(current == null);
             reverse();
@@ -920,7 +912,7 @@ public class History {
                 }
             }
         }
-        int endCount = this.countMoves(false);
+        //int endCount = this.countMoves(false);
         //System.out.println("compressed " + startCount+ " twist sequence to " + endCount + " (" + (startCount - endCount)*100f/startCount + "%)");
     } // end compress
 

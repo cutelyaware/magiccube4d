@@ -141,6 +141,11 @@ public class GenericGlue
     {
         return genericPuzzleDescription != null;
     }
+    public void deactivate()
+    {
+    	genericPuzzleDescription = null;
+        genericPuzzleState = null;
+    }
     public boolean isAnimating()
     {
         return iRotation < nRotation
@@ -173,8 +178,7 @@ public class GenericGlue
                 public void actionPerformed(ActionEvent ae)
                 {
                     if (verboseLevel >= 1) System.out.println("GenericGlue: deactivating");
-                    genericPuzzleDescription = null;
-                    genericPuzzleState = null;
+                    deactivate();
                 }
             });
         }

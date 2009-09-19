@@ -155,8 +155,8 @@ public class MagicCube {
         LOGFILE = "MagicCube4D.log", // in user's home dir
         MAGIC_NUMBER = "MagicCube4D"; // 1st string in log file for sanity checking
     
-    public final static String PUZZLE_VERSION = "3.2.3";
-    public final static int FILE_VERSION = 2;
+    public final static String PUZZLE_VERSION = "4.0.0";
+    public final static int FILE_VERSION = 3;
     
     public final static Color
         BACKGROUND = new Color(20,170,235),
