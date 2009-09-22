@@ -6,7 +6,6 @@ import java.util.Stack;
 
 import javax.swing.*;
 import javax.swing.border.*;
-import javax.swing.filechooser.FileSystemView;
 
 /**
  * The main desktop application.
@@ -20,17 +19,17 @@ public class MC4DSwing extends JFrame {
 
     //public GenericGlue genericGlue = new GenericGlue(null, 0); // don't start using generic
     //public GenericGlue genericGlue = new GenericGlue("{4,3,3}", 3); // start using generic implementation of hypercube
-    public GenericGlue genericGlue = new GenericGlue("{5}x{4}", 3); // start using pentagonal prism prism
+    private GenericGlue genericGlue = new GenericGlue("{5}x{4}", 3); // start using pentagonal prism prism
 
     private final static int
         SCRAMBLE_NONE = 0, 
         SCRAMBLE_PARTIAL = 1,
         SCRAMBLE_FULL = 2;
     private int scrambleState = SCRAMBLE_NONE;
-    private final static String HOME_DIR = FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
 
     // macro state
-    private MacroManager macroMgr = new MacroManager(PropertyManager.top.getProperty("macrofile", HOME_DIR+File.separator+"MC4D.macros"));
+    private MacroManager macroMgr = new MacroManager(PropertyManager.top.getProperty("macrofile", 
+    			StaticUtils.getHomeDir() + File.separator + "MC4D.macros"));
     private Macro lastMacro;
     private int applyingMacro; // -1 == reversed, 0 == not, 1 == forward
     
@@ -70,8 +69,22 @@ public class MC4DSwing extends JFrame {
     }
 
 
+    /*
+     * Format: 
+     * 0 - Magic Number 
+     * 1 - File Version 
+     * 2 - Scramble State
+     * 3 - Twist Count
+     * 4 - Schlafli Product
+     * 5 - Edge Length
+     */
     private void saveAs(String logfilename) {
+    	if(logfilename == null) {
+    		System.err.println("saveAs: null file name");
+    		return;
+    	}
         File file = new File(logfilename);
+        String sep = System.getProperty("line.separator");
         try {
             Writer writer = new FileWriter(file);
             writer.write(
@@ -79,8 +92,10 @@ public class MC4DSwing extends JFrame {
                 MagicCube.FILE_VERSION + " " +
                 scrambleState + " " +
                 hist.countTwists() + " " +
-                polymgr.getLength());
-            writer.write(System.getProperty("line.separator") + puzzle.toString());
+                genericGlue.genericPuzzleDescription.getSchlafliProduct() + " " +
+                genericGlue.genericPuzzleDescription.getEdgeLength());
+            //writer.write(sep + puzzle.toString());
+            writer.write(sep + "*" + sep);
             hist.write(writer);
             writer.close();
             String filepath = file.getAbsolutePath();
@@ -124,7 +139,10 @@ public class MC4DSwing extends JFrame {
         },
         save = new ProbableAction("Save") {
             public void doit(ActionEvent ae) {
+            	// Save to the previously used log file, if any, otherwise the default.
                 String fname = logFileChooser.getSelectedFile() == null ? null : logFileChooser.getSelectedFile().getAbsolutePath();
+                if(fname == null)
+                	fname = StaticUtils.getHomeDir() + File.separator + MagicCube.LOGFILE;
                 saveAs(PropertyManager.top.getProperty("logfile", fname));
             }
         },
@@ -138,11 +156,6 @@ public class MC4DSwing extends JFrame {
         undo = new ProbableAction("Undo") {
             public void doit(ActionEvent ae) {
                 statusLabel.setText("");
-                if (genericGlue.isActive())
-                {
-                    genericGlue.undoAction(view, statusLabel, polymgr.getTwistFactor());
-                    return;
-                }
                 if(hist.atScrambleBoundary()) {
                     statusLabel.setText("Can't undo past scramble boundary.");
                     return;
@@ -169,11 +182,6 @@ public class MC4DSwing extends JFrame {
         redo = new ProbableAction("Redo") {
             public void doit(ActionEvent ae) {
                 statusLabel.setText("");
-                if (genericGlue.isActive())
-                {
-                    genericGlue.redoAction(view, statusLabel, polymgr.getTwistFactor());
-                    return;
-                }
                 if(hist.atMacroOpen()) {
                     statusLabel.setText("redoing macro");
                     for(MagicCube.TwistData toRedo=hist.redo(); toRedo!=null; toRedo=hist.redo()) {
@@ -195,13 +203,9 @@ public class MC4DSwing extends JFrame {
         },
         cheat = new ProbableAction("Cheat") {
             public void doit(ActionEvent ae) {
-                if (genericGlue.isActive())
-                {
-                    genericGlue.cheatAction(view, statusLabel);
-                    return;
-                }
                 scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
-                hist.compress(false); // so fewest moves are required and solution least resembles original moves.
+                // TODO: extend compress to work with non cubes.
+                //hist.compress(false); // so fewest moves are required and solution least resembles original moves.
                 Stack<MagicCube.TwistData> toundo = new Stack<MagicCube.TwistData>();
                 for(Enumeration<MagicCube.TwistData> moves=hist.moves(); moves.hasMoreElements(); )
                     toundo.push(moves.nextElement());
@@ -293,8 +297,9 @@ public class MC4DSwing extends JFrame {
         reset = new AbstractAction("Reset") {
             public void actionPerformed(ActionEvent ae) {
                 cancel.doit(ae);
-                puzzle.reset();
-                hist.clear();
+                genericGlue.initPuzzle(
+            		genericGlue.genericPuzzleDescription.getSchlafliProduct(),
+            		genericGlue.genericPuzzleDescription.getEdgeLength());
                 scrambleState = SCRAMBLE_NONE;
                 updateTwistsLabel();
                 statusLabel.setText("");
@@ -459,20 +464,7 @@ public class MC4DSwing extends JFrame {
         // Puzzle lengths
         //
         Menu puzzlemenu = new Menu("Puzzle");
-        for(int i=2; i<=MagicCube.MAXLENGTH; i++) {
-            final int len = i;
-            final String name = len + " x " + len + " x " + len + " x " + len;
-            puzzlemenu.add(new MenuItem(name)).addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    PropertyManager.userprefs.setProperty("length", ""+len);
-                    initPuzzle(null);
-                    viewcontainer.validate();
-                    statusLabel.setText(name);
-                	genericGlue.deactivate();
-                }
-            });
-        }
-        genericGlue.addMoreItemsToPuzzleMenu(puzzlemenu, statusLabel,
+        genericGlue.addItemsToPuzzleMenu(puzzlemenu, statusLabel,
                                              new GenericGlue.Callback() { public void call() {
                                                  initPuzzle(null);
                                                  viewcontainer.validate();
@@ -496,10 +488,14 @@ public class MC4DSwing extends JFrame {
         Menu helpmenu = new Menu("Help");
         helpmenu.add(new MenuItem("About...")).addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
-                JOptionPane.showMessageDialog(MC4DSwing.this, "<html><center>" + MagicCube.TITLE + 
-                    " Version " + MagicCube.PUZZLE_VERSION + 
-                    "<br>Copyright 2005-2006 by Melinda Green, Don Hatch, and Jay Berkenbilt.<br>" +
-                    "www.superliminal.com/cube/cube.htm</center></html>");
+                JOptionPane.showMessageDialog(MC4DSwing.this, 
+                	"<html><center>" + 
+	                	MagicCube.TITLE + 
+	                    " Version " + MagicCube.PUZZLE_VERSION + 
+	                    "<br>Copyright 2005 by Melinda Green, Don Hatch" +
+	                    "<br>with invaluable help from Jay Berkenbilt and Roice Nelson." +
+	                    "<br>http://superliminal.com/cube/cube.htm" +
+                    "</center></html>");
             }
         });
         
@@ -577,55 +573,77 @@ public class MC4DSwing extends JFrame {
         macroControlsContainer.validate();
     }
     
-    
+    /*
+     * Format: 
+     * 0 - Magic Number 
+     * 1 - File Version 
+     * 2 - Scramble State
+     * 3 - Twist Count
+     * 4 - Schlafli Product
+     * 5 - Edge Length
+     */
     private void initPuzzle(String logfilename) {
         scrambleState = SCRAMBLE_NONE;
         scale = PropertyManager.getFloat("scale", 1);
-        int initialLength = PropertyManager.getInt("length", MagicCube.DEFAULT_LENGTH); // TODO: set from logfile
-        hist = new History(initialLength);
+        double initialLength = MagicCube.DEFAULT_LENGTH;
+        int iLength = (int)Math.ceil(initialLength);
+        hist = new History(iLength);
         String stateStr = "";
-        if(logfilename != null) { // read the log file, possibly reinitializing initial length and hist object.
+        if(logfilename != null) { // read the log file, possibly reinitializing length and history.
             File logfile = new File(logfilename);
             if(logfile.exists()) {
                 try {
                     BufferedReader reader = new BufferedReader(new FileReader(logfile));
-                    String firstline[] = reader.readLine().split(" ");
-                    if(firstline.length<4 || firstline.length>5 || !MagicCube.MAGIC_NUMBER.equals(firstline[0]))
+                    String firstlineStr = reader.readLine();
+                    String firstline[] = firstlineStr.split(" ");
+                    if(firstline.length != 6 || !MagicCube.MAGIC_NUMBER.equals(firstline[0]))
                         throw new IOException();
                     int readversion = Integer.parseInt(firstline[1]);
-                    if(readversion<1 || readversion>MagicCube.FILE_VERSION) {
+                    if(readversion != MagicCube.FILE_VERSION) {
                         statusLabel.setText("Incompatible log file version " + readversion);
                         return;
                     }
                     scrambleState = Integer.parseInt(firstline[2]);
-                    if(readversion>1 && firstline.length>4)
-                        initialLength = Integer.parseInt(firstline[4]);
-                    for(int i=0; i<MagicCube.NFACES; i++)
-                        stateStr += reader.readLine(); // reads the puzzle state
-                    hist = new History(initialLength);
+                    // int numTwists = Integer.parseInt(firstline[3]);
+                    String schlafli = firstline[4];
+                    initialLength = Double.parseDouble(firstline[5]);
+                    genericGlue.initPuzzle(schlafli, initialLength);
+                    hist = new History(iLength);
                     String title = MagicCube.TITLE;
+                    int c;
+                    for(c=reader.read(); !(c=='*' || c==-1); c=reader.read()) ; // read past state data
                     if(hist.read(new PushbackReader(reader)))
-                    	title += " - " + logfile.getName();
+                    	title +=  " - " + schlafli + " - " + logfile.getName();
                     else
                      	System.out.println("Error reading puzzle history");
                     setTitle(title);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     statusLabel.setText("Failed to parse log file '" + logfilename + "'");
                 }
             }
             else
                 statusLabel.setText("Couldn't find log file '" + logfilename + "'");
         }
-        polymgr = new PolygonManager(initialLength);
+        polymgr = new PolygonManager(iLength);
         if(PropertyManager.top.getProperty("faceshrink") != null || PropertyManager.top.getProperty("stickershrink") != null)
             polymgr.setShrinkers(
                 PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK), 
                 PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK));
         polymgr.setEyeW(PropertyManager.getFloat("eyew", MagicCube.EYEW));
         polymgr.setTwistFactor(PropertyManager.getFloat("twistfactor", 1));
-        puzzle = new PuzzleState(initialLength, polymgr);
+        puzzle = new PuzzleState(iLength, polymgr);
         if(stateStr.length() > 0)
             puzzle.init(stateStr);
+        
+        // initialize generic version state
+        for(Enumeration<MagicCube.TwistData> moves=hist.moves(); moves.hasMoreElements(); ) {
+        	MagicCube.TwistData move = moves.nextElement();
+	        genericGlue.genericPuzzleDescription.applyTwistToState(
+        		genericGlue.genericPuzzleState,
+                move.grip.id_within_cube,
+                move.direction,
+                move.slicemask);
+        }
         
         view = new MC4DView(puzzle, polymgr, hist);
         view.genericGlue = genericGlue; // make it share mine

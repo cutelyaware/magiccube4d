@@ -83,7 +83,7 @@ public class MagicCube {
             this.slicemask = slicemask;
             this.grip = new MagicCube.Stickerspec();
             grip.id_within_cube = id_within_cube;
-            PolygonManager.fillStickerspecFromIdAndLength(grip, 3);       
+            //PolygonManager.fillStickerspecFromIdAndLength(grip, 3);       
         }
     }
     

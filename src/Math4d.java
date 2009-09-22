@@ -28,8 +28,10 @@ public class Math4d
         float af4[] = new float[4];
         float af5[][] = new float[3][3];
         float af6[][] = new float[4][4];
-        if((af[0] == 0.0F ? 0 : 1) + (af[1] == 0.0F ? 0 : 1) + (af[2] == 0.0F ? 0 : 1) + (af[3] == 0.0F ? 0 : 1) != 1)
+        if((af[0] == 0.0F ? 0 : 1) + (af[1] == 0.0F ? 0 : 1) + (af[2] == 0.0F ? 0 : 1) + (af[3] == 0.0F ? 0 : 1) != 1) {
+        	System.err.println("FAIL in Math4d.get4RotMatrix: " + af[0] + "," + af[1] + "," + af[2] + "," + af[3]);
             _assertionFailed("(center[0]!=0 ? 1 : 0) + (center[1]!=0 ? 1 : 0) + (center[2]!=0 ? 1 : 0) + (center[3]!=0 ? 1 : 0) == 1", "Math4d.prejava", 40);
+        }
         int i;
         for(i = 0; i < 4; i++)
             if(af[i] != 0.0F)

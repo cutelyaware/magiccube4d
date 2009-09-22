@@ -1,6 +1,7 @@
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.TreePath;
@@ -102,7 +103,7 @@ public class StaticUtils {
     }
 
     /**
-     * Utility class that initializes a meduim sized, screen-centered, exit-on-close JFrame.
+     * Utility class that initializes a medium sized, screen-centered, exit-on-close JFrame.
      * Mostly useful for simple example main programs.
      */
     @SuppressWarnings("serial")
@@ -117,9 +118,13 @@ public class StaticUtils {
                 Math.max(0,screenSize.height/2 - getHeight()/2));
         }
     }
+    
+    public static String getHomeDir() {
+    	return FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
+    }
 
     /**
-     * Simple file filter suitable for use with JFileChooser to accept files with a given extention.
+     * Simple file filter suitable for use with JFileChooser to accept files with a given extension.
      * Example: myFilechooser.setFileFilter.setFileFilter(new ExtentionFilter("log", "MyApp Error Log Files")
      */
     public static class ExtentionFilter extends FileFilter {
@@ -148,8 +153,8 @@ public class StaticUtils {
      * Selection utility in the style of the JOptionPane.showXxxDialog methods.
      * Given a JTree, presents an option dialog presenting the tree allowing users to select a node.
      * @param tree is the tree to display
-     * @param parent is the component to anchor the diaglog to
-     * @return the path of the selected tree node or null if cancelled.
+     * @param parent is the component to anchor the dialog to
+     * @return the path of the selected tree node or null if canceled.
      */
     public static TreePath showTreeNodeChooser(JTree tree, String title, Component parent) {
         final String OK = "OK", CANCEL = "Cancel";

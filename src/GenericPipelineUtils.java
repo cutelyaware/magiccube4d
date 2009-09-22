@@ -529,6 +529,10 @@ public class GenericPipelineUtils
             int item[] = drawList[i];
             int iSticker = item[0];
             int iPolyWithinSticker = item[1];
+            if(0 > iSticker || iSticker >= stickerInds.length || 0 > iPolyWithinSticker || iPolyWithinSticker >= stickerInds[iSticker].length) {
+            	System.err.println("GenericPipelineUtil.pick: array indexing error");
+            	return null;
+            }
             int poly[] = stickerInds[iSticker][iPolyWithinSticker];
             int j;
             for (j = 0; j < poly.length; ++j)

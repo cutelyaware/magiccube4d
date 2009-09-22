@@ -183,9 +183,12 @@
 import com.donhatchsw.util.*; // XXX get rid
 
 class PolytopePuzzleDescription implements GenericPuzzleDescription {
-    private com.donhatchsw.util.CSG.SPolytope originalPolytope;
-    private com.donhatchsw.util.CSG.SPolytope slicedPolytope;
-
+    private CSG.SPolytope originalPolytope;
+    private CSG.SPolytope slicedPolytope;
+    
+    private String schlafliProduct;
+    private double edgeLength;
+    
     private float _circumRadius;
     private float _inRadius;
     private int _nCubies;
@@ -259,6 +262,9 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                                      double length, // usually int but can experiment with different cut depths
                                      java.io.PrintWriter progressWriter)
     {
+    	this.schlafliProduct = schlafliProduct;
+    	this.edgeLength = length;
+    	
         if (length < 1)
             throw new IllegalArgumentException("PolytopePuzzleDescription called with length="+length+", min legal length is 1");
 
@@ -268,13 +274,13 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             progressWriter.print("    Constructing polytope...");
             progressWriter.flush();
         }
-        this.originalPolytope = com.donhatchsw.util.CSG.makeRegularStarPolytopeCrossProductFromString(schlafliProduct);
+        this.originalPolytope = CSG.makeRegularStarPolytopeCrossProductFromString(schlafliProduct);
         if (progressWriter != null)
         {
             progressWriter.println(" done ("+originalPolytope.p.facets.length+" facets).");
             progressWriter.flush();
         }
-        com.donhatchsw.util.CSG.orientDeep(originalPolytope); // XXX shouldn't be necessary!!!!
+        CSG.orientDeep(originalPolytope); // XXX shouldn't be necessary!!!!
 
         int nDims = originalPolytope.p.dim;  // == originalPolytope.fullDim
 
@@ -495,11 +501,11 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 for (int iCut = 0; iCut < faceCutOffsets[iFace].length; ++iCut)
                 {
                     if (maxCuts >= 0 && totalCuts >= maxCuts) break;
-                    com.donhatchsw.util.CSG.Hyperplane cutHyperplane = new com.donhatchsw.util.CSG.Hyperplane(
+                    CSG.Hyperplane cutHyperplane = new CSG.Hyperplane(
                         faceInwardNormals[iFace],
                         faceCutOffsets[iFace][iCut]);
                     Object auxOfCut = null; // we don't set any aux on the cut for now
-                    slicedPolytope = com.donhatchsw.util.CSG.sliceFacets(slicedPolytope, cutHyperplane, auxOfCut);
+                    slicedPolytope = CSG.sliceFacets(slicedPolytope, cutHyperplane, auxOfCut);
                     if (progressWriter != null)
                     {
                         progressWriter.print("."); // one dot per cut
@@ -520,7 +526,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 progressWriter.print("    Fixing orientations (argh!)... ");
                 progressWriter.flush();
             }
-            com.donhatchsw.util.CSG.orientDeep(slicedPolytope); // XXX shouldn't be necessary!!!!
+            CSG.orientDeep(slicedPolytope); // XXX shouldn't be necessary!!!!
             if (progressWriter != null)
             {
                 progressWriter.println(" done.");
@@ -549,7 +555,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         //
         this.sticker2cubie = new int[nStickers];
         {
-            com.donhatchsw.util.MergeFind mf = new com.donhatchsw.util.MergeFind(nStickers);
+            MergeFind mf = new MergeFind(nStickers);
             // The 4d case:
             //     for each polygon in the sliced puzzle
             //         if it's part of an original polygon (not a cut)
@@ -597,14 +603,14 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         double faceCentersD[][] = new double[nFaces][nDims];
         {
             for (int iFace = 0; iFace < nFaces; ++iFace)
-                com.donhatchsw.util.CSG.cgOfVerts(faceCentersD[iFace], originalFaces[iFace]);
+                CSG.cgOfVerts(faceCentersD[iFace], originalFaces[iFace]);
         }
         this.stickerCentersD = new double[nStickers][nDims];
         this.stickerCentersHashTable = new FuzzyPointHashTable(1e-9, 1e-8, 1./128);
         {
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
             {
-                com.donhatchsw.util.CSG.cgOfVerts(stickerCentersD[iSticker], stickers[iSticker]);
+                CSG.cgOfVerts(stickerCentersD[iSticker], stickers[iSticker]);
                 stickerCentersHashTable.put(stickerCentersD[iSticker], new Integer(iSticker));
             }
         }
@@ -613,7 +619,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         float stickerCentersMinusFaceCentersF[][] = new float[nStickers][];
         {
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
-                stickerCentersMinusFaceCentersF[iSticker] = doubleToFloat(com.donhatchsw.util.VecMath.vmv(stickerCentersD[iSticker], faceCentersD[sticker2face[iSticker]]));
+                stickerCentersMinusFaceCentersF[iSticker] = doubleToFloat(VecMath.vmv(stickerCentersD[iSticker], faceCentersD[sticker2face[iSticker]]));
         }
 
 
@@ -639,7 +645,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         double restVerts[][];
         if (nDims == 3)
         {
-            com.donhatchsw.util.Poly slicedPoly = com.donhatchsw.util.PolyCSG.PolyFromPolytope(slicedPolytope.p);
+            Poly slicedPoly = PolyCSG.PolyFromPolytope(slicedPolytope.p);
             restVerts = (double[][])slicedPoly.verts;
 
             // slicedPoly.inds is a list of faces, each of which
@@ -656,10 +662,10 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             // Start by making a completely separate Poly
             // out of each sticker.  There will be no
             // vertex sharing between stickers.
-            com.donhatchsw.util.Poly stickerPolys[] = new com.donhatchsw.util.Poly[nStickers];
+            Poly stickerPolys[] = new Poly[nStickers];
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
             {
-                stickerPolys[iSticker] = com.donhatchsw.util.PolyCSG.PolyFromPolytope(stickers[iSticker]);
+                stickerPolys[iSticker] = PolyCSG.PolyFromPolytope(stickers[iSticker]);
                 // So it gets grouped when we concatenate...
                 stickerPolys[iSticker].inds = new int[][][][] {(int[][][])stickerPolys[iSticker].inds};
             }
@@ -667,7 +673,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             // Now concatenate them all together (the verts
             // and the inds).
             //
-            com.donhatchsw.util.Poly slicedPoly = com.donhatchsw.util.Poly.concat(stickerPolys);
+            Poly slicedPoly = Poly.concat(stickerPolys);
 
             restVerts = (double[][])slicedPoly.verts;
             // We assume there is only 1 contour per polygon,
@@ -744,7 +750,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                     int iVert = stickerInds[iSticker][j][k];
                     if (vertsMinusStickerCenters[iVert] == null)
                     {
-                        vertsMinusStickerCenters[iVert] = doubleToFloat(com.donhatchsw.util.VecMath.vmv(restVerts[iVert], stickerCentersD[iSticker]));
+                        vertsMinusStickerCenters[iVert] = doubleToFloat(VecMath.vmv(restVerts[iVert], stickerCentersD[iSticker]));
                         vertStickerCentersMinusFaceCenters[iVert] = stickerCentersMinusFaceCentersF[iSticker];
                         vertFaceCenters[iVert] = faceCentersF[iFace];
                     }
@@ -772,7 +778,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             int nGrips = 0;
             for (int iFace = 0; iFace < nFaces; ++iFace)
             {
-                com.donhatchsw.util.CSG.Polytope[][] allElementsOfCell = originalFaces[iFace].getAllElements();
+                CSG.Polytope[][] allElementsOfCell = originalFaces[iFace].getAllElements();
                 for (int iDim = 0; iDim <= 3; ++iDim) // yes, even for cell center, which doesn't do anything
                     nGrips += allElementsOfCell[iDim].length;
             }
@@ -785,7 +791,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             for (int iFace = 0; iFace < nFaces; ++iFace)
             {
                 CSG.Polytope cell = originalFaces[iFace];
-                com.donhatchsw.util.CSG.Polytope[][] allElementsOfCell = cell.getAllElements();
+                CSG.Polytope[][] allElementsOfCell = cell.getAllElements();
                 for (int iDim = 0; iDim <= 3; ++iDim) // XXX should we have a grip for the cell center, which doesn't do anything? maybe!
                 {
                     for (int iElt = 0; iElt < allElementsOfCell[iDim].length; ++iElt)
@@ -795,7 +801,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                                                 originalPolytope.p, cell, elt,
                                                 gripUsefulMats[iGrip]);
 
-                        com.donhatchsw.util.CSG.cgOfVerts(gripCenterD, elt);
+                        CSG.cgOfVerts(gripCenterD, elt);
                         // !! We can't use the element center,
                         // that will end up having the same center
                         // for different stickers on the same cubie!
@@ -850,7 +856,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             for (int iDim = 0; iDim < originalElements.length; ++iDim)
             for (int iElt = 0; iElt < originalElements[iDim].length; ++iElt)
             {
-                com.donhatchsw.util.CSG.cgOfVerts(eltCenter, originalElements[iDim][iElt]);
+                CSG.cgOfVerts(eltCenter, originalElements[iDim][iElt]);
                 nicePointsToRotateToCenter[iNicePoint++] = doubleToFloat(eltCenter);
 
             }
@@ -868,7 +874,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
     public String toString()
     {
         String nl = System.getProperty("line.separator");
-        com.donhatchsw.util.CSG.Polytope[][] allElements = slicedPolytope.p.getAllElements();
+        CSG.Polytope[][] allElements = slicedPolytope.p.getAllElements();
         int sizes[] = new int[allElements.length];
         for (int iDim = 0; iDim < sizes.length; ++iDim)
             sizes[iDim] = allElements[iDim].length;
@@ -924,6 +930,13 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
     // BEGIN GENERICPUZZLEDESCRIPTION INTERFACE METHODS
     //
 
+        public String getSchlafliProduct()
+        {
+        	return schlafliProduct;
+        }
+        public double getEdgeLength() {
+        	return edgeLength;
+        }
         public int nDims()
         {
             return slicedPolytope.p.fullDim;
@@ -1103,11 +1116,11 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                                                     int slicemask)
         {
             if (gripIndex < 0 || gripIndex >= nGrips())
-                throw new IllegalArgumentException("getStickerVertsPartiallyTwisted called on bad gripIndex "+gripIndex+", there are "+nGrips()+" grips!");
+                throw new IllegalArgumentException("applyTwistToState called on bad gripIndex "+gripIndex+", there are "+nGrips()+" grips!");
             if (gripSymmetryOrders[gripIndex] == 0)
-                throw new IllegalArgumentException("getStickerVertsPartiallyTwisted called on gripIndex "+gripIndex+" which does not rotate!");
+                throw new IllegalArgumentException("applyTwistToState called on gripIndex "+gripIndex+" which does not rotate!");
             if (state.length != stickerCentersD.length)
-                throw new IllegalArgumentException("getStickerVertsPartiallyTwisted called with wrong size state "+state.length+", expected "+stickerCentersD.length+"!");
+                throw new IllegalArgumentException("applyTwistToState called with wrong size state "+state.length+", expected "+stickerCentersD.length+"!");
 
             if (slicemask == 0)
                 slicemask = 1; // XXX is this the right place for this? lower and it might be time consuming, higher and too many callers will have to remember to do it
@@ -1176,7 +1189,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         }
         System.out.println("in main");
 
-        //com.donhatchsw.util.CSG.verboseLevel = 2;
+        //CSG.verboseLevel = 2;
 
         java.io.PrintWriter progressWriter = new java.io.PrintWriter(
                                              new java.io.BufferedWriter(
