@@ -9,7 +9,9 @@
  * (They would be const if java had a way to express that.)
  */
 interface GenericPuzzleDescription {
-
+	
+    public String getSchlafliProduct();
+    public double getEdgeLength();
     public int nDims();
     public int nVerts();
     public int nFaces();

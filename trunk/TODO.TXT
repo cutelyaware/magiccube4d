@@ -4,6 +4,7 @@ PUZZLES
 * Fix the puzzles containing triangles.
 * Port the solve and compress functions to the new puzzles. 
   First just for the appropriately sized cubes and eventually for all puzzles.
+* Figure out how to support rotations for generic puzzles & history.
 
 
 HIGHLIGHTING
@@ -15,3 +16,11 @@ GUI
 * Replace the AWT class usages with Swing versions.
 * Move control panel to the west.
 * Add Synthetica look-and-feel.
+* Add a puzzle-building progress bar to the status line for feedback during slicing, etc.
+
+LOG FILES
+* Maybe keep printing puzzle state data but skip over reading it and initialize from history data instead.
+* Force file names to end with ".log".
+
+META
+* Turn this list into tracked bugs & tasks

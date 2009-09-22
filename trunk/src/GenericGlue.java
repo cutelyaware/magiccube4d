@@ -15,7 +15,7 @@
 //            in its member genericGlue;
 //            it also points the MC4DView's genericGlue member
 //            to the same GenericGlue object.
-//    - addMoreItemsToPuzzleMenu()
+//    - addItemsToPuzzleMenu()
 //            MC4DSwing should call this after it adds its
 //            standard items to the puzzle menu.
 //            This function installs callbacks that activate
@@ -115,24 +115,27 @@ public class GenericGlue
 
 
     public interface Callback { public void call(); }
+    
+    private final java.io.PrintWriter makeProgressWriter() {
+    	return 
+    		new java.io.PrintWriter(
+            new java.io.BufferedWriter(
+            new java.io.OutputStreamWriter(
+            System.err)));
+    }
 
+    public void initPuzzle(String schlafli, double length) {
+    	genericPuzzleDescription = buildPuzzle(schlafli, ""+length, makeProgressWriter());
+        genericPuzzleState = com.donhatchsw.util.VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
+    }
 
-
-    public GenericGlue(String initialSchlafli, int initialLength)
+    public GenericGlue(String initialSchlafli, double initialLength)
     {
         super();
         if (verboseLevel >= 1) System.out.println("in GenericGlue ctor");
         if (initialSchlafli != null)
         {
-            java.io.PrintWriter progressWriter = new java.io.PrintWriter(
-                                                 new java.io.BufferedWriter(
-                                                 new java.io.OutputStreamWriter(
-                                                 System.err)));
-            genericPuzzleDescription = new PolytopePuzzleDescription(
-                initialSchlafli,
-                initialLength,
-                progressWriter);
-            genericPuzzleState = com.donhatchsw.util.VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
+            initPuzzle(initialSchlafli, initialLength);
         }
         if (verboseLevel >= 1) System.out.println("out GenericGlue ctor");
     }
@@ -154,19 +157,11 @@ public class GenericGlue
 
     // Call this from MC4DSwing ctor right after all
     // the other menu items are added
-    public void addMoreItemsToPuzzleMenu(Menu puzzlemenu,
+    public void addItemsToPuzzleMenu(Menu puzzlemenu,
                                          final JLabel statusLabel,
                                          final Callback initPuzzleCallback)
     {
-        if (verboseLevel >= 1) System.out.println("in GenericGlue.addMoreItemsToPuzzleMenu");
-
-        // Used for reported progress during puzzle creation,
-        // which can take a long time.
-        // Currently just goes to System.err.
-        final java.io.PrintWriter progressWriter = new java.io.PrintWriter(
-                                                   new java.io.BufferedWriter(
-                                                   new java.io.OutputStreamWriter(
-                                                   System.err)));
+        if (verboseLevel >= 1) System.out.println("in GenericGlue.addItemsToPuzzleMenu");
 
         // Selecting any of the previously existing menu items
         // should have the side effect of setting
@@ -190,7 +185,7 @@ public class GenericGlue
             {"{5}x{4}",  "1,2,2.5,3,4,5,6,7", "Pentagonal Prism Prism"},
             {"{4}x{5}",  "1,2,2.5,3,4,5,6,7", "Pentagonal Prism Prism (alt)"},
             {"{6}x{4}",  "1,2,2.5,3,4,5,6,7", "Hexagonal Prism Prism"},
-            {"{7}x{4}",  "1,2,2.5,3,4,5,6,7", "True HEPAgonal Prism Prism"},
+            {"{7}x{4}",  "1,2,2.5,3,4,5,6,7", "Heptagonal Prism Prism"},
             {"{8}x{4}",  "1,2,2.5,3,4,5,6,7", "Octagonal Prism Prism"},
             {"{9}x{4}",  "1,2,2.5,3,4,5,6,7", "Nonagonal Prism Prism"},
             {"{10}x{4}", "1,2,2.5,3,4,5,6,7", "Decagonal Prism Prism"},
@@ -202,12 +197,11 @@ public class GenericGlue
             {"{10}x{5}",  "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
             {"{10}x{10}", "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
             {"{3,3}x{}", "1,2,3,4,5,6,7",     "Tetrahedral Prism"},
-            {"{5,3}x{}", "1,2,2.5,2.5,3,4,5,6,7", "Dodecahedral Prism"},
+            {"{5,3}x{}", "1,2,2.5,3,4,5,6,7", "Dodecahedral Prism"},
             {"{}x{5,3}", "1,2,2.5,3,4,5,6,7", "Dodecahedral Prism (alt)"},
             {"{5,3,3}",  "1,2,2.5,3",         "Hypermegaminx (BIG!)"},
             {null,       "",                  "Invent my own!"},
         };
-        puzzlemenu.add(new MenuItem("-")); // separator
         for (int i = 0; i < table.length; ++i)
         {
 
@@ -235,7 +229,6 @@ public class GenericGlue
             else
                 submenu = puzzlemenu;
             final String finalSchlafli = schlafli;
-            final String finalName = name;
             for (int j = 0; j < lengthStrings.length; ++j)
             {
                 final String lengthString = lengthStrings[j];
@@ -243,104 +236,103 @@ public class GenericGlue
                 submenu.add(new MenuItem(schlafli==null ? name : ""+lengthString)).addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent ae)
                     {
-                        String schlafli = finalSchlafli;
-                        String lengthString = finalLengthString;
-                        String name = finalName;
-                        if (schlafli == null)
-                        {
-                            String prompt = "Enter your invention:";
-                            String initialInput = "{4,3,3} 3";
 
-                            while (true)
-                            {
-                                String reply = JOptionPane.showInputDialog(prompt, initialInput);
-                                if (reply == null)
-                                {
-                                    initPuzzleCallback.call(); // XXX really just want a repaint I think
-                                    return; // cancelled
-                                }
-                                String schlafliAndLength[] = reply.trim().split("\\s+");
-                                if (schlafliAndLength.length != 2)
-                                {
-                                    prompt = "Your invention sucks!\nYou must specify the schlafli product symbol (with no spaces),\nfollowed by a space, followed by the puzzle length. Try again!";
-                                    initialInput = reply;
-                                    continue;
-                                }
-                                schlafli = schlafliAndLength[0];
-                                lengthString = schlafliAndLength[1];
-                                name = "My own invention!  "+schlafli;
-                                break; // got it
-                            }
-                        }
-                        double len;
-                        try { len = Double.parseDouble(lengthString); }
-                        catch (java.lang.NumberFormatException e)
-                        {
-                            System.err.println("Your invention sucks! \""+lengthString+"\" is not a number!");
-                            initPuzzleCallback.call(); // XXX really just want a repaint I think
-                            return;
-                        }
-
-                        GenericPuzzleDescription newPuzzle = null;
-                        try
-                        {
-                            newPuzzle = new PolytopePuzzleDescription(schlafli, len, progressWriter);
-                        }
-                        catch (Throwable t)
-                        {
-                            //t.printStacktrace();
-                            String explanation = t.toString();
-                            // yes, this is lame... AND the user
-                            // can't even cut and paste it to mail it to me
-                            if (explanation.equals("java.lang.Error: Assertion failed"))
-                            {
-                                java.io.StringWriter sw = new java.io.StringWriter();
-                                t.printStackTrace(new java.io.PrintWriter(sw));
-                                explanation = "\n" + sw.toString();
-                            }
-                            JOptionPane.showMessageDialog(null,
-                                "Something went very wrong when trying to build your invention \""+schlafli+"  "+lengthString+"\":\n"+explanation,
-                                "Your Invention Sucks",
-                                JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-
-                        int nDims = newPuzzle.nDims();
-                        if (nDims != 4)
-                        {
-                            JOptionPane.showMessageDialog(null,
-                                "Re: Your invention \""+schlafli+"  "+lengthString+"\"\n"+
-                                "\n"+
-                                "That is a truly BRILLIANT "+nDims+"-dimensional invention.\n"+
-                                "It has:\n"+
-                                "        "+newPuzzle.nFaces()+" faces\n"+
-                                "        "+newPuzzle.nStickers()+" stickers\n"+
-                                "        "+newPuzzle.nCubies()+" visible cubie"+(newPuzzle.nCubies()==1?"":"s")+"\n"+
-                                "        "+newPuzzle.nVerts()+" sticker vertices\n"+
-                                "However, we are only accepting 4-dimensional inventions at this time.",
-                                "Invention Rejection Form Letter",
-                                JOptionPane.ERROR_MESSAGE);
-                            // XXX Lame, should try to get back in the loop and prompt again instead
-                            return;
-                        }
-                        genericPuzzleDescription = newPuzzle;
+                    	genericPuzzleDescription = buildPuzzle(finalSchlafli, finalLengthString, makeProgressWriter());
                         genericPuzzleState = com.donhatchsw.util.VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
 
                         undoq.setSize(0);
                         undoPartSize = 0;
 
-                        // PropertyManager.userprefs.setProperty("genericSchlafli", schlafli); // XXX not yet
-                        // PropertyManager.userprefs.setProperty("genericLength", ""+len); // XXX not yet
-                        initPuzzleCallback.call(); // really just want a repaint I think
                         String statuslabel = name + "  length="+lengthString;
                         statusLabel.setText(statuslabel); // XXX BUG - hey, it's not set right on program startup!
+                    
+                    	initPuzzleCallback.call(); // XXX really just want a repaint I think
                     }
                 });
                 // XXX add a "pick my own"!
             }
         }
-        if (verboseLevel >= 1) System.out.println("out GenericGlue.addMoreItemsToPuzzleMenu");
-    } // addMoreItemsToPuzzleMenu
+        if (verboseLevel >= 1) System.out.println("out GenericGlue.addItemsToPuzzleMenu");
+    } // addItemsToPuzzleMenu
+    
+    public static GenericPuzzleDescription buildPuzzle(String schlafli, String lengthString, java.io.PrintWriter progressWriter) {
+        if (schlafli == null)
+        {
+            String prompt = "Enter your invention:";
+            String initialInput = "{4,3,3} 3";
+
+            while (true)
+            {
+                String reply = JOptionPane.showInputDialog(prompt, initialInput);
+                if (reply == null)
+                {
+                    return null; // Canceled
+                }
+                String schlafliAndLength[] = reply.trim().split("\\s+");
+                if (schlafliAndLength.length != 2)
+                {
+                    prompt = "Can not build your invention.\nYou must specify the schlafli product symbol (with no spaces),\nfollowed by a space, followed by the puzzle length. Try again!";
+                    initialInput = reply;
+                    continue;
+                }
+                schlafli = schlafliAndLength[0];
+                lengthString = schlafliAndLength[1];
+                break; // got it
+            }
+        }
+        double len;
+        try { len = Double.parseDouble(lengthString); }
+        catch (java.lang.NumberFormatException e)
+        {
+            System.err.println(lengthString+ " is not a number");
+            return null;
+        }
+
+        GenericPuzzleDescription newPuzzle = null;
+        try
+        {
+            newPuzzle = new PolytopePuzzleDescription(schlafli, len, progressWriter);
+        }
+        catch (Throwable t)
+        {
+            //t.printStacktrace();
+            String explanation = t.toString();
+            // yes, this is lame... AND the user
+            // can't even cut and paste it to mail it to me
+            if (explanation.equals("java.lang.Error: Assertion failed"))
+            {
+                java.io.StringWriter sw = new java.io.StringWriter();
+                t.printStackTrace(new java.io.PrintWriter(sw));
+                explanation = "\n" + sw.toString();
+            }
+            JOptionPane.showMessageDialog(null,
+                "Something went very wrong when trying to build your invention \""+schlafli+"  "+lengthString+"\":\n"+explanation,
+                "Your Invention Sucks",
+                JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+
+        int nDims = newPuzzle.nDims();
+        if (nDims != 4)
+        {
+            JOptionPane.showMessageDialog(null,
+                "Re: Your invention \""+schlafli+"  "+lengthString+"\"\n"+
+                "\n"+
+                "That is a truly BRILLIANT "+nDims+"-dimensional invention.\n"+
+                "It has:\n"+
+                "        "+newPuzzle.nFaces()+" faces\n"+
+                "        "+newPuzzle.nStickers()+" stickers\n"+
+                "        "+newPuzzle.nCubies()+" visible cubie"+(newPuzzle.nCubies()==1?"":"s")+"\n"+
+                "        "+newPuzzle.nVerts()+" sticker vertices\n"+
+                "However, we are only accepting 4-dimensional inventions at this time.",
+                "Invention Rejection Form Letter",
+                JOptionPane.ERROR_MESSAGE);
+            // XXX Lame, should try to get back in the loop and prompt again instead
+            return null;
+        }
+        return newPuzzle;
+    }
+    
 
 
     public void undoAction(Canvas view, JLabel statusLabel, float twistFactor)

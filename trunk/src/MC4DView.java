@@ -177,31 +177,46 @@ public class MC4DView extends DoubleBufferedCanvas {
         this.addMouseListener(new MouseAdapter() {
             // look for and initiate twist and rotation animations
             public void mouseClicked(MouseEvent e) {
-                if (genericGlue != null && genericGlue.isActive())
-                {
-                    genericGlue.mouseClickedAction(e,
-                                                   viewMat4d,
-                                                   MC4DView.this.polymgr.getTwistFactor(),
-                                                   slicemask,
-                                                   MC4DView.this);
-                    return;
-                }
-
+//                if (genericGlue != null && genericGlue.isActive())
+//                {
+//                    genericGlue.mouseClickedAction(e,
+//                                                   viewMat4d,
+//                                                   MC4DView.this.polymgr.getTwistFactor(),
+//                                                   slicemask,
+//                                                   MC4DView.this);
+//                    return;
+//                }
+                
+                // the old way
                 MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
+                /*
                 boolean hit = MC4DView.this.polymgr.pickGrip(
                         (e.getX()-xOff)*pixels2polySF,
                         (e.getY()-yOff)*pixels2polySF,
                         untwisted_frame, clicked);
-                if(hit) {
-                    boolean isRotate = e.isControlDown() || isMiddleMouseButton(e);
+                        */
+                
+                // the new way
+                int grip = GenericPipelineUtils.pickGrip(
+                        e.getX(), e.getY(),
+                        genericGlue.untwistedFrame,
+                        genericGlue.genericPuzzleDescription);
+                     
+                if(grip < 0) {
+                    System.out.println("missed");
+                }
+                else {
+                    clicked.id_within_cube = grip; // slamming new id. do we need to set the other members?
+                    clicked.face = genericGlue.genericPuzzleDescription.getGrip2Face()[grip];
+                    System.out.println("face: " + clicked.face);
+                    //PolygonManager.fillStickerspecFromIdAndLength(clicked, (int)Math.ceil(genericGlue.genericPuzzleDescription.getEdgeLength()));
+                	boolean isRotate = e.isControlDown() || isMiddleMouseButton(e);
                     if(isRotate) {
                         if( ! PolygonManager.facetocenterToGrip(clicked.face, clicked)) {
                             System.err.println("Can't rotate that.\n");
                             return;
                         }
-                    }
-                    else if(clicked.id_within_face == 13) {
-                        System.err.println("Can't twist that.\n");
+                        System.out.println("to-center grip: " + clicked.face);
                         return;
                     }
                     // Tell listeners about the legal twist and let them call animate() if desired.
@@ -210,9 +225,6 @@ public class MC4DView extends DoubleBufferedCanvas {
                     //    dir *= 2;
                     fireTwistEvent(new MagicCube.TwistData(clicked, dir, isRotate ? -1 : slicemask));
                     repaint();
-                }
-                else {
-                    System.out.println("missed");
                 }
             }
             // watch for dragging starts and stops
@@ -404,48 +416,27 @@ public class MC4DView extends DoubleBufferedCanvas {
             polymgr.getUntwistedFrame(shadow_frame, shadowview, MagicCube.SUNVEC, false);
             shift(shadow_frame, off);
         }
-
         MagicCube.Frame frame = untwisted_frame;
-if (!(genericGlue != null && genericGlue.isActive())) // indented funnily for right now so I don't affect the diffs from previous version -Don
-        if(animationQueue.isAnimating()) {
-            MagicCube.TwistData animating = animationQueue.getAnimating();
-            if(!quickMoves && animating.animStep++ < polymgr.getTwistNFrames(animating)-1) { // keep twisting
-                frame = twisting_frame; // calculate an in-between frame
-                polymgr.getFrame(animating.grip, animating.direction,
-                    animating.slicemask==0?1:animating.slicemask,
-                    animating.animStep, polymgr.getTwistNFrames(animating),
-                    getViewMat(), MagicCube.SUNVEC, true, frame);
-                if(showShadows)
-                    polymgr.getFrame(animating.grip, animating.direction,
-                        animating.slicemask==0?1:animating.slicemask,
-                        animating.animStep, polymgr.getTwistNFrames(animating),
-                        shadowview, MagicCube.SUNVEC, false, shadow_frame);
-                        shift(shadow_frame, off);
-            }
-            else { // time to apply the puzzle state change and stop the animation
-                int mask = animating.slicemask==0?1:animating.slicemask;
-                state.twist(animating.grip, animating.direction, mask);
-                animationQueue.finishedTwist(); // end animation
-            }
-            repaint();
-            //try { Thread.sleep(500); } catch (InterruptedException e) {}
-        }
+		if(animationQueue.isAnimating() && genericGlue.iTwist == genericGlue.nTwist) {
+			MagicCube.TwistData animating = animationQueue.getAnimating();
+			// time to apply the puzzle state change and stop the animation
+			int mask = animating.slicemask==0?1:animating.slicemask;
+			state.twist(animating.grip, animating.direction, mask);
+			animationQueue.finishedTwist(); // end animation
+			repaint();
+		}
         if(allowSpinDrag && spindelta != null && lastDrag == null) { // keep spinning
             viewrot.setMult(spindelta);
             repaint();
         }
         Graphics g = super.startPaint(g1); // begin painting into the back buffer
 
-        // antialiasing makes for a beautiful image but can also be expensive to draw
-        // therefore we'll turn on antialiasing when the image is still and turn it off when in motion.
-        // i hope that refering to Graphics2D won't cause a class-not-found exception in any applets.
+        // antialiasing used to be too slow for animations but now it seems OK so always use the user preference.
+        // I hope that referring to Graphics2D won't cause a class-not-found exception in any Applets.
         // may need to remove this or otherwise work around that problem if so.
         if(g instanceof Graphics2D) {
-            boolean okToAntialias = allowAntiAliasing && lastDrag==null && spindelta==null
-                                 && !(genericGlue!=null && genericGlue.isActive() ? genericGlue.isAnimating()
-                                                                                  : isAnimating());
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
+            		allowAntiAliasing ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
         }
 
         // paint the background
@@ -484,21 +475,16 @@ if (!(genericGlue != null && genericGlue.isActive())) // indented funnily for ri
                 polymgr.getTwistFactor(),
                 this);
         }
-        else
-        {
-            if(showShadows)
-                paintFrame(shadow_frame, true, g);
-            paintFrame(frame, false, g);
-        }
         super.endPaint(); // blits the back buffer to the front
     } // end paint
 
 
-    private static class AnimationQueue {
+    // wants to be static
+    private class AnimationQueue {
         private History queueHist;
         private Vector<Object> queue = new Vector<Object>();
         private QueueItem animating; // non-null == animation in progress
-        private static class QueueItem {
+        private class QueueItem {
             public MagicCube.TwistData twist;
             public boolean applyAnimHistWhenDone = true; // whether to change history after animating
             public QueueItem(MagicCube.TwistData twist, boolean applyAnimHistWhenDone) {
@@ -518,6 +504,12 @@ if (!(genericGlue != null && genericGlue.isActive())) // indented funnily for ri
                 Object item = queue.remove(0);
                 if(item instanceof QueueItem) {
                     animating = (QueueItem)item;
+                    //genericGlue.nTwist = (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor); // XXX unscientific rounding-- and it's too fast for small angles!  really we'd like to bound the max acceleration.  XXX also this is duplicated above for nRotate
+                    genericGlue.nTwist = 10; // XXX fix
+                    genericGlue.iTwist = 0;
+                    genericGlue.iTwistGrip = animating.twist.grip.id_within_cube;
+                    genericGlue.twistDir = animating.twist.direction;
+                    genericGlue.twistSliceMask = animating.twist.slicemask;
                     break;
                 }
                 if(item instanceof Character)
@@ -542,8 +534,8 @@ if (!(genericGlue != null && genericGlue.isActive())) // indented funnily for ri
         public void finishedTwist() {
             if(animating != null && animating.applyAnimHistWhenDone)
                 queueHist.apply(animating.twist);
-            animating = null;
-            getAnimating(); // queues up the next twist if any.
+            animating = null; // the signal that the twist is finished.
+            getAnimating(); // queue up the next twist if any.
         }
 
         public void cancelAnimation() {
