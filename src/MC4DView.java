@@ -153,13 +153,14 @@ public class MC4DView extends DoubleBufferedCanvas {
          return ((anEvent.getModifiers() & InputEvent.BUTTON1_MASK) != 0);
     }
 
-    public MC4DView(PuzzleState state, PolygonManager polymgr, History hist) {
+    public MC4DView(PuzzleState state, PolygonManager polymgr, History hist, int nfaces) {
         this.state = state;
         this.polymgr = polymgr;
         this.animationQueue = new AnimationQueue(hist);
-        faceRGB = new float[MagicCube.NFACES][3];
-        for(int f=0; f<MagicCube.NFACES; f++)
-            System.arraycopy(MagicCube.FACE_COLORS[f], 0, faceRGB[f], 0, 3);
+//        faceRGB = new float[MagicCube.NFACES][3];
+//        for(int f=0; f<MagicCube.NFACES; f++)
+//            System.arraycopy(MagicCube.FACE_COLORS[f], 0, faceRGB[f], 0, 3);
+        faceRGB = YUV.generateVisuallyDistinctRGBs(nfaces, .7f, .1f); //generateHSVColors(12, 10, .5f);
         polymgr.getUntwistedFrame(untwisted_frame, getViewMat(), MagicCube.SUNVEC, true); // probably unneeded initialization
         // manage slicemask as user holds and releases number keys
         this.addKeyListener(new KeyAdapter() {
@@ -297,6 +298,60 @@ public class MC4DView extends DoubleBufferedCanvas {
             }
         });
     } // end MC4DView
+    
+    
+    /*
+     * Returns an array of nShades * nColorsPerShade RGB triplets 
+     * from the upper satFrac fraction of the saturation range 0..1
+     */
+    private static float[][] generateHSVColors(int nShades, int nColorsPerShade, float satFrac) {
+    	final double G = 1 - (1 + Math.sqrt(5))/2; // golden fraction of 1.0
+    	float[][] colors = new float[nColorsPerShade*nShades][3];
+    	for(int s=0; s<nShades; s++) {
+		    for(int i=0; i<nColorsPerShade; i++) {
+			    int cid = s*nColorsPerShade + i;
+			    double x = G * cid;
+			    double hue = 6 * (x - Math.floor(x));
+			    double f = 1./2; // fraction of the range of saturation to use. E.G. 2/3 == .333 -> 1.
+			    double sat = nShades < 2 ? 1 : ((double)s)/(nShades-1) * f + (1 - f);
+			    hsv2rgb((float) hue, (float)sat, 1, colors[cid]);
+		    }
+    	}
+	    return colors;
+    }
+    
+    public static void hsv2rgb(float h, float s, float v, float[] rgb)
+	{
+		// H is given on [0->6] or -1. S and V are given on [0->1]. 
+		// RGB are each returned on [0->1]. 
+		float m, n, f;
+		int i; 
+
+		float[] hsv = new float[3];
+
+		hsv[0] = h;
+		hsv[1] = s;
+		hsv[2] = v;
+		System.out.println("H: " + h + " S: " + s + " V:" + v);
+		if(hsv[0] == -1) {
+			rgb[0] = rgb[1] = rgb[2] = hsv[2];
+			return;  
+		}
+		i = (int)(Math.floor(hsv[0]));
+		f = hsv[0] - i;
+		if(i%2 == 0) f = 1 - f; // if i is even 
+		m = hsv[2] * (1 - hsv[1]); 
+		n = hsv[2] * (1 - hsv[1] * f); 
+		switch (i) { 
+			case 6: 
+			case 0: rgb[0]=hsv[2]; rgb[1]=n; rgb[2]=m; break;
+			case 1: rgb[0]=n; rgb[1]=hsv[2]; rgb[2]=m; break;
+			case 2: rgb[0]=m; rgb[1]=hsv[2]; rgb[2]=n; break;
+			case 3: rgb[0]=m; rgb[1]=n; rgb[2]=hsv[2]; break;
+			case 4: rgb[0]=n; rgb[1]=m; rgb[2]=hsv[2]; break;
+			case 5: rgb[0]=hsv[2]; rgb[1]=m; rgb[2]=n; break;
+		} 
+    }
     
    
     private void updateViewFactors() {
@@ -590,7 +645,7 @@ public class MC4DView extends DoubleBufferedCanvas {
 //            System.out.println("couldn't read history file");
 //        else
 //            hist.read(new java.io.StringReader(Util.readFileFromURL(histurl)));
-        final MC4DView view = new MC4DView(new PuzzleState(length, polymgr), polymgr, hist);
+        final MC4DView view = new MC4DView(new PuzzleState(length, polymgr), polymgr, hist, 6);
         view.addTwistListener(new MC4DView.TwistListener() {
             public void twisted(MagicCube.TwistData twisted) {
                 view.animate(twisted, true);

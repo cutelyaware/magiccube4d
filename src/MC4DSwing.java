@@ -645,14 +645,14 @@ public class MC4DSwing extends JFrame {
                 move.slicemask);
         }
         
-        view = new MC4DView(puzzle, polymgr, hist);
+        view = new MC4DView(puzzle, polymgr, hist, genericGlue.genericPuzzleDescription.nFaces());
         view.genericGlue = genericGlue; // make it share mine
         //genericGlue.deactivate(); // to start with normal cubes
         view.setScale(scale); // XXX added-- I think this is needed, otherwise the Property's scale doesn't get applied til I hit the scale slider! -don
 
         view.setBackground(PropertyManager.getColor("background.color"));
-        for(int f=0; f<MagicCube.NFACES; f++)
-            view.setFaceColor(f, PropertyManager.getColor("face"+f+".color", MagicCube.faceColor(f)));
+//        for(int f=0; f<MagicCube.NFACES; f++)
+//            view.setFaceColor(f, PropertyManager.getColor("face"+f+".color", MagicCube.faceColor(f)));
         Color gc = PropertyManager.getColor("ground.color", MagicCube.GROUND);
         view.setGround(PropertyManager.getBoolean("ground", true) ? gc : null);
         view.setShowShadows(PropertyManager.getBoolean("shadows", true));
