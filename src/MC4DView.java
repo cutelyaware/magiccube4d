@@ -551,10 +551,14 @@ public class MC4DView extends DoubleBufferedCanvas {
                 Object item = queue.remove(0);
                 if(item instanceof QueueItem) {
                     animating = (QueueItem)item;
-                    //genericGlue.nTwist = (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor); // XXX unscientific rounding-- and it's too fast for small angles!  really we'd like to bound the max acceleration.  XXX also this is duplicated above for nRotate
-                    genericGlue.nTwist = 10; // XXX fix
+
+                    int iTwistGrip = animating.twist.grip.id_within_cube;
+                    int order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[genericGlue.iTwistGrip];
+                    double totalRotationAngle = 2*Math.PI/order;                    
+                    
+                    genericGlue.nTwist = genericGlue.calculateNTwists( totalRotationAngle, polymgr.getTwistFactor() );
                     genericGlue.iTwist = 0;
-                    genericGlue.iTwistGrip = animating.twist.grip.id_within_cube;
+                    genericGlue.iTwistGrip = iTwistGrip;
                     genericGlue.twistDir = animating.twist.direction;
                     genericGlue.twistSliceMask = animating.twist.slicemask;
                     break;

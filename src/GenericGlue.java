@@ -236,7 +236,6 @@ public class GenericGlue
                 submenu.add(new MenuItem(schlafli==null ? name : ""+lengthString)).addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent ae)
                     {
-
                     	genericPuzzleDescription = buildPuzzle(finalSchlafli, finalLengthString, makeProgressWriter());
                         genericPuzzleState = com.donhatchsw.util.VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
 
@@ -249,7 +248,6 @@ public class GenericGlue
                     	initPuzzleCallback.call(); // XXX really just want a repaint I think
                     }
                 });
-                // XXX add a "pick my own"!
             }
         }
         if (verboseLevel >= 1) System.out.println("out GenericGlue.addItemsToPuzzleMenu");
@@ -332,9 +330,15 @@ public class GenericGlue
         }
         return newPuzzle;
     }
+
+    // XXX unscientific rounding-- and it's too fast for small angles!  
+    // It's more noticeable here than for twists because very small angles are possible here.  
+    // Really we'd like to bound the max acceleration.
+    public int calculateNTwists( double totalRotationAngle, double twistFactor )
+    {
+    	return (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor);
+    }
     
-
-
     public void undoAction(Canvas view, JLabel statusLabel, float twistFactor)
     {
         GenericGlue glue = this;
@@ -356,7 +360,7 @@ public class GenericGlue
             //
             int order = glue.genericPuzzleDescription.getGripSymmetryOrders()[node.iGrip];
             double totalRotationAngle = 2*Math.PI/order;
-            glue.nTwist = (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor); // XXX unscientific rounding-- and it's too fast for small angles!  It's more noticeable here than for twists because very small angles are possible here.  Really we'd like to bound the max acceleration.
+            glue.nTwist = calculateNTwists( totalRotationAngle, twistFactor );
             glue.iTwist = 0;
             glue.iTwistGrip = node.iGrip;
             glue.twistDir = -node.dir;
@@ -389,7 +393,7 @@ public class GenericGlue
             //
             int order = glue.genericPuzzleDescription.getGripSymmetryOrders()[node.iGrip];
             double totalRotationAngle = 2*Math.PI/order;
-            glue.nTwist = (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor);
+            glue.nTwist = calculateNTwists( totalRotationAngle, twistFactor );
             glue.iTwist = 0;
             glue.iTwistGrip = node.iGrip;
             glue.twistDir = node.dir;
@@ -506,7 +510,7 @@ public class GenericGlue
                 //
                 // Initiate a rotation
                 // that takes the nice point to the center
-                // (i.e. to the -W axix)
+                // (i.e. to the -W axis)
                 // 
 
                 double viewMat4dD[][] = new double[4][4];
@@ -524,7 +528,7 @@ public class GenericGlue
                                     nicePointOnScreen,
                                     minusWAxis);
 
-                genericGlue.nRotation = (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor); // XXX unscientific rounding-- and it's too fast for small angles!  really we'd like to bound the max acceleration. XXX also this is duplicated below for nTwist
+                genericGlue.nRotation = calculateNTwists( totalRotationAngle, twistFactor );
                 // XXX ARGH! we'd like the speed to vary as the user changes the slider,
                 // XXX but the above essentially locks in the speed for this rotation
                 genericGlue.iRotation = 0; // we are iRotation frames into nRotation
@@ -577,7 +581,7 @@ public class GenericGlue
                 //    dir *= 2;
 
                 double totalRotationAngle = 2*Math.PI/order;
-                genericGlue.nTwist = (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor); // XXX unscientific rounding-- and it's too fast for small angles!  really we'd like to bound the max acceleration.  XXX also this is duplicated above for nRotate
+                genericGlue.nTwist = calculateNTwists( totalRotationAngle, twistFactor );
                 genericGlue.iTwist = 0;
                 genericGlue.iTwistGrip = iGrip;
                 genericGlue.twistDir = dir;
@@ -807,7 +811,7 @@ public class GenericGlue
                 //
                 int order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[node.iGrip];
                 double totalRotationAngle = 2*Math.PI/order;
-                genericGlue.nTwist = (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor); // XXX unscientific rounding-- and it's too fast for small angles!  It's more noticeable here than for twists because very small angles are possible here.  Really we'd like to bound the max acceleration. 
+                genericGlue.nTwist = calculateNTwists( totalRotationAngle, twistFactor ); 
                 genericGlue.iTwist = 0;
                 genericGlue.iTwistGrip = node.iGrip;
                 genericGlue.twistDir = -node.dir;
