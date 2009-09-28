@@ -178,26 +178,26 @@ public class MC4DView extends DoubleBufferedCanvas {
         this.addMouseListener(new MouseAdapter() {
             // look for and initiate twist and rotation animations
             public void mouseClicked(MouseEvent e) {
-//                if (genericGlue != null && genericGlue.isActive())
-//                {
-//                    genericGlue.mouseClickedAction(e,
-//                                                   viewMat4d,
-//                                                   MC4DView.this.polymgr.getTwistFactor(),
-//                                                   slicemask,
-//                                                   MC4DView.this);
-//                    return;
-//                }
-                
-                // the old way
-                MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
-                /*
-                boolean hit = MC4DView.this.polymgr.pickGrip(
-                        (e.getX()-xOff)*pixels2polySF,
-                        (e.getY()-yOff)*pixels2polySF,
-                        untwisted_frame, clicked);
-                        */
-                
-                // the new way
+            	
+            	boolean isViewRotation = e.isControlDown() || isMiddleMouseButton(e);
+                if( isViewRotation )
+            	{
+                	// Pass it off to the generic glue (for now,
+                	// a view rotation helper will be created soon)
+                	if( genericGlue != null && genericGlue.isActive() )
+		            {
+		                genericGlue.mouseClickedAction(e,
+		                                               viewMat4d,
+		                                               MC4DView.this.polymgr.getTwistFactor(),
+		                                               slicemask,
+		                                               MC4DView.this);
+		
+		            }
+                	
+                    return;
+            	}
+
+                // Pick our grip.
                 int grip = GenericPipelineUtils.pickGrip(
                         e.getX(), e.getY(),
                         genericGlue.untwistedFrame,
@@ -207,24 +207,16 @@ public class MC4DView extends DoubleBufferedCanvas {
                     System.out.println("missed");
                 }
                 else {
+                	MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_cube = grip; // slamming new id. do we need to set the other members?
                     clicked.face = genericGlue.genericPuzzleDescription.getGrip2Face()[grip];
                     System.out.println("face: " + clicked.face);
-                    //PolygonManager.fillStickerspecFromIdAndLength(clicked, (int)Math.ceil(genericGlue.genericPuzzleDescription.getEdgeLength()));
-                	boolean isRotate = e.isControlDown() || isMiddleMouseButton(e);
-                    if(isRotate) {
-                        if( ! PolygonManager.facetocenterToGrip(clicked.face, clicked)) {
-                            System.err.println("Can't rotate that.\n");
-                            return;
-                        }
-                        System.out.println("to-center grip: " + clicked.face);
-                        return;
-                    }
+
                     // Tell listeners about the legal twist and let them call animate() if desired.
                     int dir = (isLeftMouseButton(e) || isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
                     //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
                     //    dir *= 2;
-                    fireTwistEvent(new MagicCube.TwistData(clicked, dir, isRotate ? -1 : slicemask));
+                    fireTwistEvent( new MagicCube.TwistData( clicked, dir, slicemask ) );
                     repaint();
                 }
             }
