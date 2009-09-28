@@ -553,7 +553,7 @@ public class MC4DView extends DoubleBufferedCanvas {
                     animating = (QueueItem)item;
 
                     int iTwistGrip = animating.twist.grip.id_within_cube;
-                    int order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[genericGlue.iTwistGrip];
+                    int order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[iTwistGrip];
                     double totalRotationAngle = 2*Math.PI/order;                    
                     
                     genericGlue.nTwist = genericGlue.calculateNTwists( totalRotationAngle, polymgr.getTwistFactor() );
