@@ -16,10 +16,7 @@ import javax.swing.border.*;
  */
 @SuppressWarnings("serial")
 public class MC4DSwing extends JFrame {
-
-    //public GenericGlue genericGlue = new GenericGlue(null, 0); // don't start using generic
-    //public GenericGlue genericGlue = new GenericGlue("{4,3,3}", 3); // start using generic implementation of hypercube
-    private GenericGlue genericGlue = new GenericGlue("{5}x{4}", 3); // start using pentagonal prism prism
+	private final String initialPuzzle = "{5}x{4}"; // "{4,3,3}"
 
     private final static int
         SCRAMBLE_NONE = 0, 
@@ -50,6 +47,9 @@ public class MC4DSwing extends JFrame {
     private JLabel 
         twistLabel  = new JLabel(),
         statusLabel = new JLabel();
+    private JProgressBar progressBar = new JProgressBar();
+    
+    private GenericGlue genericGlue = null; //new GenericGlue(initialPuzzle, 3, progressBar);
 
     private Menu apply = new Menu("Apply");
     private MenuItem // adding the accelerator keys to the strings is hokey.
@@ -299,10 +299,11 @@ public class MC4DSwing extends JFrame {
                 cancel.doit(ae);
                 genericGlue.initPuzzle(
             		genericGlue.genericPuzzleDescription.getSchlafliProduct(),
-            		genericGlue.genericPuzzleDescription.getEdgeLength());
+            		""+genericGlue.genericPuzzleDescription.getEdgeLength(),
+            		progressBar, statusLabel, false);
+                hist = new History((int)genericGlue.genericPuzzleDescription.getEdgeLength());
                 scrambleState = SCRAMBLE_NONE;
                 updateTwistsLabel();
-                statusLabel.setText("");
                 view.repaint();
             }
         },
@@ -460,15 +461,13 @@ public class MC4DSwing extends JFrame {
         Scrambler full = new Scrambler(MagicCube.FULL_SCRAMBLE);
         StaticUtils.addHotKey(KeyEvent.VK_F, viewcontainer, "Full", full);
         scramblemenu.add(new MenuItem("Full     Ctrl+F")).addActionListener(full);
+        
+        genericGlue = new GenericGlue(initialPuzzle, 3, progressBar);
 
         // Puzzle lengths
         //
         Menu puzzlemenu = new Menu("Puzzle");
-        genericGlue.addItemsToPuzzleMenu(puzzlemenu, statusLabel,
-                                             new GenericGlue.Callback() { public void call() {
-                                                 initPuzzle(null);
-                                                 viewcontainer.validate();
-                                             }});
+        genericGlue.addItemsToPuzzleMenu(puzzlemenu, statusLabel, progressBar);
 
         // Macros
         //
@@ -513,8 +512,9 @@ public class MC4DSwing extends JFrame {
         statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
         statusBar.add(Box.createHorizontalStrut(10));
         statusBar.add(statusLabel);
+        progressBar.setStringPainted(true);
+        statusBar.add(progressBar);
         statusBar.add(Box.createHorizontalGlue());
-        statusBar.add(new JSeparator(JSeparator.VERTICAL));
         statusBar.add(twistLabel);
         statusBar.add(Box.createHorizontalStrut(10));
         
@@ -607,7 +607,8 @@ public class MC4DSwing extends JFrame {
                     // int numTwists = Integer.parseInt(firstline[3]);
                     String schlafli = firstline[4];
                     initialLength = Double.parseDouble(firstline[5]);
-                    genericGlue.initPuzzle(schlafli, initialLength);
+                    genericGlue.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false);
+                    iLength = (int)Math.round(initialLength);
                     hist = new History(iLength);
                     String title = MagicCube.TITLE;
                     int c;
@@ -636,13 +637,17 @@ public class MC4DSwing extends JFrame {
             puzzle.init(stateStr);
         
         // initialize generic version state
-        for(Enumeration<MagicCube.TwistData> moves=hist.moves(); moves.hasMoreElements(); ) {
-        	MagicCube.TwistData move = moves.nextElement();
-	        genericGlue.genericPuzzleDescription.applyTwistToState(
-        		genericGlue.genericPuzzleState,
-                move.grip.id_within_cube,
-                move.direction,
-                move.slicemask);
+        try {
+	        for(Enumeration<MagicCube.TwistData> moves=hist.moves(); moves.hasMoreElements(); ) {
+	        	MagicCube.TwistData move = moves.nextElement();
+		        genericGlue.genericPuzzleDescription.applyTwistToState(
+	        		genericGlue.genericPuzzleState,
+	                move.grip.id_within_cube,
+	                move.direction,
+	                move.slicemask);
+	        }
+        } catch(Exception e) {
+        	e.printStackTrace();
         }
         
         view = new MC4DView(puzzle, polymgr, hist, genericGlue.genericPuzzleDescription.nFaces());

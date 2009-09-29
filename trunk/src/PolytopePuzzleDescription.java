@@ -180,6 +180,7 @@
                 which can be more than the symmetry of the whole puzzle.
 */
 
+
 import com.donhatchsw.util.*; // XXX get rid
 
 class PolytopePuzzleDescription implements GenericPuzzleDescription {
@@ -260,7 +261,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 
     public PolytopePuzzleDescription(String schlafliProduct,
                                      double length, // usually int but can experiment with different cut depths
-                                     java.io.PrintWriter progressWriter)
+                                     ProgressManager progressWorker)
     {
     	this.schlafliProduct = schlafliProduct;
     	this.edgeLength = length;
@@ -268,18 +269,9 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         if (length < 1)
             throw new IllegalArgumentException("PolytopePuzzleDescription called with length="+length+", min legal length is 1");
 
-        if (progressWriter != null)
-        {
-            progressWriter.println("Attempting to make a puzzle \""+schlafliProduct+"\" of length "+(Math.floor(length)==length ? ""+(int)length : ""+length)+"...");
-            progressWriter.print("    Constructing polytope...");
-            progressWriter.flush();
-        }
-        this.originalPolytope = CSG.makeRegularStarPolytopeCrossProductFromString(schlafliProduct);
-        if (progressWriter != null)
-        {
-            progressWriter.println(" done ("+originalPolytope.p.facets.length+" facets).");
-            progressWriter.flush();
-        }
+        progressWorker.init("Constructing polytope");
+
+        originalPolytope = CSG.makeRegularStarPolytopeCrossProductFromString(schlafliProduct);
         CSG.orientDeep(originalPolytope); // XXX shouldn't be necessary!!!!
 
         int nDims = originalPolytope.p.dim;  // == originalPolytope.fullDim
@@ -287,7 +279,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         CSG.Polytope originalElements[][] = originalPolytope.p.getAllElements();
         CSG.Polytope originalVerts[] = originalElements[0];
         CSG.Polytope originalFaces[] = originalElements[nDims-1];
-        int nFaces = originalFaces.length;
+        final int nFaces = originalFaces.length;
         int originalIncidences[][][][] = originalPolytope.p.getAllIncidences();
 
         // Mark each original face with its face index.
@@ -304,7 +296,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         // Figure out the face inward normals and offsets;
         // these will be used for computing where cuts should go.
         //
-        this.faceInwardNormals = new double[nFaces][nDims];
+        faceInwardNormals = new double[nFaces][nDims];
         double faceOffsets[] = new double[nFaces];
         for (int iFace = 0; iFace < nFaces; ++iFace)
         {
@@ -347,7 +339,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         //
         // So we can easily find the opposite face of a given face...
         //
-        this.face2OppositeFace = new int[nFaces];
+        face2OppositeFace = new int[nFaces];
         {
             FuzzyPointHashTable table = new FuzzyPointHashTable(1e-9, 1e-8, 1./128);
             for (int iFace = 0; iFace < nFaces; ++iFace)
@@ -373,7 +365,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         // the corresponding cut offsets will be in increasing order,
         // for sanity.
         //
-        this.faceCutOffsets = new double[nFaces][];
+        faceCutOffsets = new double[nFaces][];
         {
             for (int iFace = 0; iFace < nFaces; ++iFace)
             {
@@ -482,57 +474,43 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         // Slice!
         //
         {
-            this.slicedPolytope = originalPolytope;
-            if (progressWriter != null)
+            slicedPolytope = originalPolytope;
+            // Count the number of cuts we'll be making and initialize the progress manager.
             {
-                progressWriter.print("    Slicing");
-                progressWriter.flush();
+	            int totalCuts = 0;
+	            for (int iFace = 0; iFace < nFaces; ++iFace) {
+	                if (face2OppositeFace[iFace] != -1 && face2OppositeFace[iFace] < iFace)
+	                   continue; // already saw opposite face
+	                totalCuts += faceCutOffsets[iFace].length;
+	            }
+	            progressWorker.init("Slicing", totalCuts);
             }
-            int maxCuts = -1; // unlimited
-            //maxCuts = 6; // set to some desired number for debugging
-            int totalCuts = 0;
-            for (int iFace = 0; iFace < nFaces; ++iFace)
+            // Now do the actual work, updating the progress worker as we go.
             {
-                if (maxCuts >= 0 && totalCuts >= maxCuts) break;
-                if (face2OppositeFace[iFace] != -1
-                 && face2OppositeFace[iFace] < iFace)
-                    continue; // already saw opposite face and made the cuts
-                //System.out.println("REALLY doing facet "+iFace);
-                for (int iCut = 0; iCut < faceCutOffsets[iFace].length; ++iCut)
-                {
-                    if (maxCuts >= 0 && totalCuts >= maxCuts) break;
-                    CSG.Hyperplane cutHyperplane = new CSG.Hyperplane(
-                        faceInwardNormals[iFace],
-                        faceCutOffsets[iFace][iCut]);
-                    Object auxOfCut = null; // we don't set any aux on the cut for now
-                    slicedPolytope = CSG.sliceFacets(slicedPolytope, cutHyperplane, auxOfCut);
-                    if (progressWriter != null)
-                    {
-                        progressWriter.print("."); // one dot per cut
-                        progressWriter.flush();
-                    }
-                    totalCuts++;
-                }
-            }
-
-            if (progressWriter != null)
-            {
-                progressWriter.println(" done ("+slicedPolytope.p.facets.length+" stickers).");
-                progressWriter.flush();
-            }
-
-            if (progressWriter != null)
-            {
-                progressWriter.print("    Fixing orientations (argh!)... ");
-                progressWriter.flush();
-            }
-            CSG.orientDeep(slicedPolytope); // XXX shouldn't be necessary!!!!
-            if (progressWriter != null)
-            {
-                progressWriter.println(" done.");
-                progressWriter.flush();
+	            int cut = 0;
+	            for (int iFace = 0; iFace < nFaces; ++iFace)
+	            {
+	                if (face2OppositeFace[iFace] != -1 && face2OppositeFace[iFace] < iFace)
+	                    continue; // already saw opposite face and made the cuts
+	                //System.out.println("REALLY doing facet "+iFace);
+	                for (int iCut = 0; iCut < faceCutOffsets[iFace].length; ++iCut)
+	                {
+	                    CSG.Hyperplane cutHyperplane = new CSG.Hyperplane(
+	                        faceInwardNormals[iFace],
+	                        faceCutOffsets[iFace][iCut]);
+	                    Object auxOfCut = null; // we don't set any aux on the cut for now
+	                    slicedPolytope = CSG.sliceFacets(slicedPolytope, cutHyperplane, auxOfCut);
+	                    progressWorker.updateProgress(cut);
+	                    cut++;
+	                }
+	            }
+	            cut = cut;
             }
         }
+        
+        progressWorker.init("Fixing orientations");
+
+        CSG.orientDeep(slicedPolytope); // XXX shouldn't be necessary!!!!
 
         CSG.Polytope stickers[] = slicedPolytope.p.getAllElements()[nDims-1];
         int nStickers = stickers.length;
@@ -540,12 +518,12 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         //
         // Figure out the mapping from sticker to face.
         //
-        this.sticker2face = new int[nStickers];
+        sticker2face = new int[nStickers];
         {
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
                 sticker2face[iSticker] = ((Integer)stickers[iSticker].aux).intValue();
         }
-        this.sticker2faceShadow = VecMath.copyvec(sticker2face);
+        sticker2faceShadow = VecMath.copyvec(sticker2face);
 
         //
         // Figure out the mapping from sticker to cubie.
@@ -553,7 +531,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         // all that is guaranteed is that two stickers are on the same
         // cubie iff they have the same cubie index.
         //
-        this.sticker2cubie = new int[nStickers];
+        sticker2cubie = new int[nStickers];
         {
             MergeFind mf = new MergeFind(nStickers);
             // The 4d case:
@@ -580,14 +558,12 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
                 sticker2cubie[iSticker] = mf.find(iSticker);
 
-            if (progressWriter != null)
-            {
-                this._nCubies = 0;
-                for (int iSticker = 0; iSticker < nStickers; ++iSticker)
-                    if (sticker2cubie[iSticker] == iSticker)
-                        _nCubies++;
-                progressWriter.println("    There seem to be "+_nCubies+" accessible cubie(s).");
-            }
+            
+            _nCubies = 0;
+            for (int iSticker = 0; iSticker < nStickers; ++iSticker)
+                if (sticker2cubie[iSticker] == iSticker)
+                    _nCubies++;
+            System.out.println("    There seem to be "+_nCubies+" accessible cubie(s).");
             // XXX note, we could easily collapse the cubie indicies
             // XXX so that they are consecutive, if we cared
         }
@@ -605,8 +581,8 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             for (int iFace = 0; iFace < nFaces; ++iFace)
                 CSG.cgOfVerts(faceCentersD[iFace], originalFaces[iFace]);
         }
-        this.stickerCentersD = new double[nStickers][nDims];
-        this.stickerCentersHashTable = new FuzzyPointHashTable(1e-9, 1e-8, 1./128);
+        stickerCentersD = new double[nStickers][nDims];
+        stickerCentersHashTable = new FuzzyPointHashTable(1e-9, 1e-8, 1./128);
         {
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
             {
@@ -655,7 +631,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             // as one face per sticker (instead of flattening
             // and re-expanding which would just give us back
             // what we started with).
-            this.stickerInds = (int[][][])slicedPoly.inds;
+            stickerInds = (int[][][])slicedPoly.inds;
         }
         else if (nDims == 4)
         {
@@ -678,7 +654,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             restVerts = (double[][])slicedPoly.verts;
             // We assume there is only 1 contour per polygon,
             // so we can flatten out the contours part.
-            this.stickerInds = (int[][][])com.donhatchsw.util.Arrays.flatten(slicedPoly.inds, 2, 2);
+            stickerInds = (int[][][])com.donhatchsw.util.Arrays.flatten(slicedPoly.inds, 2, 2);
 
             //
             // Fix up the indices on each sticker so that
@@ -724,7 +700,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
                 nVerts += stickers[iSticker].getAllElements()[0].length;
             restVerts = new double[nVerts][nDims]; // zeros
-            this.stickerInds = new int[nStickers][0][];
+            stickerInds = new int[nStickers][0][];
         }
 
 
@@ -738,9 +714,9 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         //
         {
             int nVerts = restVerts.length;
-            this.vertsMinusStickerCenters = new float[nVerts][];
-            this.vertStickerCentersMinusFaceCenters = new float[nVerts][];
-            this.vertFaceCenters = new float[nVerts][];
+            vertsMinusStickerCenters = new float[nVerts][];
+            vertStickerCentersMinusFaceCenters = new float[nVerts][];
+            vertFaceCenters = new float[nVerts][];
             {
                 for (int iSticker = 0; iSticker < nStickers; ++iSticker)
                 for (int j = 0; j < stickerInds[iSticker].length; ++j)
@@ -769,23 +745,22 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         //
         if (nDims == 4)
         {
-            if (progressWriter != null)
-            {
-                progressWriter.print("    Thinking about possible twists...");
-                progressWriter.flush();
-            }
-
+            // Count the number of grips we'll be generating and initialize the progress manager.
             int nGrips = 0;
             for (int iFace = 0; iFace < nFaces; ++iFace)
             {
-                CSG.Polytope[][] allElementsOfCell = originalFaces[iFace].getAllElements();
+                CSG.Polytope cell = originalFaces[iFace];
+                CSG.Polytope[][] allElementsOfCell = cell.getAllElements();
                 for (int iDim = 0; iDim <= 3; ++iDim) // yes, even for cell center, which doesn't do anything
                     nGrips += allElementsOfCell[iDim].length;
             }
-            this.gripSymmetryOrders = new int[nGrips];
-            this.gripUsefulMats = new double[nGrips][nDims][nDims];
-            this.gripCentersF = new float[nGrips][];
-            this.grip2face = new int[nGrips];
+            progressWorker.init("Calculating possible twists", nGrips);
+
+            // Now do the actual work, updating the progress manager as we go.
+            gripSymmetryOrders = new int[nGrips];
+            gripUsefulMats = new double[nGrips][nDims][nDims];
+            gripCentersF = new float[nGrips][];
+            grip2face = new int[nGrips];
             double gripCenterD[] = new double[nDims];
             int iGrip = 0;
             for (int iFace = 0; iFace < nFaces; ++iFace)
@@ -811,13 +786,8 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 
                         gripCentersF[iGrip] = doubleToFloat(gripCenterD);
                         grip2face[iGrip] = iFace;
-                        if (progressWriter != null)
-                        {
-                            //progressWriter.print("("+iDim+":"+gripSymmetryOrders[iGrip]+")");
-                            //progressWriter.print(".");
-
-                            progressWriter.flush();
-                        }
+                        progressWorker.updateProgress(iGrip);
+                        //System.out.println("("+iDim+":"+gripSymmetryOrders[iGrip]+")");
 
                         iGrip++;
                     }
@@ -835,12 +805,6 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                     - to indices of a CCW twist of this slice
             */
 
-            if (progressWriter != null)
-            {
-                progressWriter.print(" ("+nGrips+" grips)");
-                progressWriter.println(" done.");
-                progressWriter.flush();
-            }
         } // nDims == 4
 
         //
@@ -850,7 +814,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             int nNicePoints = 0;
             for (int iDim = 0; iDim < originalElements.length; ++iDim)
                 nNicePoints += originalElements[iDim].length;
-            this.nicePointsToRotateToCenter = new float[nNicePoints][nDims];
+            nicePointsToRotateToCenter = new float[nNicePoints][nDims];
             double eltCenter[] = new double[nDims];
             int iNicePoint = 0;
             for (int iDim = 0; iDim < originalElements.length; ++iDim)
@@ -861,13 +825,6 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 
             }
             Assert(iNicePoint == nNicePoints);
-        }
-
-
-        if (progressWriter != null)
-        {
-            progressWriter.println("Done.");
-            progressWriter.flush();
         }
     } // ctor from schlafli and length
 
@@ -1176,7 +1133,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 
 
     //
-    // Little test program
+    // Example program
     //
     public static void main(String args[])
     {
@@ -1191,14 +1148,17 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 
         //CSG.verboseLevel = 2;
 
-        java.io.PrintWriter progressWriter = new java.io.PrintWriter(
-                                             new java.io.BufferedWriter(
-                                             new java.io.OutputStreamWriter(
-                                             System.err)));
-
         String schlafliProduct = args[0];
         int length = Integer.parseInt(args[1]);
-        GenericPuzzleDescription descr = new PolytopePuzzleDescription(schlafliProduct, length, progressWriter);
+        GenericPuzzleDescription descr = new PolytopePuzzleDescription(schlafliProduct, length, 
+    		new ProgressManager(new javax.swing.JProgressBar()){
+				@Override
+				protected Void doInBackground() throws Exception {
+					// TODO Auto-generated method stub
+					return null;
+				}
+			}
+        );
         System.out.println("description = "+descr);
 
         System.out.println("out main");

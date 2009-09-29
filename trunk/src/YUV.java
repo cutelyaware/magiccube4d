@@ -1,9 +1,12 @@
+import java.util.Random;
+
 
 public class YUV {
-	private final static double
-		U_OFF = .436,
-		V_OFF = .615,
-		YFRAC = 1.0f;
+	private final static float
+		U_OFF = .436f,
+		V_OFF = .615f;
+	private static final long RAND_SEED = 0;
+	private static Random rand = new Random(RAND_SEED);
 
 	// From http://en.wikipedia.org/wiki/YUV#Mathematical_derivations_and_formulas
 	public static void yuv2rgb(float y, float u, float v, float[] rgb) {
@@ -20,9 +23,9 @@ public class YUV {
 	
 	private static float[] randYUVinRGBRange(float minComponent, float maxComponent) {
 		while(true) {
-			float y = (float)(Math.random());// * YFRAC + 1-YFRAC);
-			float u = (float)(Math.random() * (2*U_OFF) - U_OFF);
-			float v = (float)(Math.random() * (2*V_OFF) - V_OFF);
+			float y = rand.nextFloat(); // * YFRAC + 1-YFRAC);
+			float u = rand.nextFloat() * 2*U_OFF - U_OFF;
+			float v = rand.nextFloat() * 2*V_OFF - V_OFF;
 			float[] rgb = new float[3];
 			yuv2rgb(y, u, v, rgb);
 			float r = rgb[0], g = rgb[1], b = rgb[2];
@@ -41,8 +44,12 @@ public class YUV {
 	 * Returns an array of ncolors RGB triplets such that each is as unique from the rest as possible
 	 * and each color has at least one component greater than minComponent and one less than maxComponent.
 	 * Use min == 1 and max == 0 to include the full RGB color range.
+	 * 
+	 * Warning: O N^2 algorithm blows up fast for more than 100 colors.
 	 */
     static float[][] generateVisuallyDistinctRGBs(int ncolors, float minComponent, float maxComponent) {
+    	rand.setSeed(RAND_SEED); // So that we get consistent results for each combination of inputs
+    	
 		float[][] yuv = new float[ncolors][3];
 		
 		// initialize array with random colors
@@ -50,7 +57,7 @@ public class YUV {
 			System.arraycopy(randYUVinRGBRange(minComponent, maxComponent), 0, yuv[got++], 0, 3);
 		}
 		// continually break up the worst-fit color pair until we get tired of searching
-		for(int c=0; c<1000; c++) {
+		for(int c=0; c<ncolors*1000; c++) {
 	    	float worst = 8888;
 	    	int worstID = 0;
 	    	for(int i=1; i<yuv.length; i++) {
@@ -87,24 +94,23 @@ public class YUV {
     	return sum;
     }
     
-    private static int worstFit(float[][] rgb) {
+    private static double worstFit(float[][] colors) {
     	float worst = 8888;
     	int worstID = 0;
-    	for(int i=1; i<rgb.length; i++) {
+    	for(int i=1; i<colors.length; i++) {
     		for(int j=0; j<i; j++) {
-	    		float dist = sqrdist(rgb[i], rgb[j]);
+	    		float dist = sqrdist(colors[i], colors[j]);
 	    		if(dist < worst) {
 	    			worst = dist;
 	    			worstID = i;
 	    		}
     		}
     	}
-    	System.out.println("Worst fit " + worst + " at ID " + worstID);
-    	return worstID;
+    	return Math.sqrt(worst);
     }
     
     private static float[] randYUVBetterThan(float bestDistSqrd, float minComponent, float maxComponent, float[][] in) {
-    	for(int attempt=1; attempt<10000; attempt++) {
+    	for(int attempt=1; attempt<100*in.length; attempt++) {
     		float[] candidate = randYUVinRGBRange(minComponent, maxComponent);
     		boolean good = true;
     		for(int i=0; i<in.length; i++)
@@ -113,7 +119,7 @@ public class YUV {
     		if(good)
     			return candidate;
     	}
-    	return null;
+    	return null; // after a bunch of passes, couldn't find a candidate that beat the best.
     }
 
     
@@ -121,10 +127,12 @@ public class YUV {
 	 * Simple example program.
 	 */
 	public static void main(String[] args) {
-		float[][] rgb = generateVisuallyDistinctRGBs(4, .8f, .3f);
+		final int ncolors = 10;
+		float[][] rgb = generateVisuallyDistinctRGBs(ncolors, .8f, .3f);
 		for(int i=0; i<rgb.length; i++) {
 			System.out.println(rgb[i][0] + "\t" + rgb[i][1] + "\t" + rgb[i][2]);
 		}
+    	System.out.println("Worst fit " + worstFit(rgb));
 	}
 
 }
