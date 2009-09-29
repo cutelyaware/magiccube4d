@@ -48,7 +48,9 @@
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
+
 
 public class GenericGlue
 {
@@ -65,18 +67,18 @@ public class GenericGlue
     //
     public int nRotation = 0; // total number of rotation frames in progress
     public int iRotation = 0; // number of frames done so far
-     public double rotationFrom[]; // where rotation is rotating from, in 4space
-     public double rotationTo[]; // where rotation is rotating to, in 4space
+    public double rotationFrom[]; // where rotation is rotating from, in 4space
+    public double rotationTo[]; // where rotation is rotating to, in 4space
 
     //
     // A twist is currently in progress if iTwist < nTwist.
     //
     public int nTwist = 0; // total number of twist frames in progress
     public int iTwist = 0; // number of twist frames done so far
-     public int iTwistGrip;     // of twist in progress, if any
-     public int twistDir;      // of twist in progress, if any
-     public int twistSliceMask; // of twist in progress, if any
-     public int twistIsUndo; // of twist in progress, if any-- when finished, don't put on undo stack
+    public int iTwistGrip;     // of twist in progress, if any
+    public int twistDir;      // of twist in progress, if any
+    public int twistSliceMask; // of twist in progress, if any
+    public int twistIsUndo; // of twist in progress, if any-- when finished, don't put on undo stack
     //
     // A cheat is in progress if cheating == true.
     //
@@ -89,7 +91,7 @@ public class GenericGlue
 
 
     //
-    // Rudimentaty undo queue.
+    // Rudimentary undo queue.
     //
     public static class HistoryNode
     {
@@ -115,27 +117,47 @@ public class GenericGlue
 
 
     public interface Callback { public void call(); }
-    
-    private final java.io.PrintWriter makeProgressWriter() {
-    	return 
-    		new java.io.PrintWriter(
-            new java.io.BufferedWriter(
-            new java.io.OutputStreamWriter(
-            System.err)));
+
+
+    public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground) {
+
+    	statusLabel.setText("");
+    	ProgressManager builder = new ProgressManager(progressView) {
+            /*
+             * Main task. Executed in background thread.
+             */
+            @Override
+            public Void doInBackground() {
+            	genericPuzzleDescription = buildPuzzle(schlafli, lengthString, this);
+                genericPuzzleState = com.donhatchsw.util.VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
+
+                undoq.setSize(0);
+                undoPartSize = 0;
+            	return null;
+    		}
+
+            /*
+             * Executed on graphics thread.
+             */
+			@Override
+			public void done() {
+				statusLabel.setText(schlafli + "  length="+lengthString);
+				super.done();
+			}
+    	};
+    	if(inBackground)
+    		builder.execute();
+    	else
+    		builder.run();
     }
 
-    public void initPuzzle(String schlafli, double length) {
-    	genericPuzzleDescription = buildPuzzle(schlafli, ""+length, makeProgressWriter());
-        genericPuzzleState = com.donhatchsw.util.VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
-    }
-
-    public GenericGlue(String initialSchlafli, double initialLength)
+    public GenericGlue(String initialSchlafli, double initialLength, JProgressBar progressView)
     {
         super();
         if (verboseLevel >= 1) System.out.println("in GenericGlue ctor");
         if (initialSchlafli != null)
         {
-            initPuzzle(initialSchlafli, initialLength);
+            initPuzzle(initialSchlafli, ""+initialLength, progressView, new JLabel(), false);
         }
         if (verboseLevel >= 1) System.out.println("out GenericGlue ctor");
     }
@@ -157,9 +179,7 @@ public class GenericGlue
 
     // Call this from MC4DSwing ctor right after all
     // the other menu items are added
-    public void addItemsToPuzzleMenu(Menu puzzlemenu,
-                                         final JLabel statusLabel,
-                                         final Callback initPuzzleCallback)
+    public void addItemsToPuzzleMenu(Menu puzzlemenu, final JLabel statusLabel, final JProgressBar progressView)
     {
         if (verboseLevel >= 1) System.out.println("in GenericGlue.addItemsToPuzzleMenu");
 
@@ -228,24 +248,13 @@ public class GenericGlue
             }
             else
                 submenu = puzzlemenu;
-            final String finalSchlafli = schlafli;
             for (int j = 0; j < lengthStrings.length; ++j)
             {
                 final String lengthString = lengthStrings[j];
-                final String finalLengthString = lengthString;
                 submenu.add(new MenuItem(schlafli==null ? name : ""+lengthString)).addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent ae)
                     {
-                    	genericPuzzleDescription = buildPuzzle(finalSchlafli, finalLengthString, makeProgressWriter());
-                        genericPuzzleState = com.donhatchsw.util.VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
-
-                        undoq.setSize(0);
-                        undoPartSize = 0;
-
-                        String statuslabel = name + "  length="+lengthString;
-                        statusLabel.setText(statuslabel); // XXX BUG - hey, it's not set right on program startup!
-                    
-                    	initPuzzleCallback.call(); // XXX really just want a repaint I think
+                    	initPuzzle(schlafli, lengthString, progressView, statusLabel, true);
                     }
                 });
             }
@@ -253,7 +262,7 @@ public class GenericGlue
         if (verboseLevel >= 1) System.out.println("out GenericGlue.addItemsToPuzzleMenu");
     } // addItemsToPuzzleMenu
     
-    public static GenericPuzzleDescription buildPuzzle(String schlafli, String lengthString, java.io.PrintWriter progressWriter) {
+    public static GenericPuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
         if (schlafli == null)
         {
             String prompt = "Enter your invention:";
@@ -289,7 +298,7 @@ public class GenericGlue
         GenericPuzzleDescription newPuzzle = null;
         try
         {
-            newPuzzle = new PolytopePuzzleDescription(schlafli, len, progressWriter);
+            newPuzzle = new PolytopePuzzleDescription(schlafli, len, progressView);
         }
         catch (Throwable t)
         {
@@ -303,10 +312,12 @@ public class GenericGlue
                 t.printStackTrace(new java.io.PrintWriter(sw));
                 explanation = "\n" + sw.toString();
             }
-            JOptionPane.showMessageDialog(null,
-                "Something went very wrong when trying to build your invention \""+schlafli+"  "+lengthString+"\":\n"+explanation,
-                "Your Invention Sucks",
-                JOptionPane.ERROR_MESSAGE);
+            t.printStackTrace();
+            System.out.println("Something went very wrong when trying to build your invention \""+schlafli+"  "+lengthString+"\":\n"+explanation);
+//            JOptionPane.showMessageDialog(null,
+//                "Something went very wrong when trying to build your invention \""+schlafli+"  "+lengthString+"\":\n"+explanation,
+//                "Your Invention Sucks",
+//                JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
