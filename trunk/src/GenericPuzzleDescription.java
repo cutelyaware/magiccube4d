@@ -123,7 +123,10 @@ interface GenericPuzzleDescription {
     */
     public int[/*nStickers*/] getGrip2Face();
 
-
+    /**
+     * Get a particular face center.
+     */
+    public float[/*nDims*/] getFaceCenter( int faceIndex );
 
     /**
     * Apply a move to an array of colors (face indices)

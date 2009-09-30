@@ -21,7 +21,6 @@ import java.util.Enumeration;
 public class MC4DView extends DoubleBufferedCanvas {
 
     public GenericGlue genericGlue = null; // caller can set this after I'm constructed
-    public float viewMat4d[][] = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}}; // XXX new member, similar to viewrot-- put this somewhere
 
     public static interface TwistListener { public void twisted(MagicCube.TwistData twisted); }
     private Vector<TwistListener> twistListeners = new Vector<TwistListener>();
@@ -35,7 +34,6 @@ public class MC4DView extends DoubleBufferedCanvas {
     private PuzzleState state;
     private PolygonManager polymgr;
     private final MagicCube.Frame
-        untwisted_frame = new MagicCube.Frame(),
         shadow_frame = new MagicCube.Frame(),
         twisting_frame = new MagicCube.Frame(); // scratch var used during animation
     private AnimationQueue animationQueue;
@@ -53,9 +51,7 @@ public class MC4DView extends DoubleBufferedCanvas {
     private float pixels2polySF = .01f; // screen transform data
     private Point lastDrag; // non-null == dragging
     private long lastDragTime; // timestamp of last drag event
-    private SQuat viewrot = new SQuat(); // total quaternion rotation of puzzle in view.
-    private SQuat spindelta; // rotation to add for each frame while spinning. null == stopped
-    private boolean allowSpinDrag = true; // whether to allow spin dragging at all
+    private RotationHandler rotationHandler = new RotationHandler();
     private boolean allowAntiAliasing = true; // whether to allow antialiasing at all
     private float scale = 1;
     private boolean highlightByCubie = false;
@@ -111,7 +107,7 @@ public class MC4DView extends DoubleBufferedCanvas {
     }
 
     public void allowSpinDrag(boolean val) {
-        allowSpinDrag = val;
+        rotationHandler.settings.allowSpinDrag = val;
         repaint();
     }
 
@@ -161,7 +157,7 @@ public class MC4DView extends DoubleBufferedCanvas {
 //        for(int f=0; f<MagicCube.NFACES; f++)
 //            System.arraycopy(MagicCube.FACE_COLORS[f], 0, faceRGB[f], 0, 3);
         faceRGB = YUV.generateVisuallyDistinctRGBs(nfaces, .7f, .1f); //generateHSVColors(12, 10, .5f);
-        polymgr.getUntwistedFrame(untwisted_frame, getViewMat(), MagicCube.SUNVEC, true); // probably unneeded initialization
+
         // manage slicemask as user holds and releases number keys
         this.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent arg0) {
@@ -187,7 +183,7 @@ public class MC4DView extends DoubleBufferedCanvas {
                 	if( genericGlue != null && genericGlue.isActive() )
 		            {
 		                genericGlue.mouseClickedAction(e,
-		                                               viewMat4d,
+		                                               rotationHandler,
 		                                               MC4DView.this.polymgr.getTwistFactor(),
 		                                               slicemask,
 		                                               MC4DView.this);
@@ -224,13 +220,13 @@ public class MC4DView extends DoubleBufferedCanvas {
             public void mousePressed(MouseEvent arg0) {
                 lastDrag = arg0.getPoint();
                 lastDragTime = arg0.getWhen();
-                spindelta = null; // always stop any spinning
+                rotationHandler.stopSpinning();
             }
             public void mouseReleased(MouseEvent arg0) {
                 long timedelta = arg0.getWhen() - lastDragTime;
                 lastDrag = null;
                 if(timedelta > 0) {
-                    spindelta = null; // stop any spin if last point wasn't in motion
+                	rotationHandler.stopSpinning(); // stop any spin if last point wasn't in motion
                     repaint();
                 }
             }
@@ -245,18 +241,9 @@ public class MC4DView extends DoubleBufferedCanvas {
                     drag_dir = new float[2];
                 Vec_h._VMV2(drag_dir, new float[] { lastDrag.x, lastDrag.y }, end);
                 drag_dir[1] *= -1;      // in Windows, Y is down, so invert it
-                float[] axis = new float[3];
-                Vec_h._XV2(axis, drag_dir);
-                float pixelsMoved = (float)Math.sqrt(Vec_h._NORMSQRD2(axis));
-                if (pixelsMoved > .0001) { // do nothing if ended where we started
-                    Vec_h._VDS2(axis, axis, pixelsMoved);
-                    axis[2] = 0;
-                    float rads = pixelsMoved / 300f;
-                    spindelta = new SQuat(axis, rads);
-                    viewrot.setMult(spindelta);
-                    if(pixelsMoved < 2)
-                        spindelta = null; // drag distance not large enough to trigger autorotation
-                }
+                
+                rotationHandler.mouseDragged( drag_dir[0], drag_dir[1] );
+                
                 lastDrag = arg0.getPoint();
                 lastDragTime = arg0.getWhen();
                 repaint();
@@ -267,25 +254,6 @@ public class MC4DView extends DoubleBufferedCanvas {
                 {
                     genericGlue.mouseMovedAction(arg0, MC4DView.this);
                     return;
-                }
-                MagicCube.Stickerspec sticker = new MagicCube.Stickerspec();
-                int hitQuad = MC4DView.this.polymgr.pick(
-                    (arg0.getX()-xOff)*pixels2polySF,
-                    (arg0.getY()-yOff)*pixels2polySF,
-                    untwisted_frame, sticker);
-                if(hitQuad >= 0) {
-                    if(stickerUnderMouse == null || stickerUnderMouse.id_within_cube != sticker.id_within_cube)
-                        repaint(); // something new to highlight
-                    stickerUnderMouse = sticker;
-                    //System.out.println(sticker.id_within_face + " on face " + sticker.face);
-                    int len = MC4DView.this.polymgr.getLength();
-                    for(int d=0; d<MagicCube.NDIMS; d++)
-                        cubieCenter[d] = clamp(sticker.coords[d], -(len-1), len-1);
-                }
-                else { // missed
-                    if(stickerUnderMouse != null)
-                        repaint(); // now nothing highlighted
-                    stickerUnderMouse = null;
                 }
             }
         });
@@ -409,16 +377,6 @@ public class MC4DView extends DoubleBufferedCanvas {
         polymgr.fillStickerspecFromId(tmpsticker);
         return distSqrd(tmpsticker.coords, cubieCenter) == 1;
     }
-    
-    private float[][] getViewMat() {
-        if( ! allowSpinDrag)
-            return new float[][] {
-                {1,0,0,},
-                {0,1,0,},
-                {0,0,1,},
-            };
-        return new SQuat.Matrix3(viewrot).asArray();
-    }
 
     /**
      * @param l light vector in screen space.
@@ -446,24 +404,7 @@ public class MC4DView extends DoubleBufferedCanvas {
 
     public void paint(Graphics g1) {
         updateViewFactors();
-        polymgr.getUntwistedFrame(untwisted_frame, getViewMat(), MagicCube.SUNVEC, true);
 
-        float[][] shadowview = new float[3][3];
-        float[] off = new float[3];
-        if(showShadows) {
-            float[] planenormal = new float[] {0,1,.1f};
-            float planeoffset = -.5f;
-            float[] planeoffsetvector = new float[3];
-            Vec_h._VXS3(planeoffsetvector, planenormal, planeoffset); // shifting *lower* on screen
-            float[][] viewmat = getViewMat(), shadowmat = getShadowMat(new float[] { .82f, 1.55f, 3.3f }, planenormal);
-            Vec_h._MXM3(shadowview, viewmat, shadowmat);
-            // calculate off = -planeoffsetvector * shadowmat + planeoffsetvector
-            Vec_h._VXM3(off, planeoffsetvector, shadowmat);
-            Vec_h._VMV3(off, planeoffsetvector, off);
-            polymgr.getUntwistedFrame(shadow_frame, shadowview, MagicCube.SUNVEC, false);
-            shift(shadow_frame, off);
-        }
-        MagicCube.Frame frame = untwisted_frame;
 		if(animationQueue.isAnimating() && genericGlue.iTwist == genericGlue.nTwist) {
 			MagicCube.TwistData animating = animationQueue.getAnimating();
 			// time to apply the puzzle state change and stop the animation
@@ -472,8 +413,7 @@ public class MC4DView extends DoubleBufferedCanvas {
 			animationQueue.finishedTwist(); // end animation
 			repaint();
 		}
-        if(allowSpinDrag && spindelta != null && lastDrag == null) { // keep spinning
-            viewrot.setMult(spindelta);
+        if( rotationHandler.continueSpin() && lastDrag == null) { // keep spinning
             repaint();
         }
         Graphics g = super.startPaint(g1); // begin painting into the back buffer
@@ -493,6 +433,7 @@ public class MC4DView extends DoubleBufferedCanvas {
             g.setColor(ground);
             g.fillRect(0, getHeight()*6/9, getWidth(), getHeight());
         }
+        
         // paint the puzzle
         if (genericGlue != null && genericGlue.isActive())
         {
@@ -500,9 +441,8 @@ public class MC4DView extends DoubleBufferedCanvas {
               // used by compute part...
                 polymgr.getFaceShrink(),
                 polymgr.getStickerShrink(),
-                viewMat4d, // contents of this get incremented if rotating!
+                rotationHandler,
                 polymgr.getEyeW(),
-                this.getViewMat(),
                 MagicCube.EYEZ,
                 scale,
                 pixels2polySF,

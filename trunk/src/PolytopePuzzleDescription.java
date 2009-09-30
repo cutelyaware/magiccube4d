@@ -211,7 +211,8 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
     private double faceInwardNormals[/*nFaces*/][/*nDims*/];
     private double faceCutOffsets[/*nFaces*/][/*nCutsThisFace*/]; // slice 0 is bounded by -infinity and offset[0], slice i+1 is bounded by offset[i],offset[i+1], ... slice[nSlices-1] is bounded by offset[nSlices-2]..infinity
 
-    private float nicePointsToRotateToCenter[][];
+    private float nicePointsToRotateToCenter[][/*nDims*/];
+    private float faceCenters[/*nFaces*/][/*nDims*/];
 
     private double stickerCentersD[][];
     private FuzzyPointHashTable stickerCentersHashTable;
@@ -311,7 +312,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         }
 
         //
-        // Figure out the circumRadius (farthest vertex from orign)
+        // Figure out the circumRadius (farthest vertex from origin)
         // and inRadius (closest face plane to origin)
         // of the original polytope...
         //
@@ -591,7 +592,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             }
         }
 
-        float faceCentersF[][] = doubleToFloat(faceCentersD);
+        faceCenters = doubleToFloat(faceCentersD);
         float stickerCentersMinusFaceCentersF[][] = new float[nStickers][];
         {
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
@@ -728,7 +729,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                     {
                         vertsMinusStickerCenters[iVert] = doubleToFloat(VecMath.vmv(restVerts[iVert], stickerCentersD[iSticker]));
                         vertStickerCentersMinusFaceCenters[iVert] = stickerCentersMinusFaceCentersF[iSticker];
-                        vertFaceCenters[iVert] = faceCentersF[iFace];
+                        vertFaceCenters[iVert] = faceCenters[iFace];
                     }
                 }
             }
@@ -1062,6 +1063,13 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         public int[/*nFaces*/] getGrip2Face()
         {
             return grip2face;
+        }
+        public float[/*nDims*/] getFaceCenter( int faceIndex )
+        {
+        	if( faceIndex < 0 || faceIndex >= nFaces() )
+                throw new IllegalArgumentException( "getFaceCenter called with bad face index " + faceIndex + ", there are " + nFaces() + " faces!" );
+            
+        	return faceCenters[faceIndex];
         }
         public int[/*nFaces*/] getFace2OppositeFace()
         {
