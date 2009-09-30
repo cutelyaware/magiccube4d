@@ -609,17 +609,34 @@ public class GenericPipelineUtils
         return iGrip;
     }
 
-    public static float[] pickNicePointToRotateToCenter(float x, float y,
+    public static float[] pickPointToRotateToCenter(float x, float y,
                                                         Frame frame,
-                                                        GenericPuzzleDescription puzzleDescription)
+                                                        GenericPuzzleDescription puzzleDescription,
+                                                        Snap snapOption )
     {
-        float polyOrStickerCenter[] = pickPolyOrStickerCenter(x, y, frame, puzzleDescription);
-        if (polyOrStickerCenter == null)
-            return null;
-        float nicePoint[] = puzzleDescription.getClosestNicePointToRotateToCenter(polyOrStickerCenter);
-        return nicePoint;
+        switch( snapOption )
+        {
+        case Snap_Cell:
+        {
+        	int stickerIndex = pickSticker( x, y, frame, puzzleDescription );
+        	if( -1 == stickerIndex )
+        		return null;
+        	int faceIndex = puzzleDescription.getSticker2Face()[stickerIndex];
+        	return puzzleDescription.getFaceCenter( faceIndex );
+        }
+        case Snap_Smart:
+        {
+            float polyOrStickerCenter[] = pickPolyOrStickerCenter( x, y, frame, puzzleDescription );
+            if( polyOrStickerCenter == null )
+                return null;        	
+            return puzzleDescription.getClosestNicePointToRotateToCenter( polyOrStickerCenter );
+        }
+        default:
+        	Assert( false );
+        }
+        
+        return null;
     }
-
 
     // XXX figure out where to put this, if anywhere
     private static java.util.Random jitterGenerator = new java.util.Random();

@@ -54,7 +54,7 @@ import javax.swing.*;
 
 public class GenericGlue
 {
-    public static int verboseLevel = 0; // set to something else to debug
+	public static int verboseLevel = 0; // set to something else to debug
 
     //
     // State.  And not much of it!
@@ -483,12 +483,11 @@ public class GenericGlue
         genericGlue.iStickerUnderMouse = pickedSticker;
     } // mouseMovedAction
 
-    public void mouseClickedAction(MouseEvent e,
-                                   float viewMat4d[/*4*/][/*4*/],
-                                   float twistFactor,
-                                   int slicemask,
-
-                                   Canvas view)
+    public void mouseClickedAction( MouseEvent e,
+    		RotationHandler rotationHandler,
+    		float twistFactor,
+    		int slicemask,
+    		Canvas view )
     {
         GenericGlue genericGlue = this;
         boolean isRotate = e.isControlDown() || isMiddleMouseButton(e);
@@ -511,10 +510,11 @@ public class GenericGlue
 
         if (isRotate)
         {
-            float nicePoint[] = GenericPipelineUtils.pickNicePointToRotateToCenter(
+            float nicePoint[] = GenericPipelineUtils.pickPointToRotateToCenter(
                              e.getX(), e.getY(),
                              genericGlue.untwistedFrame,
-                             genericGlue.genericPuzzleDescription);
+                             genericGlue.genericPuzzleDescription, 
+                             rotationHandler.settings.snapSetting );
 
             if (nicePoint != null)
             {
@@ -524,15 +524,11 @@ public class GenericGlue
                 // (i.e. to the -W axis)
                 // 
 
-                double viewMat4dD[][] = new double[4][4];
                 double nicePointD[] = new double[4];
-                for (int i = 0; i < 4; ++i)
-                for (int j = 0; j < 4; ++j)
-                    viewMat4dD[i][j] = (double)viewMat4d[i][j];
                 for (int i = 0; i < 4; ++i)
                     nicePointD[i] = (double)nicePoint[i];
 
-                double nicePointOnScreen[] = com.donhatchsw.util.VecMath.vxm(nicePointD, viewMat4dD);
+                double nicePointOnScreen[] = com.donhatchsw.util.VecMath.vxm( nicePointD, rotationHandler.current4dView() );
                 com.donhatchsw.util.VecMath.normalize(nicePointOnScreen, nicePointOnScreen); // if it's not already
                 double minusWAxis[] = {0,0,0,-1};
                 double totalRotationAngle = com.donhatchsw.util.VecMath.angleBetweenUnitVectors(
@@ -642,9 +638,8 @@ public class GenericGlue
         // These are used by the compute part only
         float faceShrink,
         float stickerShrink,
-        float viewMat4d[/*4*/][/*4*/], // contents of this get incremented if animating!
+        RotationHandler rotationHandler,
         float eyeW,
-        float viewMat[/*3*/][/*3*/],
         float eyeZ, // MagicCube.EYEZ
         float scale, // whatever the fuck that means
         float pixels2polySF, // whatever the fuck that means
@@ -677,26 +672,27 @@ public class GenericGlue
         InterpFunc interp = sine_interp;
         //InterpFunc interp = linear_interp;
 
+        double[][] viewMat4d = rotationHandler.current4dView();
         if (genericGlue.iRotation < genericGlue.nRotation)
         {
             //
             // 4d rotation in progress
             //
-            double viewMat4dD[][] = new double[4][4];
+            double copy[][] = new double[4][4];
             for (int i = 0; i < 4; ++i)
             for (int j = 0; j < 4; ++j)
-                viewMat4dD[i][j] = (double)viewMat4d[i][j];
-
+            	copy[i][j] = viewMat4d[i][j];
 
             double incFrac = interp.func((genericGlue.iRotation+1)/(float)genericGlue.nRotation)
                            - interp.func(genericGlue.iRotation/(float)genericGlue.nRotation);
             double incmatD[][] = com.donhatchsw.util.VecMath.makeRowRotMatThatSlerps(genericGlue.rotationFrom, genericGlue.rotationTo, incFrac);
-            viewMat4dD = com.donhatchsw.util.VecMath.mxm(viewMat4dD, incmatD);
-            com.donhatchsw.util.VecMath.gramschmidt(viewMat4dD, viewMat4dD);
+            copy = com.donhatchsw.util.VecMath.mxm(copy, incmatD);
+            com.donhatchsw.util.VecMath.gramschmidt(copy, copy);
 
             for (int i = 0; i < 4; ++i)
             for (int j = 0; j < 4; ++j)
-                viewMat4d[i][j] = (float)viewMat4dD[i][j];
+                viewMat4d[i][j] = copy[i][j];
+            
             //System.out.println("    "+genericGlue.iRotation+"/"+genericGlue.nRotation+" -> "+(genericGlue.iRotation+1)+"/"+genericGlue.nRotation+"");
             genericGlue.iRotation++;
             view.repaint(); // make sure we keep drawing while there's more to do
@@ -738,6 +734,11 @@ public class GenericGlue
         float scaleFudge3d = 1.f;
         float scaleFudge2d = 4.7f;
 
+        float viewMat4df[][] = new float[4][4];
+        for( int i=0; i<4; ++i )
+        for( int j=0; j<4; ++j )
+        	viewMat4df[i][j] = (float)viewMat4d[i][j];
+        
         // XXX probably doing this more than necessary... when it's a rest frame that hasn't changed
         GenericPipelineUtils.computeFrame(
             glueFrameToDrawInto,
@@ -751,14 +752,14 @@ public class GenericGlue
               slicemask,
               fracIntoTwist,
 
-            com.donhatchsw.util.VecMath.mxs(viewMat4d, scaleFudge4d),
+            com.donhatchsw.util.VecMath.mxs(viewMat4df, scaleFudge4d),
             eyeW,
             com.donhatchsw.util.VecMath.mxmxmxm(
                 com.donhatchsw.util.VecMath.makeRowRotMat(3, 2, 1, (float)Math.PI/2),
                 com.donhatchsw.util.VecMath.makeRowRotMat(3, 2, 0, 1.f*(float)MagicCube.TWIRL*(float)Math.PI/180.f),
                 //com.donhatchsw.util.VecMath.makeRowRotMat(3, 1, 2, 1.f*(float)MagicCube.TILT*(float)Math.PI/180.f),
                 com.donhatchsw.util.VecMath.makeRowRotMat(3, 1, 2, 1.f*15*(float)Math.PI/180.f),
-                com.donhatchsw.util.VecMath.mxs(viewMat, scaleFudge3d)),
+                com.donhatchsw.util.VecMath.mxs(rotationHandler.current3dView(), scaleFudge3d)),
             eyeZ,
 
             new float[][]{{scaleFudge2d*scale/pixels2polySF, 0},
@@ -767,7 +768,6 @@ public class GenericGlue
             com.donhatchsw.util.VecMath.normalize(towardsSunVec),
             groundNormal,
             groundOffset);
-
 
         // THE COMPUTE PART ENDS HERE
         // THE PAINT PART STARTS HERE (maybe should be a separate function)
