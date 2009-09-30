@@ -540,7 +540,7 @@ public class History {
 
     private boolean isSane() {
         boolean found_current = false;
-        int ngrips = MagicCube.NGRIPS;
+        //int ngrips = MagicCube.NGRIPS;
 
         Assert((first == null) == (last == null));
 

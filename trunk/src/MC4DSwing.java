@@ -7,6 +7,8 @@ import java.util.Stack;
 import javax.swing.*;
 import javax.swing.border.*;
 
+import de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel;
+
 /**
  * The main desktop application.
  * The main method here creates and shows an instance of this class.
@@ -51,17 +53,17 @@ public class MC4DSwing extends JFrame {
     
     private GenericGlue genericGlue = null; //new GenericGlue(initialPuzzle, 3, progressBar);
 
-    private Menu apply = new Menu("Apply");
-    private MenuItem // adding the accelerator keys to the strings is hokey.
-        openitem    = new MenuItem("Open               Ctrl+O"),
-        saveitem    = new MenuItem("Save               Ctrl+S"),
-        saveasitem  = new MenuItem("Save As..."),
-        quititem    = new MenuItem("Quit               Ctrl+Q"),
-        resetitem   = new MenuItem("Reset                     Ctrl+R"),
-        undoitem    = new MenuItem("Undo                      Ctrl+Z"),
-        redoitem    = new MenuItem("Redo                      Ctrl+V"),
-        cheatitem   = new MenuItem("Solve (Cheat)       Ctrl+T"),
-        solveitem   = new MenuItem("Solve (For Real)  Ctrl+L");
+    private JMenu apply = new JMenu("Apply");
+    private JMenuItem
+        openitem    = new JMenuItem("Open"),
+        saveitem    = new JMenuItem("Save"),
+        saveasitem  = new JMenuItem("Save As..."),
+        quititem    = new JMenuItem("Quit"),
+        resetitem   = new JMenuItem("Reset"),
+        undoitem    = new JMenuItem("Undo"),
+        redoitem    = new JMenuItem("Redo"),
+        cheatitem   = new JMenuItem("Solve (Cheat)"),
+        solveitem   = new JMenuItem("Solve (For Real)");
     
     private void updateTwistsLabel() {
     	int twists = hist.countTwists();
@@ -254,7 +256,7 @@ public class MC4DSwing extends JFrame {
                 }
             }
         },
-        cancel = new ProbableAction("Cancel Macro Definition") { // toggles macro definition start/end
+        cancel = new ProbableAction("Cancel Macro Definition") {
             public void doit(ActionEvent ae) {
                 view.cancelAnimation(); // also stops any animation
                 if( ! macroMgr.isOpen())
@@ -285,6 +287,13 @@ public class MC4DSwing extends JFrame {
                 view.setBackground(new Color(255, 170, 170));
             }
         };
+        
+    private GenericGlue.Callback viewRepainter = new GenericGlue.Callback() {
+    	public void call() {
+    		progressBar.setVisible(false);
+    		view.repaint();
+    	}
+    };
 
     // those actions which *can* be realistically performed while animations are playing
     //
@@ -300,7 +309,7 @@ public class MC4DSwing extends JFrame {
                 genericGlue.initPuzzle(
             		genericGlue.genericPuzzleDescription.getSchlafliProduct(),
             		""+genericGlue.genericPuzzleDescription.getEdgeLength(),
-            		progressBar, statusLabel, false);
+            		progressBar, statusLabel, false, viewRepainter);
                 hist = new History((int)genericGlue.genericPuzzleDescription.getEdgeLength());
                 scrambleState = SCRAMBLE_NONE;
                 updateTwistsLabel();
@@ -367,50 +376,39 @@ public class MC4DSwing extends JFrame {
         if(PropertyManager.top.getProperty("macrofile") != null)
             macroFileChooser.setSelectedFile(new File(PropertyManager.top.getProperty("macrofile")));
 
-        // set accelerator keys for some actions
-        StaticUtils.addHotKey(KeyEvent.VK_R, viewcontainer, "Reset", reset);
-        StaticUtils.addHotKey(KeyEvent.VK_Z, viewcontainer, "Undo", undo);
-        StaticUtils.addHotKey(KeyEvent.VK_V, viewcontainer, "Redo", redo);
-        StaticUtils.addHotKey(KeyEvent.VK_O, viewcontainer, "Open", open);
-        StaticUtils.addHotKey(KeyEvent.VK_S, viewcontainer, "Save", save);
-        StaticUtils.addHotKey(KeyEvent.VK_Q, viewcontainer, "Quit", quit);
+        // set accelerator keys for some menu actions
+        StaticUtils.addHotKey(KeyEvent.VK_R, resetitem, "Reset", reset);
+        StaticUtils.addHotKey(KeyEvent.VK_Z, undoitem, "Undo", undo);
+        StaticUtils.addHotKey(KeyEvent.VK_V, redoitem, "Redo", redo);
+        StaticUtils.addHotKey(KeyEvent.VK_O, openitem, "Open", open);
+        StaticUtils.addHotKey(KeyEvent.VK_S, saveitem, "Save", save);
+        StaticUtils.addHotKey(KeyEvent.VK_Q, quititem, "Quit", quit);
+        StaticUtils.addHotKey(KeyEvent.VK_L, solveitem, "Real", solve);
+        StaticUtils.addHotKey(KeyEvent.VK_T, cheatitem, "Cheat", cheat);
+        
+        // accelerator keys from some non-menu actions
         StaticUtils.addHotKey(KeyEvent.VK_M, viewcontainer, "Macro", macro);
         StaticUtils.addHotKey(KeyEvent.VK_ESCAPE, viewcontainer, "Cancel", cancel);
         StaticUtils.addHotKey(KeyEvent.VK_A, viewcontainer, "Apply", last);
-        StaticUtils.addHotKey(KeyEvent.VK_L, viewcontainer, "Real", solve);
-        StaticUtils.addHotKey(KeyEvent.VK_T, viewcontainer, "Cheat", cheat);
-
-        // unfortunately using the non-swing menus because the JMenu versions don't
-        // paint on top of the non-swing puzzle view for some mysterious reason.
-
-        openitem.addActionListener(open);
-        saveitem.addActionListener(save);
-        //StaticUtils.addHotKey(KeyEvent.VK_S, saveitem, "Save", save); // this is how we'd do it with swing
-        saveasitem.addActionListener(saveas);
-        quititem.addActionListener(quit);
-        undoitem.addActionListener(undo);
-        redoitem.addActionListener(redo);
-        resetitem.addActionListener(reset);
-        cheatitem.addActionListener(cheat);
-        solveitem.addActionListener(solve);
         
-        Menu filemenu = new Menu("File");
+        saveasitem.addActionListener(saveas); // no hotkey
+
+        
+        JMenu filemenu = new JMenu("File");
         filemenu.add(openitem);
         filemenu.addSeparator();
         filemenu.add(saveitem);
         filemenu.add(saveasitem);
         filemenu.addSeparator();
         filemenu.add(quititem);
-        Menu editmenu = new Menu("Edit");
+        JMenu editmenu = new JMenu("Edit");
         editmenu.add(resetitem);
         editmenu.add(undoitem);
         editmenu.add(redoitem);
         editmenu.addSeparator();
         editmenu.add(cheatitem);
         editmenu.add(solveitem);
-        //editmenu.addSeparator();
-        //editmenu.add(prefsitem);
-        Menu scramblemenu = new Menu("Scramble");
+        JMenu scramblemenu = new JMenu("Scramble");
 
         // Scrambling
         //
@@ -452,40 +450,47 @@ public class MC4DSwing extends JFrame {
                 statusLabel.setText(fully ? "Fully Scrambled" : scramblechens + " Random Twist" + (scramblechens==1?"":"s"));
             }
         }
+        JMenuItem scrambleItem = null;
+        Scrambler scrambler = null;
         for(int i=1; i<=8; i++) {
-            Scrambler scrambler = new Scrambler(i);
-            StaticUtils.addHotKey(KeyEvent.VK_0+i, viewcontainer, "Scramble"+i, scrambler);
-            scramblemenu.add(new MenuItem(""+i + "         Ctrl+"+i)).addActionListener(scrambler);
+            scrambler = new Scrambler(i);
+            scrambleItem = new JMenuItem(""+i);
+            StaticUtils.addHotKey(KeyEvent.VK_0+i, scrambleItem, "Scramble"+i, scrambler);
+            scramblemenu.add(scrambleItem);
         }
         scramblemenu.addSeparator();
-        Scrambler full = new Scrambler(MagicCube.FULL_SCRAMBLE);
-        StaticUtils.addHotKey(KeyEvent.VK_F, viewcontainer, "Full", full);
-        scramblemenu.add(new MenuItem("Full     Ctrl+F")).addActionListener(full);
+        scrambler = new Scrambler(MagicCube.FULL_SCRAMBLE);
+        scrambleItem = new JMenuItem("Full     ");
+        StaticUtils.addHotKey(KeyEvent.VK_F, scrambleItem, "Full", scrambler);
+        scramblemenu.add(scrambleItem);
         
-        genericGlue = new GenericGlue(initialPuzzle, 3, progressBar);
 
         // Puzzle lengths
         //
-        Menu puzzlemenu = new Menu("Puzzle");
-        genericGlue.addItemsToPuzzleMenu(puzzlemenu, statusLabel, progressBar);
+        JMenu puzzlemenu = new JMenu("Puzzle");
 
         // Macros
         //
-        Menu macromenu = new Menu("Macros");
-        macromenu.add(new MenuItem("Start/Stop Macro Definition  Ctrl+M")).addActionListener(macro);
-        macromenu.add(new MenuItem("Cancel Macro Definition      Ctrl+Esc")).addActionListener(cancel);
-        macromenu.add(new MenuItem("Apply Last Macro                   Ctrl+A")).addActionListener(last);
-        macromenu.add(apply);
-        macromenu.add(new MenuItem("Read Macro File...")).addActionListener(read);
-        macromenu.add(new MenuItem("Write Macro File")).addActionListener(write);
-        macromenu.add(new MenuItem("Write Macro File As...")).addActionListener(writeas);
+        JMenu macromenu = new JMenu("Macros");
+        JMenuItem item = new JMenuItem("Start/Stop Macro Definition");
+        StaticUtils.addHotKey(KeyEvent.VK_M, item, "Macro", macro);
+        macromenu.add(item);
+        item = new JMenuItem("Cancel Macro Definition");
+        StaticUtils.addHotKey(KeyEvent.VK_ESCAPE, item, "Cancel", cancel);
+        macromenu.add(item);
+        item = new JMenuItem("Apply Last Macro");
+        StaticUtils.addHotKey(KeyEvent.VK_A, item, "Last", last);
+        macromenu.add(item);
+        macromenu.add(new JMenuItem("Read Macro File...")).addActionListener(read);
+        macromenu.add(new JMenuItem("Write Macro File")).addActionListener(write);
+        macromenu.add(new JMenuItem("Write Macro File As...")).addActionListener(writeas);
         initMacroList(); // create controls for any macro definitions.
         initMacroControls(); // to show controls
 
         // Help
         //
-        Menu helpmenu = new Menu("Help");
-        helpmenu.add(new MenuItem("About...")).addActionListener(new ActionListener() {
+        JMenu helpmenu = new JMenu("Help");
+        helpmenu.add(new JMenuItem("About...")).addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 JOptionPane.showMessageDialog(MC4DSwing.this, 
                 	"<html><center>" + 
@@ -498,14 +503,14 @@ public class MC4DSwing extends JFrame {
             }
         });
         
-        MenuBar menubar = new MenuBar();
+        JMenuBar menubar = new JMenuBar();
         menubar.add(filemenu);
         menubar.add(editmenu);
         menubar.add(scramblemenu);
         menubar.add(puzzlemenu);
         menubar.add(macromenu);
         menubar.add(helpmenu);
-        setMenuBar(menubar);
+        setJMenuBar(menubar);
         
         JPanel statusBar = new JPanel();
         statusBar.setBackground(this.getBackground());
@@ -516,7 +521,7 @@ public class MC4DSwing extends JFrame {
         statusBar.add(progressBar);
         statusBar.add(Box.createHorizontalGlue());
         statusBar.add(twistLabel);
-        statusBar.add(Box.createHorizontalStrut(10));
+        statusBar.add(Box.createRigidArea(new Dimension(10, 25))); // height is so view won't jump as progress bar is shown/hidden
         
         viewcontainer.setBorder(new BevelBorder(BevelBorder.LOWERED));
         statusBar.setBorder(new BevelBorder(BevelBorder.LOWERED));
@@ -525,14 +530,85 @@ public class MC4DSwing extends JFrame {
 
         Container contents = getContentPane();
         contents.setLayout(new BorderLayout());
-        contents.add(macroControlsContainer, "East"); // I'd prefer west except AWT drop-down menus screw it up.
+        contents.add(macroControlsContainer, "West"); // I'd prefer west except AWT drop-down menus screw it up.
         contents.add(viewcontainer, "Center");
         contents.add(statusBar, "South");
-        
+
+        genericGlue = new GenericGlue(initialPuzzle, 3, progressBar);
+        initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));
     } // end MC4DSwing
 
 
+    public void initPuzzleMenu(JMenu puzzlemenu, final JLabel statusLabel, final JProgressBar progressView)
+    {
+        String table[][] = {
+            {"{3,3,3}",  "1,1.9,2,3,4,5,6,7", "Simplex"},
+            {"{3}x{4}",  "1,2,3,4,5,6,7",     "Triangular Prism Prism"},
+            {"{4,3,3}",  "1,2,3,4,5,6,7,8,9", "Hypercube"},
+            {"{5}x{4}",  "1,2,2.5,3,4,5,6,7", "Pentagonal Prism Prism"},
+            {"{4}x{5}",  "1,2,2.5,3,4,5,6,7", "Pentagonal Prism Prism (alt)"},
+            {"{6}x{4}",  "1,2,2.5,3,4,5,6,7", "Hexagonal Prism Prism"},
+            {"{7}x{4}",  "1,2,2.5,3,4,5,6,7", "Heptagonal Prism Prism"},
+            {"{8}x{4}",  "1,2,2.5,3,4,5,6,7", "Octagonal Prism Prism"},
+            {"{9}x{4}",  "1,2,2.5,3,4,5,6,7", "Nonagonal Prism Prism"},
+            {"{10}x{4}", "1,2,2.5,3,4,5,6,7", "Decagonal Prism Prism"},
+            {"{100}x{4}","1,3",               "Onehundredagonal Prism Prism"},
+            {"{3}x{3}",  "1,2,3,4,5,6,7",     ""},
+            {"{3}x{5}",  "1,2,2.5,3,4,5,6,7", ""},
+            {"{5}x{5}",  "1,2,2.5,3,4,5,6,7", ""}, // XXX 2 is ugly, has slivers
+            {"{5}x{10}",  "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
+            {"{10}x{5}",  "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
+            {"{10}x{10}", "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
+            {"{3,3}x{}", "1,2,3,4,5,6,7",     "Tetrahedral Prism"},
+            {"{5,3}x{}", "1,2,2.5,3,4,5,6,7", "Dodecahedral Prism"},
+            {"{}x{5,3}", "1,2,2.5,3,4,5,6,7", "Dodecahedral Prism (alt)"},
+            {"{5,3,3}",  "1,2,2.5,3",         "Hypermegaminx (BIG!)"},
+            {null,       "",                  "Invent my own!"},
+        };
+        for (int i = 0; i < table.length; ++i)
+        {
+
+            final String schlafli = table[i][0];
+            String lengthStrings[] = table[i][1].split(",");
+            final String name = (schlafli==null ? table[i][2] :
+                                 schlafli + "  " + table[i][2]);
+
+            // Puzzles with triangles kind of suck so far,
+            // so we might want to leave them out of the menu...
+            boolean allowPuzzlesWithTriangles = true;
+            //boolean allowPuzzlesWithTriangles = false;
+            if (!allowPuzzlesWithTriangles)
+            {
+                if (schlafli != null && schlafli.indexOf("{3") != -1)
+                    continue;
+            }
+
+            JMenu submenu;
+            if (schlafli != null)
+            {
+                submenu = new JMenu(name+"    "); // XXX padding so the > doesn't clobber the end of the longest names!? lame
+                puzzlemenu.add(submenu);
+            }
+            else
+                submenu = puzzlemenu;
+            for (int j = 0; j < lengthStrings.length; ++j)
+            {
+                final String lengthString = lengthStrings[j];
+                submenu.add(new JMenuItem(schlafli==null ? name : "   "+lengthString+"  ")).addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent ae)
+                    {
+                		progressView.setVisible(true);
+                    	view.repaint();
+                    	genericGlue.initPuzzle(schlafli, lengthString, progressView, statusLabel, true, viewRepainter);
+                    	view.repaint();
+                    }
+                });
+            }
+        }
+    } // initPuzzleMenu
+    
+    
     /**
      * Called whenever macro list in manager changes to keep "Apply" submenu up-to-date.
      */
@@ -542,7 +618,7 @@ public class MC4DSwing extends JFrame {
         for (int i = 0; i < macros.length; ++i)
         {
             final Macro macro = macros[i];
-            MenuItem applyitem = apply.add(new MenuItem(macro.getName()));
+            JMenuItem applyitem = apply.add(new JMenuItem(macro.getName()));
             applyitem.addActionListener(new ProbableAction(macro.getName()) {
                 public void doit(ActionEvent ae) {
                     lastMacro = macro;
@@ -607,7 +683,7 @@ public class MC4DSwing extends JFrame {
                     // int numTwists = Integer.parseInt(firstline[3]);
                     String schlafli = firstline[4];
                     initialLength = Double.parseDouble(firstline[5]);
-                    genericGlue.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false);
+                    genericGlue.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false, viewRepainter);
                     iLength = (int)Math.round(initialLength);
                     hist = new History(iLength);
                     String title = MagicCube.TITLE;
@@ -652,12 +728,9 @@ public class MC4DSwing extends JFrame {
         
         view = new MC4DView(puzzle, polymgr, hist, genericGlue.genericPuzzleDescription.nFaces());
         view.genericGlue = genericGlue; // make it share mine
-        //genericGlue.deactivate(); // to start with normal cubes
         view.setScale(scale); // XXX added-- I think this is needed, otherwise the Property's scale doesn't get applied til I hit the scale slider! -don
 
         view.setBackground(PropertyManager.getColor("background.color"));
-//        for(int f=0; f<MagicCube.NFACES; f++)
-//            view.setFaceColor(f, PropertyManager.getColor("face"+f+".color", MagicCube.faceColor(f)));
         Color gc = PropertyManager.getColor("ground.color", MagicCube.GROUND);
         view.setGround(PropertyManager.getBoolean("ground", true) ? gc : null);
         view.setShowShadows(PropertyManager.getBoolean("shadows", true));
@@ -1033,6 +1106,8 @@ public class MC4DSwing extends JFrame {
             public void run() {
                 System.out.println("version " + System.getProperty("java.version"));
                 PropertyManager.loadProps(args, PropertyManager.top);
+                try { UIManager.setLookAndFeel(new SyntheticaStandardLookAndFeel()); } 
+                catch (Exception e) { e.printStackTrace(); }
                 final JFrame frame = new MC4DSwing();
                 frame.setSize(
                     PropertyManager.getInt("window.width",  900),

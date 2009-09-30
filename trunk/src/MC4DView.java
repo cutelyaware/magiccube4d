@@ -6,10 +6,8 @@ import java.io.PushbackReader;
 import java.util.Vector;
 import java.util.Enumeration;
 
-//
-// NOTE: FOR APPLET COMPATIBILITY THIS CLASS SHOULD NOT INCLUCE ANY POST JDK 1.2 CONSTRUCTS
-// AND SHOULD NOT BE COMPILED WITH POST JDK 1.4 COMPILERS.
-//
+import javax.swing.JPanel;
+
 
 /**
  * Represents a viewer/controller for the Magic Cube 4D puzzle.
@@ -18,7 +16,7 @@ import java.util.Enumeration;
  * @author Melinda Green
  */
 @SuppressWarnings("serial")
-public class MC4DView extends DoubleBufferedCanvas {
+public class MC4DView extends JPanel {
 
     public GenericGlue genericGlue = null; // caller can set this after I'm constructed
 
@@ -187,7 +185,6 @@ public class MC4DView extends DoubleBufferedCanvas {
 		                                               MC4DView.this.polymgr.getTwistFactor(),
 		                                               slicemask,
 		                                               MC4DView.this);
-		
 		            }
                 	
                     return;
@@ -416,7 +413,7 @@ public class MC4DView extends DoubleBufferedCanvas {
         if( rotationHandler.continueSpin() && lastDrag == null) { // keep spinning
             repaint();
         }
-        Graphics g = super.startPaint(g1); // begin painting into the back buffer
+        Graphics g = g1; //super.startPaint(g1); // begin painting into the back buffer
 
         // antialiasing used to be too slow for animations but now it seems OK so always use the user preference.
         // I hope that referring to Graphics2D won't cause a class-not-found exception in any Applets.
@@ -462,7 +459,7 @@ public class MC4DView extends DoubleBufferedCanvas {
                 polymgr.getTwistFactor(),
                 this);
         }
-        super.endPaint(); // blits the back buffer to the front
+        //super.endPaint(); // blits the back buffer to the front
     } // end paint
 
 
