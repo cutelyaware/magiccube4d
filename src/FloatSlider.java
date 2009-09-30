@@ -1,11 +1,11 @@
 
-//
-// NOTE: FOR APPLET COMPATIBILITY THIS CLASS SHOULD NOT INCLUCE ANY POST JDK 1.2 CONSTRUCTS
 // AND SHOULD NOT BE COMPILED WITH POST JDK 1.4 COMPILERS.
 //
 
 import java.awt.*;
 import java.awt.event.*;
+
+import javax.swing.JScrollBar;
 
 /**
  * Floating point version of JSlider.
@@ -15,13 +15,13 @@ import java.awt.event.*;
  * Note that unlike in the base class, values set via setFloatValue(val) are allowed
  * to be outside the min/max range values. In those cases the slider thumb will clamp
  * to the appropriate slider end (just like in the base class) but the out-of-range
- * value will still be retrivable with getFloatValue().
+ * value will still be retrievable with getFloatValue().
  * 
  * Copyright 2005 - Superliminal Software
  * @author Melinda Green & Don Hatch
  */
 @SuppressWarnings("serial")
-public class FloatSlider extends Scrollbar {
+public class FloatSlider extends JScrollBar {
     private final static int DEFAULT_RANGE = 1000; // number of descrete steps
     private final static int DEFAULT_VISIBLE = 20; // pixel width of thumb
     private double curFloat, minFloat, maxFloat;
@@ -151,7 +151,7 @@ public class FloatSlider extends Scrollbar {
      */
     public static void main(String args[]) {
         Frame frame = new Frame("FloatSlider example");
-        final FloatSlider rslider = new FloatSlider(Scrollbar.HORIZONTAL, 100.1f, 5.5f, 50000f, true);
+        final FloatSlider rslider = new FloatSlider(Scrollbar.HORIZONTAL, 10f, 1f, 100f, true);
         final Label curValue = new Label("FloatSlider value: " + rslider.getFloatValue());
         rslider.addAdjustmentListener(new AdjustmentListener() {
             public void adjustmentValueChanged(AdjustmentEvent ae) {

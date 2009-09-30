@@ -119,7 +119,7 @@ public class GenericGlue
     public interface Callback { public void call(); }
 
 
-    public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground) {
+    public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground, final Callback cb) {
 
     	statusLabel.setText("");
     	ProgressManager builder = new ProgressManager(progressView) {
@@ -143,6 +143,8 @@ public class GenericGlue
 			public void done() {
 				statusLabel.setText(schlafli + "  length="+lengthString);
 				super.done();
+				if(cb != null) 
+					cb.call();
 			}
     	};
     	if(inBackground)
@@ -157,7 +159,7 @@ public class GenericGlue
         if (verboseLevel >= 1) System.out.println("in GenericGlue ctor");
         if (initialSchlafli != null)
         {
-            initPuzzle(initialSchlafli, ""+initialLength, progressView, new JLabel(), false);
+            initPuzzle(initialSchlafli, ""+initialLength, progressView, new JLabel(), false, null);
         }
         if (verboseLevel >= 1) System.out.println("out GenericGlue ctor");
     }
@@ -177,90 +179,6 @@ public class GenericGlue
             || iTwist < nTwist;
     }
 
-    // Call this from MC4DSwing ctor right after all
-    // the other menu items are added
-    public void addItemsToPuzzleMenu(Menu puzzlemenu, final JLabel statusLabel, final JProgressBar progressView)
-    {
-        if (verboseLevel >= 1) System.out.println("in GenericGlue.addItemsToPuzzleMenu");
-
-        // Selecting any of the previously existing menu items
-        // should have the side effect of setting
-        // genericPuzzleDescription to null-- that's the indicator
-        // that the glue overlay mechanism is no longer active.
-        for (int i = 0; i < puzzlemenu.getItemCount(); ++i)
-        {
-            puzzlemenu.getItem(i).addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae)
-                {
-                    if (verboseLevel >= 1) System.out.println("GenericGlue: deactivating");
-                    deactivate();
-                }
-            });
-        }
-
-        String table[][] = {
-            {"{3,3,3}",  "1,1.9,2,3,4,5,6,7", "Simplex"},
-            {"{3}x{4}",  "1,2,3,4,5,6,7",     "Triangular Prism Prism"},
-            {"{4,3,3}",  "1,2,3,4,5,6,7,8,9", "Hypercube"},
-            {"{5}x{4}",  "1,2,2.5,3,4,5,6,7", "Pentagonal Prism Prism"},
-            {"{4}x{5}",  "1,2,2.5,3,4,5,6,7", "Pentagonal Prism Prism (alt)"},
-            {"{6}x{4}",  "1,2,2.5,3,4,5,6,7", "Hexagonal Prism Prism"},
-            {"{7}x{4}",  "1,2,2.5,3,4,5,6,7", "Heptagonal Prism Prism"},
-            {"{8}x{4}",  "1,2,2.5,3,4,5,6,7", "Octagonal Prism Prism"},
-            {"{9}x{4}",  "1,2,2.5,3,4,5,6,7", "Nonagonal Prism Prism"},
-            {"{10}x{4}", "1,2,2.5,3,4,5,6,7", "Decagonal Prism Prism"},
-            {"{100}x{4}","1,3",               "Onehundredagonal Prism Prism"},
-            {"{3}x{3}",  "1,2,3,4,5,6,7",     ""},
-            {"{3}x{5}",  "1,2,2.5,3,4,5,6,7", ""},
-            {"{5}x{5}",  "1,2,2.5,3,4,5,6,7", ""}, // XXX 2 is ugly, has slivers
-            {"{5}x{10}",  "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
-            {"{10}x{5}",  "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
-            {"{10}x{10}", "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
-            {"{3,3}x{}", "1,2,3,4,5,6,7",     "Tetrahedral Prism"},
-            {"{5,3}x{}", "1,2,2.5,3,4,5,6,7", "Dodecahedral Prism"},
-            {"{}x{5,3}", "1,2,2.5,3,4,5,6,7", "Dodecahedral Prism (alt)"},
-            {"{5,3,3}",  "1,2,2.5,3",         "Hypermegaminx (BIG!)"},
-            {null,       "",                  "Invent my own!"},
-        };
-        for (int i = 0; i < table.length; ++i)
-        {
-
-            final String schlafli = table[i][0];
-            String lengthStrings[] = table[i][1].split(",");
-            final String name = (schlafli==null ? table[i][2] :
-                                 schlafli + "  " + table[i][2]);
-
-            // Puzzles with triangles kind of suck so far,
-            // so we might want to leave them out of the menu...
-            boolean allowPuzzlesWithTriangles = true;
-            //boolean allowPuzzlesWithTriangles = false;
-            if (!allowPuzzlesWithTriangles)
-            {
-                if (schlafli != null && schlafli.indexOf("{3") != -1)
-                    continue;
-            }
-
-            Menu submenu;
-            if (schlafli != null)
-            {
-                submenu = new Menu(name+"    "); // XXX padding so the > doesn't clobber the end of the longest names!? lame
-                puzzlemenu.add(submenu);
-            }
-            else
-                submenu = puzzlemenu;
-            for (int j = 0; j < lengthStrings.length; ++j)
-            {
-                final String lengthString = lengthStrings[j];
-                submenu.add(new MenuItem(schlafli==null ? name : ""+lengthString)).addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent ae)
-                    {
-                    	initPuzzle(schlafli, lengthString, progressView, statusLabel, true);
-                    }
-                });
-            }
-        }
-        if (verboseLevel >= 1) System.out.println("out GenericGlue.addItemsToPuzzleMenu");
-    } // addItemsToPuzzleMenu
     
     public static GenericPuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
         if (schlafli == null)
@@ -350,7 +268,7 @@ public class GenericGlue
     	return (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor);
     }
     
-    public void undoAction(Canvas view, JLabel statusLabel, float twistFactor)
+    public void undoAction(JPanel view, JLabel statusLabel, float twistFactor)
     {
         GenericGlue glue = this;
         if (glue.undoPartSize > 0)
@@ -383,7 +301,7 @@ public class GenericGlue
             statusLabel.setText("Nothing to undo.");
     } // undoAction
 
-    public void redoAction(Canvas view, JLabel statusLabel, float twistFactor)
+    public void redoAction(JPanel view, JLabel statusLabel, float twistFactor)
     {
         GenericGlue glue = this;
         if (glue.undoq.size()-glue.undoPartSize > 0)
@@ -416,7 +334,7 @@ public class GenericGlue
             statusLabel.setText("Nothing to redo.");
     } // redoAction
 
-    public void cheatAction(Canvas view, JLabel statusLabel)
+    public void cheatAction(JPanel view, JLabel statusLabel)
     {
         GenericGlue glue = this;
         glue.cheating = true; // each repaint will trigger another til done
@@ -424,7 +342,7 @@ public class GenericGlue
         statusLabel.setText("");
     } // cheatAction
 
-    public void scrambleAction(Canvas view, JLabel statusLabel, int scramblechenfrengensen)
+    public void scrambleAction(JPanel view, JLabel statusLabel, int scramblechenfrengensen)
     {
         GenericGlue glue = this;
         java.util.Random rand = new java.util.Random();
@@ -470,7 +388,7 @@ public class GenericGlue
 
 
     public void mouseMovedAction(MouseEvent e,
-                                 Canvas view)
+                                 JPanel view)
     {
         GenericGlue genericGlue = this;
         int pickedSticker = GenericPipelineUtils.pickSticker(
@@ -483,11 +401,12 @@ public class GenericGlue
         genericGlue.iStickerUnderMouse = pickedSticker;
     } // mouseMovedAction
 
+
     public void mouseClickedAction( MouseEvent e,
     		RotationHandler rotationHandler,
     		float twistFactor,
     		int slicemask,
-    		Canvas view )
+    		JPanel view )
     {
         GenericGlue genericGlue = this;
         boolean isRotate = e.isControlDown() || isMiddleMouseButton(e);
@@ -656,7 +575,7 @@ public class GenericGlue
         Color outlineColor,
         Graphics g,
         float twistFactor,
-        Canvas view)
+        JPanel view)
     {
         GenericGlue genericGlue = this;
 

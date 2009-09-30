@@ -2,6 +2,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 /*
@@ -27,7 +28,7 @@ public abstract class ProgressManager extends SwingWorker<Void, Void> {
    		         public  void propertyChange(PropertyChangeEvent evt) {
    		    		 String eventName = evt.getPropertyName();
    		             if ("progress".equals(eventName)) {
-   			        	 int newVal = ((Integer)evt.getNewValue()).intValue();
+   			        	 final int newVal = ((Integer)evt.getNewValue()).intValue();
    		                 progressView.setValue(newVal);
    		                 progressView.repaint();
    		             }
@@ -36,12 +37,17 @@ public abstract class ProgressManager extends SwingWorker<Void, Void> {
    	    );
 	}
 	
-	private void init(String string, boolean indeterminate, int max) {
+	private void init(final String string, final boolean indeterminate, int max) {
 		this.max = max;
 		setProgress(0);
-		progressView.setIndeterminate(indeterminate);
-		progressView.setString(string);
-		progressView.setVisible(true);
+		SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					progressView.setIndeterminate(indeterminate);
+					progressView.setString(string);
+					//progressView.setVisible(true); // this seems to cause all menu items to disappear
+				}
+			}
+		);
 	}
 	
 	/*
