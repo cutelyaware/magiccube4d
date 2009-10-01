@@ -31,13 +31,8 @@ public class MC4DView extends JPanel {
 
     private PuzzleState state;
     private PolygonManager polymgr;
-    private final MagicCube.Frame
-        shadow_frame = new MagicCube.Frame(),
-        twisting_frame = new MagicCube.Frame(); // scratch var used during animation
     private AnimationQueue animationQueue;
     public boolean isAnimating() { return animationQueue.isAnimating(); }
-    private MagicCube.Stickerspec stickerUnderMouse; // null if none or animating/spinning
-    private int cubieCenter[] = new int[MagicCube.NDIMS]; // center of cubie containing above
     private int slicemask; // bitmap representing which number keys are down
     private float faceRGB[][];
     private boolean showShadows=true;
@@ -106,6 +101,11 @@ public class MC4DView extends JPanel {
 
     public void allowSpinDrag(boolean val) {
         rotationHandler.settings.allowSpinDrag = val;
+        repaint();
+    }
+    
+    public void setSnapMode(Snap snap) {
+        rotationHandler.settings.snapSetting = snap;
         repaint();
     }
 
@@ -260,7 +260,7 @@ public class MC4DView extends JPanel {
     /*
      * Returns an array of nShades * nColorsPerShade RGB triplets 
      * from the upper satFrac fraction of the saturation range 0..1
-     */
+     *
     private static float[][] generateHSVColors(int nShades, int nColorsPerShade, float satFrac) {
     	final double G = 1 - (1 + Math.sqrt(5))/2; // golden fraction of 1.0
     	float[][] colors = new float[nColorsPerShade*nShades][3];
@@ -275,7 +275,7 @@ public class MC4DView extends JPanel {
 		    }
     	}
 	    return colors;
-    }
+    }*/
     
     public static void hsv2rgb(float h, float s, float v, float[] rgb)
 	{
@@ -322,40 +322,7 @@ public class MC4DView extends JPanel {
         xOff = ((W>H) ? (W-H)/2 : 0) + min/2;
         yOff = ((H>W) ? (H-W)/2 : 0) + min/2;
     }
-    
-    private void paintFrame(MagicCube.Frame frame, boolean isShadows, Graphics g) {
-        int
-            xs[] = new int[4],
-            ys[] = new int[4];
-        Color shadowcolor = ground == null ? Color.black : ground.darker().darker().darker().darker();
-        for (int q = 0; q < frame.nquads; q++) {
-            for (int i = 0; i < 4; i++) {
-                int qi = frame.quads[q][i];
-                xs[i] = (int)(xOff + frame.verts[qi][0]/pixels2polySF + .5);
-                ys[i] = (int)(yOff + frame.verts[qi][1]/pixels2polySF + .5);
-                //System.out.println(xs[i] + ", " + ys[i]);
-            }
-            int sid = frame.quadids[q]/6;
-            int cs = state.idToColor(sid);
-            //System.out.println(cs);
-            float b = frame.brightnesses[q];
-            Color stickercolor = new Color(
-                b*faceRGB[cs][0],
-                b*faceRGB[cs][1],
-                b*faceRGB[cs][2]);
-            boolean highlight = stickerUnderMouse != null && (highlightByCubie ? partOfCubie(sid) : stickerUnderMouse.id_within_cube == sid);
-            if(highlight)
-                stickercolor = stickercolor.brighter().brighter();
-            g.setColor(isShadows ? shadowcolor : stickercolor);
-            g.fillPolygon(xs, ys, 4);
-            if(!isShadows && outlineColor != null) {
-                g.setColor(outlineColor);
-                // uncomment the following line for an alternate outlining idea -MG
-                // g.setColor(new Color(faceRGB[cs][0], faceRGB[cs][1], faceRGB[cs][2]));
-                g.drawPolygon(xs, ys, 4);
-            }
-        }        
-    }
+
     
     public static int distSqrd(int a[], int b[]) {
         int sum = 0;
@@ -367,19 +334,11 @@ public class MC4DView extends JPanel {
     }       
     
 
-    private MagicCube.Stickerspec tmpsticker = new MagicCube.Stickerspec();
-    
-    private boolean partOfCubie(int sid) {
-        tmpsticker.id_within_cube = sid;
-        polymgr.fillStickerspecFromId(tmpsticker);
-        return distSqrd(tmpsticker.coords, cubieCenter) == 1;
-    }
-
     /**
      * @param l light vector in screen space.
      * @param n plane normal vector of plane passing through origin.
-     * @return matric that takes points in 3-space to their shadows.
-     */
+     * @return matrix that takes points in 3-space to their shadows.
+     *
     private static float[][] getShadowMat(float[] l, float[] n) {
         // l /= l dot n
         float[] tmp = new float[l.length];
@@ -390,16 +349,10 @@ public class MC4DView extends JPanel {
             {  -n[1]*l[0], 1-n[1]*l[1],  -n[1]*l[2], },
             {  -n[2]*l[0],  -n[2]*l[1], 1-n[2]*l[2], },
         };
-    }
+    }*/
 
-    private static void shift(MagicCube.Frame frame, float[] off) {
-        float[] negoff = {off[0], -off[1], off[2]};
-        for(int i=0; i<frame.nverts; i++)
-            for(int j=0; j<2; j++)
-                frame.verts[i][j] += negoff[j];
-    }
 
-    public void paint(Graphics g1) {
+    public void paint(Graphics g) {
         updateViewFactors();
 
 		if(animationQueue.isAnimating() && genericGlue.iTwist == genericGlue.nTwist) {
@@ -413,7 +366,6 @@ public class MC4DView extends JPanel {
         if( rotationHandler.continueSpin() && lastDrag == null) { // keep spinning
             repaint();
         }
-        Graphics g = g1; //super.startPaint(g1); // begin painting into the back buffer
 
         // antialiasing used to be too slow for animations but now it seems OK so always use the user preference.
         // I hope that referring to Graphics2D won't cause a class-not-found exception in any Applets.
@@ -459,7 +411,6 @@ public class MC4DView extends JPanel {
                 polymgr.getTwistFactor(),
                 this);
         }
-        //super.endPaint(); // blits the back buffer to the front
     } // end paint
 
 
@@ -600,11 +551,5 @@ public class MC4DView extends JPanel {
             }
         });
         frame.setVisible(true);
-    }
-    
-    private static int clamp(int x, int a, int b)
-    {
-        return x <= a ? a :
-               x >= b ? b : x;
     }
 }
