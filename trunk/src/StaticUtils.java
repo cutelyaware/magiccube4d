@@ -32,7 +32,10 @@ public class StaticUtils {
      * @param action callback to notify when control key is pressed
      */
     public static void addHotKey(int key, JComponent to, String actionName, Action action) {
-        KeyStroke keystroke = KeyStroke.getKeyStroke(key, java.awt.event.InputEvent.CTRL_MASK);
+    	addHotKey(KeyStroke.getKeyStroke(key, java.awt.event.InputEvent.CTRL_MASK), to, actionName, action);
+    }
+    
+    public static void addHotKey(KeyStroke keystroke, JComponent to, String actionName, Action action) {
         InputMap map = to.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         map.put(keystroke, actionName);
         to.getActionMap().put(actionName, action);

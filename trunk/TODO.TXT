@@ -31,14 +31,16 @@ LOG FILES
 BUGS
 * Fix Quick Moves.
 * Fix color buttons and remove the 6 fixed color choices.
-* Fix macro cancel.
-* Fix slices masks.
+* DONE - Fix macro cancel.
+* DONE - Fix slices masks.
 * Fix the puzzles containing triangles.
 * Fix macro apply.
-* Fix disconnected histories in reset, scramble, and other operations.
+* DONE - Fix disconnected histories in reset, scramble, and other operations.
 * Fix "whichax out of range" errors
 * Fix horrible behavior when attempting to twist center-center stickers, or better yet
   Don't highlight or allow twist attempts on them in the first place.
+* Make Esc key cancel solve/cheat animations even when 3D window does not have focus.
+* Fix so that building new puzzle releases memory used by previous puzzle. (by removing listeners?)
 
 META
 * Turn this list into tracked bugs & tasks

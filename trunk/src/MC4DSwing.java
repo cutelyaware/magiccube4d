@@ -388,7 +388,7 @@ public class MC4DSwing extends JFrame {
         
         // accelerator keys from some non-menu actions
         StaticUtils.addHotKey(KeyEvent.VK_M, viewcontainer, "Macro", macro);
-        StaticUtils.addHotKey(KeyEvent.VK_ESCAPE, viewcontainer, "Cancel", cancel);
+        StaticUtils.addHotKey(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), viewcontainer, "Cancel", cancel);
         StaticUtils.addHotKey(KeyEvent.VK_A, viewcontainer, "Apply", last);
         
         saveasitem.addActionListener(saveas); // no hotkey
@@ -824,13 +824,13 @@ public class MC4DSwing extends JFrame {
                 if(c == KeyEvent.VK_ESCAPE)
                     cancel.doit(null);
                 //if(c == 'k')  hist.mark(History.MARK_MACRO_OPEN);
-//                if(Character.isDigit(c)) {
-//                    MagicCube.TwistData toGoto = hist.goTo(c - '0');
-//                    if(toGoto != null)
-//                        view.animate(toGoto);
-//                    else
-//                        statusLabel.setText("Nothing to goto.");
-//                }
+                //if(Character.isDigit(c)) {
+                //    MagicCube.TwistData toGoto = hist.goTo(c - '0');
+                //    if(toGoto != null)
+                //        view.animate(toGoto);
+                //    else
+                //        statusLabel.setText("Nothing to goto.");
+                //}
             }
         });
     } // end initPuzzle
