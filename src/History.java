@@ -148,10 +148,15 @@ public class History {
     public void deleteLast() {
         deleteNode(last);
     }
-
-    public void clear() {
+    
+    public void clear(int newLength) {
+    	length = newLength;
         while (first != null)
             deleteLast();
+    }
+
+    public void clear() {
+    	clear(length);
     }
 
     public void append(int stickerid, int dir, int slicesmask) {
