@@ -306,11 +306,11 @@ public class MC4DSwing extends JFrame {
         reset = new AbstractAction("Reset") {
             public void actionPerformed(ActionEvent ae) {
                 cancel.doit(ae);
+                double length = genericGlue.genericPuzzleDescription.getEdgeLength();
                 genericGlue.initPuzzle(
             		genericGlue.genericPuzzleDescription.getSchlafliProduct(),
-            		""+genericGlue.genericPuzzleDescription.getEdgeLength(),
-            		progressBar, statusLabel, false, viewRepainter);
-                hist = new History((int)genericGlue.genericPuzzleDescription.getEdgeLength());
+            		""+length, progressBar, statusLabel, false, viewRepainter);
+                hist.clear((int)length);
                 scrambleState = SCRAMBLE_NONE;
                 updateTwistsLabel();
                 view.repaint();
