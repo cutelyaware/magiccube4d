@@ -738,6 +738,7 @@ public class MC4DSwing extends JFrame {
         view.allowSpinDrag(PropertyManager.getBoolean("spindrag", true));
         view.allowAntiAliasing(PropertyManager.getBoolean("antialiasing", true));
         view.setHighlightByCubie(PropertyManager.getBoolean("highlightbycubie", false));
+        view.setSnapMode(PropertyManager.getBoolean("ctrlrotbyface", true) ? Snap.Snap_Cell : Snap.Snap_Smart);
         Color ol = PropertyManager.getColor("outlines.color", Color.BLACK);
         view.setOutlined(PropertyManager.getBoolean("outlines", false) ? ol : null);
         viewcontainer.removeAll();
@@ -964,6 +965,39 @@ public class MC4DSwing extends JFrame {
                 }
             });
             
+            final JRadioButton 
+	        	ctrlRotateByFace  = new JRadioButton("by Face"),
+	        	ctrlRotateByCubie = new JRadioButton("by Cubie");
+            ButtonGroup ctrlRotateGroup = new ButtonGroup();
+            ctrlRotateGroup.add(ctrlRotateByFace);
+            ctrlRotateGroup.add(ctrlRotateByCubie);
+            if(PropertyManager.getBoolean("ctrlrotbyface", true))
+            	ctrlRotateByFace.setSelected(true);
+            else
+            	ctrlRotateByCubie.setSelected(true);
+            ctrlRotateByFace.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					boolean byFace = ctrlRotateByFace.isSelected();
+					MC4DSwing.this.view.setSnapMode(byFace ? Snap.Snap_Cell : Snap.Snap_Smart);
+					PropertyManager.userprefs.setProperty("ctrlrotbyface", ""+byFace);
+				}
+            });
+            ctrlRotateByCubie.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					boolean byCubie = ctrlRotateByCubie.isSelected();
+					MC4DSwing.this.view.setSnapMode(byCubie ? Snap.Snap_Smart : Snap.Snap_Cell);
+					PropertyManager.userprefs.setProperty("ctrlrotbyface", ""+!byCubie);
+				}
+            });
+            JLabel ctrlClickLabel = new JLabel("Ctrl-Click Rotates:");
+            JPanel rotateMode = new JPanel();
+            rotateMode.setLayout(new BoxLayout(rotateMode, BoxLayout.X_AXIS));
+            rotateMode.add(ctrlClickLabel);
+            rotateMode.add(Box.createHorizontalGlue());
+            ctrlClickLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
             JPanel sliders = new JPanel(new GridLayout(5, 2));
             sliders.add(new JLabel("Twist Speed"));
             sliders.add(twistfactorSlider);
@@ -985,6 +1019,9 @@ public class MC4DSwing extends JFrame {
             general.add(highlightByCubie);
             general.add(quickMoves);
             general.add(allowAntiAliasing);
+            general.add(rotateMode);
+            general.add(ctrlRotateByFace);
+            general.add(ctrlRotateByCubie);
             general.add(Box.createVerticalGlue());
 
             JPanel faces = new JPanel();

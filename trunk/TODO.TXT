@@ -1,11 +1,13 @@
 
 PUZZLES
 * Support from 2 to N-dimensional puzzles (yeah right!).
-* Fix the puzzles containing triangles.
 * Port the solve and compress functions to the new puzzles. 
   First just for the appropriately sized cubes and eventually for all puzzles.
-* Figure out how to support rotations for generic puzzles & history.
-
+* DONE - Figure out how to support rotations for generic puzzles & history.
+* Implement Jenn3D-style 4D rotates via Shift-left drag.
+* Implement right-drag spin (X) and scale (Y)
+* Comment out broken or redundant puzzles before shipping.
+* Make twist speed adjustable mid-twist.
 
 HIGHLIGHTING
 * Disallow 360 degree twists.
@@ -13,14 +15,30 @@ HIGHLIGHTING
   do something if clicked. For center-center stickers that would require the Ctrl key being held.
 
 GUI
-* Replace the AWT class usages with Swing versions.
-* Move control panel to the west.
-* Add Synthetica look-and-feel.
-* Add a puzzle-building progress bar to the status line for feedback during slicing, etc.
+* Choose better slider ranges.
+* Fix or remove contigious cubies mode.
+* DONE - Replace the AWT class usages with Swing versions.
+* DONE - Move control panel to the west.
+* DONE - Add Synthetica look-and-feel.
+* DONE - Add a puzzle-building progress bar to the status line for feedback during slicing, etc.
+* DONE - Add ctrl-click-to-center modes.
 
 LOG FILES
 * Maybe keep printing puzzle state data but skip over reading it and initialize from history data instead.
 * Force file names to end with ".log".
+* Save transform matrix in the file.
+
+BUGS
+* Fix Quick Moves.
+* Fix color buttons and remove the 6 fixed color choices.
+* Fix macro cancel.
+* Fix slices masks.
+* Fix the puzzles containing triangles.
+* Fix macro apply.
+* Fix disconnected histories in reset, scramble, and other operations.
+* Fix "whichax out of range" errors
+* Fix horrible behavior when attempting to twist center-center stickers, or better yet
+  Don't highlight or allow twist attempts on them in the first place.
 
 META
 * Turn this list into tracked bugs & tasks
