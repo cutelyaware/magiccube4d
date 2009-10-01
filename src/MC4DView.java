@@ -151,11 +151,9 @@ public class MC4DView extends JPanel {
         this.state = state;
         this.polymgr = polymgr;
         this.animationQueue = new AnimationQueue(hist);
-//        faceRGB = new float[MagicCube.NFACES][3];
-//        for(int f=0; f<MagicCube.NFACES; f++)
-//            System.arraycopy(MagicCube.FACE_COLORS[f], 0, faceRGB[f], 0, 3);
         faceRGB = YUV.generateVisuallyDistinctRGBs(nfaces, .7f, .1f); //generateHSVColors(12, 10, .5f);
-
+        this.setFocusable(true);
+        
         // manage slicemask as user holds and releases number keys
         this.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent arg0) {
@@ -172,6 +170,7 @@ public class MC4DView extends JPanel {
         this.addMouseListener(new MouseAdapter() {
             // look for and initiate twist and rotation animations
             public void mouseClicked(MouseEvent e) {
+            	MC4DView.this.requestFocusInWindow(); // to start receiving key events.
             	
             	boolean isViewRotation = e.isControlDown() || isMiddleMouseButton(e);
                 if( isViewRotation )
@@ -483,33 +482,6 @@ public class MC4DView extends JPanel {
         }
     } // end class AnimationQueue
 
-
-    // Make it so we get keyboard focus on startup,
-    // without having to click first.  Thanks, Melinda!
-    // The state of things seems to be:
-    //      - Buttons and TextFields are apparently "focus traversable"
-    //        by default.  Canvases and Applets aren't,
-    //        implying (not obvious) that you need to click to type
-    //        when the app starts,
-    //        which is almost never the desired behavior.
-    //        You can change this by overriding isFocusTraversable(),
-    //        which we do below.
-    //      - This method is deprecated in favor of isFocusable, though
-    //        better would be simply using setFocusable(boolean). I'm
-    //        not doing that however because isFocusable is a 1.4 concept
-    //        and we want the Applet code to be backwards compatible with
-    //        1.2 if possible.
-    //      - Other approaches using requestFocus():
-    //        A Canvas calling requestFocus() doesn't seem to do
-    //        anything.  An Applet calling requestFocus() doesn't
-    //        do anything during init(), but I think it works
-    //        if you put it in the mouseEntered handler or something,
-    //        though this can lead to various unpredictabilities.
-    //
-    public boolean isFocusTraversable()
-    {
-        return true;
-    }
 
     /**
      * Simple example program.
