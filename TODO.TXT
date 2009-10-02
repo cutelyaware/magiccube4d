@@ -8,6 +8,7 @@ PUZZLES
 * Implement right-drag spin (X) and scale (Y)
 * Comment out broken or redundant puzzles before shipping.
 * Make twist speed adjustable mid-twist.
+* Need isSolved method to determine when a true solve has been achieved.
 
 HIGHLIGHTING
 * Disallow 360 degree twists.
@@ -17,6 +18,7 @@ HIGHLIGHTING
 GUI
 * Choose better slider ranges.
 * Fix or remove contigious cubies mode.
+* Add a debugging FPS meter.
 * DONE - Replace the AWT class usages with Swing versions.
 * DONE - Move control panel to the west.
 * DONE - Add Synthetica look-and-feel.
@@ -37,6 +39,8 @@ BUGS
 * Fix macro apply.
 * DONE - Fix disconnected histories in reset, scramble, and other operations.
 * Fix "whichax out of range" errors
+* Fix random Exception in thread "AWT-EventQueue-0" java.lang.ArrayIndexOutOfBoundsException: 4042
+	at GenericPipelineUtils.paintFrame(GenericPipelineUtils.java:683)
 * Fix horrible behavior when attempting to twist center-center stickers, or better yet
   Don't highlight or allow twist attempts on them in the first place.
 * Make Esc key cancel solve/cheat animations even when 3D window does not have focus.

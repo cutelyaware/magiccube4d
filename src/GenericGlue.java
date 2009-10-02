@@ -268,7 +268,7 @@ public class GenericGlue
     	return (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor);
     }
     
-    public void undoAction(JPanel view, JLabel statusLabel, float twistFactor)
+    public void undoAction(Component view, JLabel statusLabel, float twistFactor)
     {
         GenericGlue glue = this;
         if (glue.undoPartSize > 0)
@@ -301,7 +301,7 @@ public class GenericGlue
             statusLabel.setText("Nothing to undo.");
     } // undoAction
 
-    public void redoAction(JPanel view, JLabel statusLabel, float twistFactor)
+    public void redoAction(Component view, JLabel statusLabel, float twistFactor)
     {
         GenericGlue glue = this;
         if (glue.undoq.size()-glue.undoPartSize > 0)
@@ -334,7 +334,7 @@ public class GenericGlue
             statusLabel.setText("Nothing to redo.");
     } // redoAction
 
-    public void cheatAction(JPanel view, JLabel statusLabel)
+    public void cheatAction(Component view, JLabel statusLabel)
     {
         GenericGlue glue = this;
         glue.cheating = true; // each repaint will trigger another til done
@@ -342,7 +342,7 @@ public class GenericGlue
         statusLabel.setText("");
     } // cheatAction
 
-    public void scrambleAction(JPanel view, JLabel statusLabel, int scramblechenfrengensen)
+    public void scrambleAction(Component view, JLabel statusLabel, int scramblechenfrengensen)
     {
         GenericGlue glue = this;
         java.util.Random rand = new java.util.Random();
@@ -388,7 +388,7 @@ public class GenericGlue
 
 
     public void mouseMovedAction(MouseEvent e,
-                                 JPanel view)
+                                 Component view)
     {
         GenericGlue genericGlue = this;
         int pickedSticker = GenericPipelineUtils.pickSticker(
@@ -406,7 +406,7 @@ public class GenericGlue
     		RotationHandler rotationHandler,
     		float twistFactor,
     		int slicemask,
-    		JPanel view )
+    		Component view )
     {
         GenericGlue genericGlue = this;
         boolean isRotate = e.isControlDown() || isMiddleMouseButton(e);
@@ -575,7 +575,7 @@ public class GenericGlue
         Color outlineColor,
         Graphics g,
         float twistFactor,
-        JPanel view)
+        Component view)
     {
         GenericGlue genericGlue = this;
 

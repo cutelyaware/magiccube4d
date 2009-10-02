@@ -7,6 +7,7 @@ import java.util.Vector;
 import java.util.Enumeration;
 
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 
 /**
@@ -16,7 +17,7 @@ import javax.swing.JPanel;
  * @author Melinda Green
  */
 @SuppressWarnings("serial")
-public class MC4DView extends JPanel {
+public class MC4DView extends Component {
 
     public GenericGlue genericGlue = null; // caller can set this after I'm constructed
 
@@ -217,6 +218,7 @@ public class MC4DView extends JPanel {
                 lastDrag = arg0.getPoint();
                 lastDragTime = arg0.getWhen();
                 rotationHandler.stopSpinning();
+                FPSTimer.stop();
             }
             public void mouseReleased(MouseEvent arg0) {
                 long timedelta = arg0.getWhen() - lastDragTime;
@@ -239,6 +241,9 @@ public class MC4DView extends JPanel {
                 drag_dir[1] *= -1;      // in Windows, Y is down, so invert it
                 
                 rotationHandler.mouseDragged( drag_dir[0], drag_dir[1] );
+                frames = 0;
+                if(debugging)
+                	FPSTimer.restart();
                 
                 lastDrag = arg0.getPoint();
                 lastDragTime = arg0.getWhen();
@@ -350,8 +355,21 @@ public class MC4DView extends JPanel {
         };
     }*/
 
+    // Quick & dirty frame timer for debugging.
+    //
+    private static int frames = 0, FPS =0;
+    private static boolean debugging = PropertyManager.getBoolean("debugging", true);
+    private static Timer FPSTimer = new Timer(1000, new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			FPS = frames;
+			//System.out.println("FPS = " + FPS);
+			frames = 0;
+		}
+    });
 
     public void paint(Graphics g) {
+    	frames++;
         updateViewFactors();
 
 		if(animationQueue.isAnimating() && genericGlue.iTwist == genericGlue.nTwist) {
@@ -409,6 +427,13 @@ public class MC4DView extends JPanel {
                 g,
                 polymgr.getTwistFactor(),
                 this);
+            
+            if(FPSTimer.isRunning()) {
+            	StringBuffer sb = new StringBuffer();
+            	for(int i=0; i<FPS; i++) sb.append(' ');
+            	g.setColor(Color.black);
+            	StaticUtils.fillString("FPS: "+FPS+sb, 0, getHeight(), Color.white, g);
+            }
         }
     } // end paint
 
