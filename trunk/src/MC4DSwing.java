@@ -6,6 +6,8 @@ import java.util.Stack;
 
 import javax.swing.*;
 import javax.swing.border.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel;
 
@@ -629,7 +631,7 @@ public class MC4DSwing extends JFrame {
     }
 
     private void initMacroControls() {
-        JTabbedPane tabs = new JTabbedPane();
+        final JTabbedPane tabs = new JTabbedPane();
         tabs.add("Macros", new MacroControls(macroMgr, new MacroControls.Listener() {
             public void apply(Macro macro, boolean reverse) {
                 lastMacro = macro;
@@ -643,7 +645,14 @@ public class MC4DSwing extends JFrame {
                 initMacroList();
             }
         }));
+        tabs.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent ce) {
+				PropertyManager.userprefs.setProperty("lasttab", ""+tabs.getSelectedIndex());
+			}
+        });
         tabs.add("Preferences", new PreferencesEditor());
+        tabs.setSelectedIndex(PropertyManager.getInt("lasttab", 0));
         macroControlsContainer.removeAll();
         macroControlsContainer.add(tabs);
         macroControlsContainer.validate();
