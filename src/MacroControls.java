@@ -29,6 +29,7 @@ public class MacroControls extends JPanel {
     private MacroManager mgr;
     private Listener app;
     private Macro selected;
+    private final static Font SYMBOL_FONT = new Font("Dialog", Font.PLAIN, 12);
 
     public MacroControls(final MacroManager mgr, final Listener app) {
         this.mgr = mgr;
@@ -40,10 +41,12 @@ public class MacroControls extends JPanel {
 
         removeAll();
         final JButton
-            moveUp = new JButton("\u25B2"),
+	        moveUp = new JButton("\u25B2"),
             moveDn = new JButton("\u25BC"),
             rename = new JButton("Rename"),
             delete = new JButton("Delete");
+        moveUp.setFont(SYMBOL_FONT);
+        moveDn.setFont(SYMBOL_FONT);
         final Macro macros[] = mgr.getMacros();
         if(selected==null && macros.length>0)
             selected = macros[macros.length-1];
