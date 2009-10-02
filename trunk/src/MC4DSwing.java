@@ -741,7 +741,7 @@ public class MC4DSwing extends JFrame {
         view.setSnapMode(PropertyManager.getBoolean("ctrlrotbyface", true) ? Snap.Snap_Cell : Snap.Snap_Smart);
         Color ol = PropertyManager.getColor("outlines.color", Color.BLACK);
         view.setOutlined(PropertyManager.getBoolean("outlines", false) ? ol : null);
-        viewcontainer.removeAll();
+        viewcontainer.removeAll(); 
         viewcontainer.add(view, "Center");
         
         hist.addHistoryListener(new History.HistoryListener() {
