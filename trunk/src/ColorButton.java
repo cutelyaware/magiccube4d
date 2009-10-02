@@ -1,9 +1,28 @@
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
 import javax.swing.event.*;
+
+@SuppressWarnings("serial")
+class ColorizedButton extends JButton {
+	private Color color;
+
+	public ColorizedButton(Color c) {
+		color = c;
+	}
+
+	@Override
+	public void paintComponent(Graphics g) {
+		// paint original background
+		super.paintComponent(g);
+		// colorize complete button
+		g.setColor(color);
+		g.fillRect(0, 0, this.getWidth() - 1, this.getHeight() - 1);
+	}
+}
 
 /**
  * A JButton with a background color controlled by a pop-up JColorChooser.
@@ -16,14 +35,16 @@ public class ColorButton extends JButton {
     public interface ColorChangeListener {
         public void colorChanged(Color newColor);
     }
+    private final static int ALPHA = 128;
+	private Color color;
     private String prefKey;
     private JColorChooser tcc = new JColorChooser();
+    private Color transparent(Color c) { return new Color(c.getRed(), c.getGreen(), c.getBlue(), ALPHA); }
     
     public ColorButton(String label, final String prefKey, final Color def, final ColorChangeListener changer, final boolean continuous) {
         super(label);
         this.prefKey = prefKey;
-        setBackground(PropertyManager.getColor(prefKey, def));
-        setContrastingForeground();
+        setColor(PropertyManager.getColor(prefKey, def));
         addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 final Color oldColor = PropertyManager.getColor(prefKey, def);
@@ -61,18 +82,26 @@ public class ColorButton extends JButton {
     private void setColor(Color newColor) {
         if(newColor == null)
             return;
-        setBackground(newColor);
-        setContrastingForeground();
+        color = transparent(newColor);
+        //setContrastingForeground();
         PropertyManager.userprefs.setProperty(prefKey, newColor.getRed()+"," + newColor.getGreen()+"," + newColor.getBlue());        
     }
     private void setContrastingForeground() {
-        Color bg = getBackground();
-        setForeground((bg.getRed() + bg.getGreen() + bg.getBlue()) / 3 >= 128 ? Color.BLACK : Color.WHITE);
+        setForeground((color.getRed() + color.getGreen() + color.getBlue()) / 3 >= 128 ? Color.BLACK : Color.WHITE);
     }
+    
+	@Override
+	public void paintComponent(Graphics g) {
+		// paint original background
+		super.paintComponent(g);
+		// colorize complete button
+		g.setColor(color);
+		g.fillRect(0, 0, this.getWidth() - 1, this.getHeight() - 1);
+	}
     
     public static void main(String args[]) {
         JFrame frame = new StaticUtils.QuickFrame("ColorButton Test");
-        frame.getContentPane().add(new ColorButton("test", "testcolor", Color.RED, new ColorChangeListener() {
+        frame.getContentPane().add(new ColorButton("test", "testcolor", new Color(255, 0, 0, 64), new ColorChangeListener() {
             public void colorChanged(Color newColor) {
                 System.out.println("new color " + newColor);
             }
