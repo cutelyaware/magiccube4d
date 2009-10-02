@@ -1,10 +1,6 @@
 import java.net.*;
 import java.io.*;
 
-//
-//NOTE: FOR APPLET COMPATIBILITY THIS CLASS SHOULD NOT INCLUCE ANY POST JDK 1.2 CONSTRUCTS
-//AND SHOULD NOT BE COMPILED WITH POST JDK 1.4 COMPILERS.
-//
 
 /**
  * Contains static I/O methods for dealing with resources.

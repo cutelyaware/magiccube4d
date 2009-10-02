@@ -1,9 +1,5 @@
 import java.awt.Color;
 
-//
-//NOTE: FOR APPLET COMPATIBILITY THIS CLASS SHOULD NOT INCLUCE ANY POST JDK 1.2 CONSTRUCTS
-//AND SHOULD NOT BE COMPILED WITH POST JDK 1.4 COMPILERS.
-//
 
 /**
  * Contains all the global static constants shared by all Magic Cube 4D classes.

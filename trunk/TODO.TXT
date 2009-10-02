@@ -18,7 +18,7 @@ HIGHLIGHTING
 GUI
 * Choose better slider ranges.
 * Fix or remove contigious cubies mode.
-* Add a debugging FPS meter.
+* DONE - Add a debugging FPS meter.
 * DONE - Replace the AWT class usages with Swing versions.
 * DONE - Move control panel to the west.
 * DONE - Add Synthetica look-and-feel.

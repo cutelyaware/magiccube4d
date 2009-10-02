@@ -3,10 +3,6 @@ import java.awt.*;
 import java.io.StringReader;
 import java.io.PushbackReader;
 
-//
-//NOTE: FOR APPLET COMPATIBILITY THIS CLASS SHOULD NOT INCLUCE ANY POST JDK 1.2 CONSTRUCTS
-//AND SHOULD NOT BE COMPILED WITH POST JDK 1.4 COMPILERS.
-//
 
 /**
  * Represents a simple Applet demo version of the core MagicCube4D puzzle.
