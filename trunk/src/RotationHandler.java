@@ -1,28 +1,22 @@
 import com.donhatchsw.util.VecMath;
 
 
-enum Snap
+// Class which manages view rotations, both ctrl-click and continuous style.
+public class RotationHandler
 {
-	Snap_Cell,		// Rotates cell centers.
-	Snap_Smart		// Rotates vertices, edge centers, cell centers, etc. smartly (we've been calling this cubie-to-center as well)
-};
-
-class RotationSettings
-{
-	RotationSettings()
+	public enum Snap
 	{
-		allowSpinDrag = true;
-		snapSetting = Snap.Snap_Cell;
+		Snap_Cell,		// Rotates cell centers.
+		Snap_Smart		// Rotates vertices, edge centers, cell centers, etc. smartly (we've been calling this cubie-to-center as well)
 	}
 	
-	public boolean allowSpinDrag;
-	public Snap snapSetting;
-}
-
-// Class which manages view rotations, both ctrl-click and continuous style.
-class RotationHandler
-{
-	public RotationSettings settings = new RotationSettings();
+	// Modes
+	private boolean allowSpinDrag = true;
+	private Snap snapSetting = Snap.Snap_Cell;
+	public void setAllowSpinDrag(boolean allowSpinDrag) { this.allowSpinDrag = allowSpinDrag; }
+	public boolean allowsSpinDrag() { return allowSpinDrag; }
+	public void setSnapSetting(Snap snapSetting) { this.snapSetting = snapSetting; }
+	public Snap getSnapSetting() { return snapSetting; }
 
 	// 4D Variables.
 	private double viewMat4d[][] = VecMath.identitymat( 4 );
@@ -38,7 +32,7 @@ class RotationHandler
 	}
 
     public float[][] current3dView() {
-        if( !settings.allowSpinDrag )
+        if( !allowSpinDrag )
             return new float[][] {
                 {1,0,0,},
                 {0,1,0,},
@@ -75,7 +69,7 @@ class RotationHandler
 	// Returns true if our settings are such that we should continue.
 	public boolean continueSpin()
 	{
-		if( settings.allowSpinDrag && spindelta != null )
+		if( allowSpinDrag && spindelta != null )
 		{
 			viewrot.setMult( spindelta );
 			return true;

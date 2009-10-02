@@ -747,7 +747,7 @@ public class MC4DSwing extends JFrame {
         view.allowSpinDrag(PropertyManager.getBoolean("spindrag", true));
         view.allowAntiAliasing(PropertyManager.getBoolean("antialiasing", true));
         view.setHighlightByCubie(PropertyManager.getBoolean("highlightbycubie", false));
-        view.setSnapMode(PropertyManager.getBoolean("ctrlrotbyface", true) ? Snap.Snap_Cell : Snap.Snap_Smart);
+        view.setSnapMode(PropertyManager.getBoolean("ctrlrotbyface", true) ? RotationHandler.Snap.Snap_Cell : RotationHandler.Snap.Snap_Smart);
         Color ol = PropertyManager.getColor("outlines.color", Color.BLACK);
         view.setOutlined(PropertyManager.getBoolean("outlines", false) ? ol : null);
         viewcontainer.removeAll(); 
@@ -988,7 +988,7 @@ public class MC4DSwing extends JFrame {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					boolean byFace = ctrlRotateByFace.isSelected();
-					MC4DSwing.this.view.setSnapMode(byFace ? Snap.Snap_Cell : Snap.Snap_Smart);
+					MC4DSwing.this.view.setSnapMode(byFace ? RotationHandler.Snap.Snap_Cell : RotationHandler.Snap.Snap_Smart);
 					PropertyManager.userprefs.setProperty("ctrlrotbyface", ""+byFace);
 				}
             });
@@ -996,7 +996,7 @@ public class MC4DSwing extends JFrame {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					boolean byCubie = ctrlRotateByCubie.isSelected();
-					MC4DSwing.this.view.setSnapMode(byCubie ? Snap.Snap_Smart : Snap.Snap_Cell);
+					MC4DSwing.this.view.setSnapMode(byCubie ? RotationHandler.Snap.Snap_Smart : RotationHandler.Snap.Snap_Cell);
 					PropertyManager.userprefs.setProperty("ctrlrotbyface", ""+!byCubie);
 				}
             });

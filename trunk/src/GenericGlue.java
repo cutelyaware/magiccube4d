@@ -433,7 +433,7 @@ public class GenericGlue
                              e.getX(), e.getY(),
                              genericGlue.untwistedFrame,
                              genericGlue.genericPuzzleDescription, 
-                             rotationHandler.settings.snapSetting );
+                             rotationHandler.getSnapSetting() );
 
             if (nicePoint != null)
             {
