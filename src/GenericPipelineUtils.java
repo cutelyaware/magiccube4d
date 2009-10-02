@@ -612,7 +612,7 @@ public class GenericPipelineUtils
     public static float[] pickPointToRotateToCenter(float x, float y,
                                                         Frame frame,
                                                         GenericPuzzleDescription puzzleDescription,
-                                                        Snap snapOption )
+                                                        RotationHandler.Snap snapOption )
     {
         switch( snapOption )
         {

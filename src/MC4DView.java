@@ -101,12 +101,12 @@ public class MC4DView extends Component {
     }
 
     public void allowSpinDrag(boolean val) {
-        rotationHandler.settings.allowSpinDrag = val;
+        rotationHandler.setAllowSpinDrag(val);
         repaint();
     }
     
-    public void setSnapMode(Snap snap) {
-        rotationHandler.settings.snapSetting = snap;
+    public void setSnapMode(RotationHandler.Snap snap) {
+        rotationHandler.setSnapSetting(snap);
         repaint();
     }
 
