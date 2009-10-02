@@ -858,7 +858,12 @@ public class MC4DSwing extends JFrame {
         }
         private boolean synchingsliders = false;
         
-        PreferencesEditor() {
+        public PreferencesEditor() {
+        	init();
+        }
+        
+        private void init() {
+        	removeAll();
             final FloatSlider
                 twistfactorSlider = makeSlider(PropertyManager.getFloat("twistfactor", 1), .05f, 5),
                 scaleSlider = makeSlider(PropertyManager.getFloat("scale", 1), .1f, 5),
@@ -1033,20 +1038,6 @@ public class MC4DSwing extends JFrame {
             general.add(ctrlRotateByCubie);
             general.add(Box.createVerticalGlue());
 
-            JPanel faces = new JPanel();
-            faces.setLayout(new GridLayout(2, 4));
-            for(int f=0; f<MagicCube.NFACES; f++) {
-                String key = "face" + f + ".color";
-                Color def = MagicCube.faceColor(f);
-                final int n = f;
-                final JButton faceButt = new ColorButton(""+f, key, def, new ColorButton.ColorChangeListener() {
-                    public void colorChanged(Color newColor) {
-                        view.setFaceColor(n, newColor);
-                    }
-                }, true);
-                faces.add(faceButt);
-            }
-
             // background controls
             JButton backgroundColor = new ColorButton("Background", "background.color", MagicCube.BACKGROUND,
                 new ColorButton.ColorChangeListener() {
@@ -1096,11 +1087,6 @@ public class MC4DSwing extends JFrame {
             colors.add(backgroundColor);
             colors.add(Box.createVerticalStrut(15));
             JPanel tmp = new JPanel();
-            tmp.add(new JLabel("Faces:  "));
-            tmp.add(faces);
-            colors.add(tmp);
-            colors.add(Box.createVerticalStrut(15));
-            tmp = new JPanel();
             tmp.add(drawGround);
             tmp.add(ground);
             colors.add(tmp);
@@ -1110,12 +1096,13 @@ public class MC4DSwing extends JFrame {
             colors.add(tmp);
             colors.add(Box.createVerticalGlue());
             
-            JButton clear = new JButton("Reset To Defaults");
-            clear.addActionListener(new ActionListener() {
+            JButton reset = new JButton("Reset To Defaults");
+            reset.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     PropertyManager.userprefs.clear();
                     String fname = logFileChooser.getSelectedFile() == null ? null : logFileChooser.getSelectedFile().getAbsolutePath();
                     initPuzzle(fname);
+                    init(); // to sync the controls with the default prefs.
                     viewcontainer.validate();
                     view.repaint();
                 }
@@ -1130,7 +1117,7 @@ public class MC4DSwing extends JFrame {
             add(general, "North");
             add(colors, "Center");
             tmp = new JPanel();
-            tmp.add(clear);
+            tmp.add(reset);
             add(tmp, "South");
         }
     } // end class PreferencesEditor
