@@ -41,6 +41,8 @@ public class ColorButton extends JButton {
     private JColorChooser tcc = new JColorChooser();
     private Color transparent(Color c) { return new Color(c.getRed(), c.getGreen(), c.getBlue(), ALPHA); }
     
+    public Color getColor() { return color; }
+    
     public ColorButton(String label, final String prefKey, final Color def, final ColorChangeListener changer, final boolean continuous) {
         super(label);
         this.prefKey = prefKey;

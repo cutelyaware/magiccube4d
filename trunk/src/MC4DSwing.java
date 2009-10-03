@@ -1041,7 +1041,7 @@ public class MC4DSwing extends JFrame {
             general.add(Box.createVerticalGlue());
 
             // background controls
-            JButton backgroundColor = new ColorButton("Background", "background.color", MagicCube.BACKGROUND,
+            ColorButton backgroundColor = new ColorButton("Background", "background.color", MagicCube.BACKGROUND,
                 new ColorButton.ColorChangeListener() {
                     public void colorChanged(Color newColor) {
                         view.setBackground(newColor);
@@ -1049,7 +1049,7 @@ public class MC4DSwing extends JFrame {
                 }, true
             );
             final JCheckBox drawGround = new JCheckBox("Draw Ground", PropertyManager.getBoolean("ground", true));
-            final JButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND,
+            final ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND,
                 new ColorButton.ColorChangeListener() {
                     public void colorChanged(Color newColor) {
                         if( ! drawGround.isSelected())
@@ -1061,14 +1061,14 @@ public class MC4DSwing extends JFrame {
             drawGround.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean drawground = drawGround.isSelected();
-                    view.setGround(drawground ? ground.getBackground() : null);
+                    view.setGround(drawground ? ground.getColor() : null);
                     PropertyManager.userprefs.setProperty("ground", ""+drawground);
                 }
             });
             
             // outlining controls
             final JCheckBox drawOutlines = new JCheckBox("Draw Outlines", PropertyManager.getBoolean("outlines", false));
-            final JButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK,
+            final ColorButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK,
                 new ColorButton.ColorChangeListener() {
                     public void colorChanged(Color newColor) {
                         if( ! drawOutlines.isSelected())
@@ -1080,7 +1080,7 @@ public class MC4DSwing extends JFrame {
             drawOutlines.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean drawoutlines = drawOutlines.isSelected();
-                    view.setOutlined(drawoutlines ? outlinesColor.getBackground() : null);
+                    view.setOutlined(drawoutlines ? outlinesColor.getColor() : null);
                     PropertyManager.userprefs.setProperty("outlines", ""+drawoutlines);
                 }
             });
