@@ -601,8 +601,10 @@ public class MC4DSwing extends JFrame {
                     public void actionPerformed(ActionEvent ae)
                     {
                 		progressView.setVisible(true);
-                    	view.repaint();
                     	genericGlue.initPuzzle(schlafli, lengthString, progressView, statusLabel, true, viewRepainter);
+                    	hist.clear((int)Double.parseDouble(lengthString));
+                    	updateTwistsLabel();
+                    	scrambleState = SCRAMBLE_NONE;
                     	view.repaint();
                     }
                 });
@@ -1099,9 +1101,13 @@ public class MC4DSwing extends JFrame {
             JButton reset = new JButton("Reset To Defaults");
             reset.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
+                	// TODO: make this work. Problem is syncing the view with the reset prefs
+                	// without losing the user's history state. Possible if view gets all prefs
+                	// from the property manager rather than via setters. Otherwise this is tricky to do right.
                     PropertyManager.userprefs.clear();
                     String fname = logFileChooser.getSelectedFile() == null ? null : logFileChooser.getSelectedFile().getAbsolutePath();
                     initPuzzle(fname);
+                    scrambleState = SCRAMBLE_NONE;
                     init(); // to sync the controls with the default prefs.
                     viewcontainer.validate();
                     view.repaint();
@@ -1117,7 +1123,7 @@ public class MC4DSwing extends JFrame {
             add(general, "North");
             add(colors, "Center");
             tmp = new JPanel();
-            tmp.add(reset);
+            //tmp.add(reset); // commented out until we can make this work well
             add(tmp, "South");
         }
     } // end class PreferencesEditor

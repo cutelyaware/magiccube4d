@@ -25,6 +25,8 @@ public class RotationHandler
 	// 3D Variables (make these go away since Jenn controls could subsume them?)
 	private SQuat viewrot = new SQuat();	// total quaternion rotation of puzzle.
 	private SQuat spindelta = null;			// rotation to add for each frame while spinning. null == stopped
+	
+	public SQuat getSpinDelta() { return spindelta; } // really just need an isSpinning() method.
 
 	public double[][] current4dView()
 	{

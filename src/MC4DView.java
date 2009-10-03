@@ -383,13 +383,15 @@ public class MC4DView extends Component {
         if( rotationHandler.continueSpin() && lastDrag == null) { // keep spinning
             repaint();
         }
-
-        // antialiasing used to be too slow for animations but now it seems OK so always use the user preference.
-        // I hope that referring to Graphics2D won't cause a class-not-found exception in any Applets.
-        // may need to remove this or otherwise work around that problem if so.
+        
+        // antialiasing makes for a beautiful image but can also be expensive to draw therefore
+        // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
         if(g instanceof Graphics2D) {
+            boolean okToAntialias = allowAntiAliasing && lastDrag==null && rotationHandler.getSpinDelta()==null
+                                 && !(genericGlue!=null && genericGlue.isActive() ? genericGlue.isAnimating()
+                                                                                  : isAnimating());
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-            		allowAntiAliasing ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
+                okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
         }
 
         // paint the background
@@ -428,7 +430,7 @@ public class MC4DView extends Component {
                 polymgr.getTwistFactor(),
                 this);
             
-            if(FPSTimer.isRunning()) {
+            if(FPSTimer.isRunning() && rotationHandler.continueSpin() && lastDrag == null) {
             	StringBuffer sb = new StringBuffer();
             	for(int i=0; i<FPS; i++) sb.append(' ');
             	g.setColor(Color.black);
