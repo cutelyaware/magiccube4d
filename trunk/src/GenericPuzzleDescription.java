@@ -77,8 +77,9 @@ interface GenericPuzzleDescription {
 
     /**
     * XXX floundering here... closest in what sense? normalized vectors on a sphere?
+    * The is2x2x2x2Cell is used to control only looking at a subset of the grips.
     */
-    public int getClosestGrip(float pickCoords[/*4*/]);
+    public int getClosestGrip(float pickCoords[/*4*/], int faceIndex, boolean is2x2x2Cell);
 
     /**
     * Get the vertices of the geometry that gets drawn
@@ -121,13 +122,18 @@ interface GenericPuzzleDescription {
     /**
     * Get a table mapping grip index to face index.
     */
-    public int[/*nStickers*/] getGrip2Face();
+    public int[/*nGrips*/] getGrip2Face();
 
     /**
      * Get a particular face center.
      */
     public float[/*nDims*/] getFaceCenter( int faceIndex );
 
+    /**
+     * Get the coordinates for a particular grip.
+     */
+    public float[/*nDims*/] getGripCoords( int gripIndex );
+    
     /**
     * Apply a move to an array of colors (face indices)
     * representing the current puzzle state.

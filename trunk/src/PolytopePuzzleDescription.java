@@ -205,6 +205,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
     private int sticker2cubie[/*nStickers*/];
 
     private float gripCentersF[/*nGrips*/][];
+    private int gripDims[/*nGrips*/];	
     private int grip2face[/*nGrips*/];
     private int gripSymmetryOrders[/*nGrips*/];
     private double gripUsefulMats[/*nGrips*/][/*nDims*/][/*nDims*/]; // weird name
@@ -753,7 +754,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 CSG.Polytope cell = originalFaces[iFace];
                 CSG.Polytope[][] allElementsOfCell = cell.getAllElements();
                 for (int iDim = 0; iDim <= 3; ++iDim) // yes, even for cell center, which doesn't do anything
-                    nGrips += allElementsOfCell[iDim].length;
+                	nGrips += allElementsOfCell[iDim].length;
             }
             progressWorker.init("Calculating possible twists", nGrips);
 
@@ -761,6 +762,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             gripSymmetryOrders = new int[nGrips];
             gripUsefulMats = new double[nGrips][nDims][nDims];
             gripCentersF = new float[nGrips][];
+            gripDims = new int[nGrips];
             grip2face = new int[nGrips];
             double gripCenterD[] = new double[nDims];
             int iGrip = 0;
@@ -786,6 +788,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                         VecMath.lerp(gripCenterD, gripCenterD, faceCentersD[iFace], .01);
 
                         gripCentersF[iGrip] = doubleToFloat(gripCenterD);
+                        gripDims[iGrip] = iDim;
                         grip2face[iGrip] = iFace;
                         progressWorker.updateProgress(iGrip);
                         //System.out.println("("+iDim+":"+gripSymmetryOrders[iGrip]+")");
@@ -967,12 +970,21 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         {
             return gripSymmetryOrders;
         }
-        public int getClosestGrip(float pickCoords[/*4*/])
+        public int getClosestGrip( float pickCoords[/*4*/], int faceIndex, boolean is2x2x2Cell )
         {
             int bestIndex = -1;
             float bestDistSqrd = Float.MAX_VALUE;
             for (int i = 0; i < gripCentersF.length; ++i)
             {
+            	// Only consider grips on this face.
+            	// This helped some poor behavior on 2x2x2 cells,
+            	// and is a good check in general I think.
+            	if( this.getGrip2Face()[i] != faceIndex )
+            		continue;
+            	
+            	if( is2x2x2Cell && gripDims[i] < 2 )
+            		continue;
+            	
                 float thisDistSqrd = VecMath.distsqrd(gripCentersF[i],
                                                       pickCoords);
                 if (thisDistSqrd < bestDistSqrd)
@@ -1060,7 +1072,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         {
             return sticker2cubie;
         }
-        public int[/*nFaces*/] getGrip2Face()
+        public int[/*nGrips*/] getGrip2Face()
         {
             return grip2face;
         }
@@ -1070,6 +1082,13 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 throw new IllegalArgumentException( "getFaceCenter called with bad face index " + faceIndex + ", there are " + nFaces() + " faces!" );
             
         	return faceCenters[faceIndex];
+        }
+        public float[/*nDims*/] getGripCoords( int gripIndex )
+        {
+        	if( gripIndex < 0 || gripIndex >= nGrips() )
+        		throw new IllegalArgumentException( "getGripCoords called with bad grip index " + gripIndex + ", there are " + nGrips() + " grips!" );
+        	
+        	return gripCentersF[gripIndex];
         }
         public int[/*nFaces*/] getFace2OppositeFace()
         {
