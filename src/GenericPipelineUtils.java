@@ -556,8 +556,31 @@ public class GenericPipelineUtils
         return iStickerAndPoly != null ? iStickerAndPoly[0] : -1;
     }
 
-    // Pick poly center if it's a 2x2x2x2, sticker center otherwise.
-    public static float[] pickPolyOrStickerCenter(float x, float y,
+    private static boolean is2x2x2Cell( float polyCenter[], float stickerCenter[], float faceCenter[] )
+    {
+        // Do fuzzy compares so that we can catch other puzzles with 2x2x2 cells besides the 2^4.
+    	// XXX - this tolerance is very high, but may possibly be lowered after sliver situation is improved.
+        float eps = .1f;
+        
+        // Comparison vectors.
+        float c1 = VecMath.normsqrd( VecMath.vmv( stickerCenter, faceCenter ) );
+        float c2 = VecMath.normsqrd( VecMath.vmv( polyCenter, faceCenter ) );
+        boolean itsProbablyThe2 = 
+        	  Math.abs( c1 - 0.75 ) < eps &&
+        	( Math.abs( c2 - 1.5 ) < eps ||
+        	  Math.abs( c2 - 0.5) < eps );
+        return itsProbablyThe2;
+    }
+    
+    private static class PickInfo
+    {
+    	public int faceIndex;
+    	public float polyCenter[];
+    	public float stickerCenter[];
+    	public boolean is2x2x2Cell;
+    }
+    
+    private static PickInfo pickPolyAndStickerCenters(float x, float y,
                                                   Frame frame,
                                                   GenericPuzzleDescription puzzleDescription)
     {
@@ -573,39 +596,32 @@ public class GenericPipelineUtils
                                                     1.f,  // faceShrink
                                                     1.f); // stickerShrink
         int stickerInds[][][] = puzzleDescription.getStickerInds();
-        // XXX not sure which of the following are better if either-- maybe poly for 2x, sticker otherwise? it's definitely disconcerting when different parts of the sticker do diff things...
         int sticker[][] = stickerInds[hit[0]];
         int poly[] = sticker[hit[1]];
         float polyCenter[] = VecMath.averageIndexed(poly, verts);
         float stickerCenter[] = VecMath.averageIndexed(sticker, verts);
-        float center[];
-
+        int faceIndex = puzzleDescription.getSticker2Face()[hit[0]];
+        float[] faceCenter = puzzleDescription.getFaceCenter(faceIndex);
         //System.out.println("        poly center = "+VecMath.toString(polyCenter));
         //System.out.println("        sticker center = "+VecMath.toString(stickerCenter));
-
-        // XXX total hack-- use poly center if we think it's the 2x2x2x2 puzzle
-        // XXX and the sticker center otherwise.
-
-        boolean itsProbablyThe2 = VecMath.normsqrd(stickerCenter) == 1.75
-                               && (VecMath.normsqrd(polyCenter) == 1.5
-                                || VecMath.normsqrd(polyCenter) == 2.5);
-        if (verboseLevel >= 1) System.out.println("itsProbablyThe2 = "+itsProbablyThe2);
-
-        if (itsProbablyThe2)
-            center = polyCenter;
-        else
-            center = stickerCenter;
-        return center;
-    } // pickPolyOrStickerCenter
+        
+        PickInfo ret = new PickInfo();
+        ret.faceIndex = faceIndex;
+        ret.polyCenter = polyCenter;
+        ret.stickerCenter = stickerCenter;
+        ret.is2x2x2Cell = is2x2x2Cell( polyCenter, stickerCenter, faceCenter );
+        return ret;
+    }
 
     public static int pickGrip(float x, float y,
                                Frame frame,
                                GenericPuzzleDescription puzzleDescription)
     {
-        float polyOrStickerCenter[] = pickPolyOrStickerCenter(x, y, frame, puzzleDescription);
-        if (polyOrStickerCenter == null)
+    	PickInfo pickInfo = pickPolyAndStickerCenters( x, y, frame, puzzleDescription );
+        if( pickInfo == null )
             return -1;
-        int iGrip = puzzleDescription.getClosestGrip(polyOrStickerCenter);
+        float center[] = pickInfo.is2x2x2Cell ? pickInfo.polyCenter : pickInfo.stickerCenter;
+        int iGrip = puzzleDescription.getClosestGrip( center, pickInfo.faceIndex, pickInfo.is2x2x2Cell );
         return iGrip;
     }
 
@@ -626,10 +642,10 @@ public class GenericPipelineUtils
         }
         case Snap_Smart:
         {
-            float polyOrStickerCenter[] = pickPolyOrStickerCenter( x, y, frame, puzzleDescription );
-            if( polyOrStickerCenter == null )
+        	PickInfo pickInfo = pickPolyAndStickerCenters( x, y, frame, puzzleDescription );
+            if( pickInfo == null )
                 return null;        	
-            return puzzleDescription.getClosestNicePointToRotateToCenter( polyOrStickerCenter );
+            return puzzleDescription.getClosestNicePointToRotateToCenter( pickInfo.stickerCenter );
         }
         default:
         	Assert( false );
