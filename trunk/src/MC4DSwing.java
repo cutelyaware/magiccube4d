@@ -82,12 +82,12 @@ public class MC4DSwing extends JFrame {
      * 4 - Schlafli Product
      * 5 - Edge Length
      */
-    private void saveAs(String logfilename) {
-    	if(logfilename == null) {
+    private void saveAs(String log) {
+    	if(log == null) {
     		System.err.println("saveAs: null file name");
     		return;
     	}
-        File file = new File(logfilename);
+        File file = new File(log);
         String sep = System.getProperty("line.separator");
         try {
             Writer writer = new FileWriter(file);
@@ -109,7 +109,7 @@ public class MC4DSwing extends JFrame {
             PropertyManager.userprefs.setProperty("logfile", filepath);
             setTitle(MagicCube.TITLE + " - " + file.getName());
         } catch(IOException ioe) {
-            statusLabel.setText("Save failed");
+            statusLabel.setText("Save to '" + log + "' failed. Consider using 'File > Save As' to save somewhere else.");
         }
     }
 
@@ -155,7 +155,11 @@ public class MC4DSwing extends JFrame {
         saveas = new ProbableAction("Save As...") {
             public void doit(ActionEvent ae) {
                 if(logFileChooser.showSaveDialog(MC4DSwing.this) == JFileChooser.APPROVE_OPTION) {
-                    saveAs(logFileChooser.getSelectedFile().getAbsolutePath());
+                	String path = logFileChooser.getSelectedFile().getAbsolutePath();
+                	if( !path.endsWith(".log")) {
+                		path += ".log";
+                	}
+                    saveAs(path);
                 }
             }
         },
@@ -671,7 +675,7 @@ public class MC4DSwing extends JFrame {
      * 4 - Schlafli Product
      * 5 - Edge Length
      */
-    private void initPuzzle(String logfilename) {
+    private void initPuzzle(String log) {
         scrambleState = SCRAMBLE_NONE;
         scale = PropertyManager.getFloat("scale", 1);
         double initialLength = MagicCube.DEFAULT_LENGTH;
@@ -679,8 +683,8 @@ public class MC4DSwing extends JFrame {
         hist = new History(iLength);
         RotationHandler rotations = new RotationHandler();
         String stateStr = "";
-        if(logfilename != null) { // read the log file, possibly reinitializing length and history.
-            File logfile = new File(logfilename);
+        if(log != null) { // read the log file, possibly reinitializing length and history.
+            File logfile = new File(log);
             if(logfile.exists()) {
                 try {
                     BufferedReader reader = new BufferedReader(new FileReader(logfile));
@@ -710,11 +714,11 @@ public class MC4DSwing extends JFrame {
                      	System.out.println("Error reading puzzle history");
                     setTitle(title);
                 } catch (Exception e) {
-                    statusLabel.setText("Failed to parse log file '" + logfilename + "'");
+                    statusLabel.setText("Failed to parse log file '" + log + "'");
                 }
             }
             else
-                statusLabel.setText("Couldn't find log file '" + logfilename + "'");
+                statusLabel.setText("Couldn't find log file '" + log + "'");
         }
         polymgr = new PolygonManager(iLength);
         if(PropertyManager.top.getProperty("faceshrink") != null || PropertyManager.top.getProperty("stickershrink") != null)

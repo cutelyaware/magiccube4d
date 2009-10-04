@@ -27,7 +27,7 @@ GUI
 
 LOG FILES
 * Maybe keep printing puzzle state data but skip over reading it and initialize from history data instead.
-* Force file names to end with ".log".
+* DONE - Force file names to end with ".log".
 * DONE - Save transform matrix in the file.
 
 BUGS
@@ -48,4 +48,6 @@ BUGS
 
 META
 * Get Eclipse to output executable jar files or modify my batch file and check it in.
+* Generally clean up the abstractions. Especially try to eliminate old PuzzleState and PolygonManager 
+  classes and eliminate or prune and rename GenericGlue class. 
 * Turn this list into tracked bugs & tasks
