@@ -1,4 +1,7 @@
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PushbackReader;
+import java.io.Reader;
 import java.io.Writer;
 
 import com.donhatchsw.util.VecMath;
@@ -30,15 +33,25 @@ public class RotationHandler
 	public void setSensitivity( float sensitivity ) { this.sensitivity = sensitivity; }
 
 	// Persistence.
-	public void write( Writer writer )
+	public void write( Writer writer ) throws IOException
 	{
-		// XXX Implement me.
-		// XXX Do we need to store the settings?
+		for(int i=0; i<4; i++) {
+			for(int j=0; j<4; j++) {
+				writer.write(""+viewMat4d[i][j]);
+				writer.write(j==3 ? System.getProperty("line.separator") : " ");
+			}
+		}
 	}
 	
-	public void read( PushbackReader pr ) 
+	public void read( BufferedReader reader ) throws IOException 
 	{
-		// XXX Implement me.
+		for(int i=0; i<4; i++) {
+			String line = reader.readLine();
+			String numberStrings[] = line.split(" ");
+			for(int j=0; j<4; j++) {
+				viewMat4d[i][j] = Double.parseDouble(numberStrings[j]);
+			}
+		}
 	}
 	
 	// 4D Variables.

@@ -4,8 +4,7 @@ PUZZLES
 * Port the solve and compress functions to the new puzzles. 
   First just for the appropriately sized cubes and eventually for all puzzles.
 * DONE - Figure out how to support rotations for generic puzzles & history.
-* Implement Jenn3D-style 4D rotates via Shift-left drag.
-* Implement right-drag spin (X) and scale (Y)
+* DONE - Implement Jenn3D-style 4D rotates via Shift-left drag.
 * Comment out broken or redundant puzzles before shipping.
 * Make twist speed adjustable mid-twist.
 * Need isSolved method to determine when a true solve has been achieved.
@@ -29,7 +28,7 @@ GUI
 LOG FILES
 * Maybe keep printing puzzle state data but skip over reading it and initialize from history data instead.
 * Force file names to end with ".log".
-* Save transform matrix in the file.
+* DONE - Save transform matrix in the file.
 
 BUGS
 * Fix Quick Moves.
@@ -48,4 +47,5 @@ BUGS
 * Fix so that building new puzzle releases memory used by previous puzzle. (by removing listeners?)
 
 META
+* Get Eclipse to output executable jar files or modify my batch file and check it in.
 * Turn this list into tracked bugs & tasks

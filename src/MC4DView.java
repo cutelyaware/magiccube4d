@@ -45,12 +45,14 @@ public class MC4DView extends Component {
     private float pixels2polySF = .01f; // screen transform data
     private Point lastDrag; // non-null == dragging
     private long lastDragTime; // timestamp of last drag event
-    private RotationHandler rotationHandler = new RotationHandler();
+    private RotationHandler rotationHandler;
     private boolean allowAntiAliasing = true; // whether to allow antialiasing at all
     private float scale = 1;
     private boolean highlightByCubie = false;
     private boolean quickMoves = false; // whether to skip animations and perform moves in a single frame
     public void setHighlightByCubie(boolean val) { highlightByCubie = val; }
+    
+    public RotationHandler getRotations() { return rotationHandler; } // const
     
     public void setScale(float scale) {
         this.scale = scale;
@@ -148,9 +150,10 @@ public class MC4DView extends Component {
          return ((anEvent.getModifiers() & InputEvent.BUTTON1_MASK) != 0);
     }
 
-    public MC4DView(PuzzleState state, PolygonManager polymgr, History hist, int nfaces) {
+    public MC4DView(PuzzleState state, PolygonManager polymgr, RotationHandler rotations, History hist, int nfaces) {
         this.state = state;
         this.polymgr = polymgr;
+        this.rotationHandler = rotations;
         this.animationQueue = new AnimationQueue(hist);
         faceRGB = YUV.generateVisuallyDistinctRGBs(nfaces, .7f, .1f); //generateHSVColors(12, 10, .5f);
         this.setFocusable(true);
@@ -530,7 +533,7 @@ public class MC4DView extends Component {
 //            System.out.println("couldn't read history file");
 //        else
 //            hist.read(new java.io.StringReader(Util.readFileFromURL(histurl)));
-        final MC4DView view = new MC4DView(new PuzzleState(length, polymgr), polymgr, hist, 6);
+        final MC4DView view = new MC4DView(new PuzzleState(length, polymgr), polymgr, new RotationHandler(), hist, 6);
         view.addTwistListener(new MC4DView.TwistListener() {
             public void twisted(MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
