@@ -203,6 +203,7 @@ public class MC4DView extends Component {
                 	MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_cube = grip; // slamming new id. do we need to set the other members?
                     clicked.face = genericGlue.genericPuzzleDescription.getGrip2Face()[grip];
+                    //clicked.coords = genericGlue.genericPuzzleDescription.getGripCoords( grip );
                     System.out.println("face: " + clicked.face);
 
                     // Tell listeners about the legal twist and let them call animate() if desired.
@@ -231,22 +232,23 @@ public class MC4DView extends Component {
         });
         // watch for dragging gestures to rotate the 3D view
         this.addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent arg0) {
+            public void mouseDragged(MouseEvent e) {
                 if(lastDrag == null)
                     return;
                 float[]
-                    end = new float[] { arg0.getX(), arg0.getY() },
+                    end = new float[] { e.getX(), e.getY() },
                     drag_dir = new float[2];
                 Vec_h._VMV2(drag_dir, new float[] { lastDrag.x, lastDrag.y }, end);
                 drag_dir[1] *= -1;      // in Windows, Y is down, so invert it
                 
-                rotationHandler.mouseDragged( drag_dir[0], drag_dir[1] );
+                rotationHandler.mouseDragged( drag_dir[0], drag_dir[1],
+                		isLeftMouseButton(e), isMiddleMouseButton(e), e.isShiftDown() );
                 frames = 0;
                 if(debugging)
                 	FPSTimer.restart();
                 
-                lastDrag = arg0.getPoint();
-                lastDragTime = arg0.getWhen();
+                lastDrag = e.getPoint();
+                lastDragTime = e.getWhen();
                 repaint();
             }
             public void mouseMoved(MouseEvent arg0) {
@@ -387,7 +389,7 @@ public class MC4DView extends Component {
         // antialiasing makes for a beautiful image but can also be expensive to draw therefore
         // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
         if(g instanceof Graphics2D) {
-            boolean okToAntialias = allowAntiAliasing && lastDrag==null && rotationHandler.getSpinDelta()==null
+            boolean okToAntialias = allowAntiAliasing && lastDrag==null && rotationHandler.isSpinning()
                                  && !(genericGlue!=null && genericGlue.isActive() ? genericGlue.isAnimating()
                                                                                   : isAnimating());
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,

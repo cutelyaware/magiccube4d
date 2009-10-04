@@ -409,7 +409,6 @@ public class GenericGlue
     		Component view )
     {
         GenericGlue genericGlue = this;
-        boolean isRotate = e.isControlDown() || isMiddleMouseButton(e);
         
         /* Uncomment to debug the pick
         {
@@ -427,125 +426,48 @@ public class GenericGlue
             }
         } */
 
-        if (isRotate)
+        float nicePoint[] = GenericPipelineUtils.pickPointToRotateToCenter(
+                         e.getX(), e.getY(),
+                         genericGlue.untwistedFrame,
+                         genericGlue.genericPuzzleDescription, 
+                         rotationHandler.getSnapSetting() );
+
+        if (nicePoint != null)
         {
-            float nicePoint[] = GenericPipelineUtils.pickPointToRotateToCenter(
-                             e.getX(), e.getY(),
-                             genericGlue.untwistedFrame,
-                             genericGlue.genericPuzzleDescription, 
-                             rotationHandler.getSnapSetting() );
+            //
+            // Initiate a rotation
+            // that takes the nice point to the center
+            // (i.e. to the -W axis)
+            // 
 
-            if (nicePoint != null)
+            double nicePointD[] = new double[4];
+            for (int i = 0; i < 4; ++i)
+                nicePointD[i] = (double)nicePoint[i];
+
+            double nicePointOnScreen[] = com.donhatchsw.util.VecMath.vxm( nicePointD, rotationHandler.current4dView() );
+            com.donhatchsw.util.VecMath.normalize(nicePointOnScreen, nicePointOnScreen); // if it's not already
+            double minusWAxis[] = {0,0,0,-1};
+            double totalRotationAngle = com.donhatchsw.util.VecMath.angleBetweenUnitVectors(
+                                nicePointOnScreen,
+                                minusWAxis);
+
+            genericGlue.nRotation = calculateNTwists( totalRotationAngle, twistFactor );
+            // XXX ARGH! we'd like the speed to vary as the user changes the slider,
+            // XXX but the above essentially locks in the speed for this rotation
+            genericGlue.iRotation = 0; // we are iRotation frames into nRotation
+            genericGlue.rotationFrom = nicePointOnScreen;
+            genericGlue.rotationTo = minusWAxis;
+            view.repaint();
+
+            if (genericGlue.iRotation == genericGlue.nRotation)
             {
-                //
-                // Initiate a rotation
-                // that takes the nice point to the center
-                // (i.e. to the -W axis)
-                // 
-
-                double nicePointD[] = new double[4];
-                for (int i = 0; i < 4; ++i)
-                    nicePointD[i] = (double)nicePoint[i];
-
-                double nicePointOnScreen[] = com.donhatchsw.util.VecMath.vxm( nicePointD, rotationHandler.current4dView() );
-                com.donhatchsw.util.VecMath.normalize(nicePointOnScreen, nicePointOnScreen); // if it's not already
-                double minusWAxis[] = {0,0,0,-1};
-                double totalRotationAngle = com.donhatchsw.util.VecMath.angleBetweenUnitVectors(
-                                    nicePointOnScreen,
-                                    minusWAxis);
-
-                genericGlue.nRotation = calculateNTwists( totalRotationAngle, twistFactor );
-                // XXX ARGH! we'd like the speed to vary as the user changes the slider,
-                // XXX but the above essentially locks in the speed for this rotation
-                genericGlue.iRotation = 0; // we are iRotation frames into nRotation
-                genericGlue.rotationFrom = nicePointOnScreen;
-                genericGlue.rotationTo = minusWAxis;
-                view.repaint();
-
-                if (genericGlue.iRotation == genericGlue.nRotation)
-                {
-                    // Already in the center
-                    System.err.println("Can't rotate that.\n");
-                }
+                // Already in the center
+                System.err.println("Can't rotate that.\n");
             }
-            else
-                System.out.println("missed");
-        } // isRotate
-        else // !isRotate, it's a twist
-        {
-            int iGrip = GenericPipelineUtils.pickGrip(
-                            e.getX(), e.getY(),
-                            genericGlue.untwistedFrame,
-                            genericGlue.genericPuzzleDescription);
-            if (iGrip != -1)
-            {
-                int order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[iGrip];
-
-               
-                //System.err.println("    Grip "+iGrip+"");
-                //System.err.println("        order "+order);
-
-                if (genericGlue.iTwist < genericGlue.nTwist)
-                {
-                    // Twist already in progress.
-                    // XXX should add this one to a queue.
-                    // XXX for now, just prohibit it.
-                    System.err.println("    BEEP! SLOW DOWN!"); // XXX obnoxious
-                    return;
-                }
-
-
-                if (order <= 0)
-                {
-                    System.err.println("Can't twist that.\n");
-                    return;
-                }
-
-              int dir = (isLeftMouseButton(e) || isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
-
-                //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
-                //    dir *= 2;
-
-                double totalRotationAngle = 2*Math.PI/order;
-                genericGlue.nTwist = calculateNTwists( totalRotationAngle, twistFactor );
-                genericGlue.iTwist = 0;
-                genericGlue.iTwistGrip = iGrip;
-                genericGlue.twistDir = dir;
-                genericGlue.twistSliceMask = slicemask;
-
-                //
-                // Stick it in the undo queue now, instead
-                // of at the end of the animation.
-                // It's easier for us to do it
-                // here than for the guy at the end to do it,
-                // because he would have to decide to do it or not
-                // depending on whether it was an undo
-                // (and there's currently no mechanism for him
-                // to know that).
-                //
-                // XXX seems like it would be better policy
-                // XXX to add to the undo queue at the same time
-                // XXX as the move is applied to the state...
-                // XXX so we should probably apply the move
-                // XXX to the state here too, which means
-                // XXX we have to modify what gets passed
-                // XXX to the getFrame functions (i.e.
-                // XXX tell it the twist is going towards
-                // XXX the current state array instead of
-                // XXX away from it)
-                // 
-                genericGlue.undoq.setSize(genericGlue.undoPartSize); // clear redo part
-                genericGlue.undoq.addElement(new GenericGlue.HistoryNode(
-                                                    genericGlue.iTwistGrip,
-                                                    genericGlue.twistDir,
-                                                    genericGlue.twistSliceMask));
-                genericGlue.undoPartSize++;
-
-                view.repaint();
-            }
-            else
-                System.out.println("missed");
         }
+        else
+            System.out.println("missed");
+            
     } // mouseClickedAction
 
 
@@ -673,16 +595,9 @@ public class GenericGlue
 
             com.donhatchsw.util.VecMath.mxs(viewMat4df, scaleFudge4d),
             eyeW,
-            com.donhatchsw.util.VecMath.mxmxmxm(
-                com.donhatchsw.util.VecMath.makeRowRotMat(3, 2, 1, (float)Math.PI/2),
-                com.donhatchsw.util.VecMath.makeRowRotMat(3, 2, 0, 1.f*(float)MagicCube.TWIRL*(float)Math.PI/180.f),
-                //com.donhatchsw.util.VecMath.makeRowRotMat(3, 1, 2, 1.f*(float)MagicCube.TILT*(float)Math.PI/180.f),
-                com.donhatchsw.util.VecMath.makeRowRotMat(3, 1, 2, 1.f*15*(float)Math.PI/180.f),
-                com.donhatchsw.util.VecMath.mxs(rotationHandler.current3dView(), scaleFudge3d)),
             eyeZ,
-
             new float[][]{{scaleFudge2d*scale/pixels2polySF, 0},
-                          {0, -scaleFudge2d*scale/pixels2polySF},
+                          {0, -scaleFudge2d*scale/pixels2polySF},           
                           {(float)xOff, (float)yOff}},
             com.donhatchsw.util.VecMath.normalize(towardsSunVec),
             groundNormal,
@@ -751,19 +666,5 @@ public class GenericGlue
             }
         }
     } // computeAndPaintFrame
-
-
-
-
-    /*
-     * Shamelessly copied from someone who shamelessly copied it from SwingUtilities.java since that is in JDK 1.3 and we'd like to keep this to 1.2 and below.
-     */
-    public static boolean isMiddleMouseButton(MouseEvent anEvent) {
-        return ((anEvent.getModifiers() & InputEvent.BUTTON2_MASK) == InputEvent.BUTTON2_MASK);
-    }
-    public static boolean isLeftMouseButton(MouseEvent anEvent) {
-         return ((anEvent.getModifiers() & InputEvent.BUTTON1_MASK) != 0);
-    }
-
 
 } // class GenericGlue

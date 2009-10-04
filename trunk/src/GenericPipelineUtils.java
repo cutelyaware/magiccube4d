@@ -100,7 +100,6 @@ public class GenericPipelineUtils
 
                                     float rot4d[/*4*/][/*4 or 5*/],
                                     float eyeW,
-                                    float rot3d[/*3*/][/*3 or 4*/],
                                     float eyeZ,
                                     float rot2d[/*2*/][/*2 or 3*/],
                                     
@@ -252,25 +251,6 @@ public class GenericPipelineUtils
             shadowDrawListSize = groundNormal != null ? nBackFacing : 0;
         }
         if (verboseLevel >= 3) System.out.println("        after front-cell cull: verts = "+com.donhatchsw.util.Arrays.toStringCompact(verts));
-
-        //
-        // Rotate/scale in 3d
-        // XXX could try to only do this on vertices that passed the culls
-        //
-        {
-            if (verboseLevel >= 3) System.out.println("rot3d = "+com.donhatchsw.util.Arrays.toStringCompact(rot3d));
-            float tempIn[] = new float[3]; // XXX MEMORY ALLOCATION
-            float tempOut[] = new float[3]; // XXX MEMORY ALLOCATION
-            for (int iVert = 0; iVert < verts.length; ++iVert)
-            {
-                for (int i = 0; i < 3; ++i) // 3 out of 4
-                    tempIn[i] = verts[iVert][i];
-                VecMath.vxm(tempOut, tempIn, rot3d); // only first 3... however the matrix can be 3x3 or 4x3
-                for (int i = 0; i < 3; ++i) // 3 out of 4
-                    verts[iVert][i] = tempOut[i];
-            }
-        }
-        if (verboseLevel >= 3) System.out.println("        after 3d rot/scale/trans: verts = "+com.donhatchsw.util.Arrays.toStringCompact(verts));
 
         //
         // If doing shadows,

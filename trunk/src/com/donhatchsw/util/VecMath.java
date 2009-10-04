@@ -2801,6 +2801,20 @@ PRINTVEC(vxmxm(new double[]{0,1,2,3,4,5},M,pva));
             identitymat(result);
             return result;
         }
+        /** return newly allocated zero matrix of given dimension */
+        public static double[][] zeromat(int n)
+        {
+            double result[][] = new double[n][n];
+            zeromat(result);
+            return result;
+        }
+        /** return newly allocated zero matrix of given dimensions */
+        public static double[][] zeromat(int n, int m)
+        {
+            double result[][] = new double[n][m];
+            zeromat(result);
+            return result;
+        }
         /** transpose matrix, returning newly allocated result */
         public static double[][] transpose(double M[][])
         {
