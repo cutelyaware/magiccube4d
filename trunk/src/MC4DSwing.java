@@ -98,6 +98,8 @@ public class MC4DSwing extends JFrame {
                 hist.countTwists() + " " +
                 genericGlue.genericPuzzleDescription.getSchlafliProduct() + " " +
                 genericGlue.genericPuzzleDescription.getEdgeLength());
+            writer.write(sep);
+            view.getRotations().write(writer);
             //writer.write(sep + puzzle.toString());
             writer.write(sep + "*" + sep);
             hist.write(writer);
@@ -675,6 +677,7 @@ public class MC4DSwing extends JFrame {
         double initialLength = MagicCube.DEFAULT_LENGTH;
         int iLength = (int)Math.ceil(initialLength);
         hist = new History(iLength);
+        RotationHandler rotations = new RotationHandler();
         String stateStr = "";
         if(logfilename != null) { // read the log file, possibly reinitializing length and history.
             File logfile = new File(logfilename);
@@ -698,6 +701,7 @@ public class MC4DSwing extends JFrame {
                     iLength = (int)Math.round(initialLength);
                     hist = new History(iLength);
                     String title = MagicCube.TITLE;
+                    rotations.read(reader);
                     int c;
                     for(c=reader.read(); !(c=='*' || c==-1); c=reader.read()) ; // read past state data
                     if(hist.read(new PushbackReader(reader)))
@@ -737,7 +741,7 @@ public class MC4DSwing extends JFrame {
         	e.printStackTrace();
         }
         
-        view = new MC4DView(puzzle, polymgr, hist, genericGlue.genericPuzzleDescription.nFaces());
+        view = new MC4DView(puzzle, polymgr, rotations, hist, genericGlue.genericPuzzleDescription.nFaces());
         view.genericGlue = genericGlue; // make it share mine
         view.setScale(scale); // XXX added-- I think this is needed, otherwise the Property's scale doesn't get applied til I hit the scale slider! -don
 

@@ -27,7 +27,7 @@ public class MC4DApplet extends Applet {
             System.out.println("couldn't read history file");
         else
             hist.read(new PushbackReader(new StringReader(Util.readFileFromURL(histurl))));
-        final MC4DView view = new MC4DView(new PuzzleState(length, polymgr), polymgr, hist, 6);
+        final MC4DView view = new MC4DView(new PuzzleState(length, polymgr), polymgr, new RotationHandler(), hist, 6);
         view.addTwistListener(new MC4DView.TwistListener() {
             public void twisted(MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
