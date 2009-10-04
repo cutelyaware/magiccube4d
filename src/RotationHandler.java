@@ -9,19 +9,14 @@ public class RotationHandler
 {
 	RotationHandler()
 	{
-		// Put us in a nice-looking start position.
-		this.viewMat4d = new double[][] {
-			{.732,-.196,.653,0},
-			{.681,.187,-.707,0},
-			{.016,.963,.270,0},
-			{0,0,0,1} };
-		VecMath.gramschmidt( viewMat4d, viewMat4d );
+		reset4dView();
 	}
 	
 	public enum Snap
 	{
 		Snap_Cell,		// Rotates cell centers.
-		Snap_Smart		// Rotates vertices, edge centers, cell centers, etc. smartly (we've been calling this cubie-to-center as well)
+		Snap_Smart		// Rotates vertices, edge centers, cell centers, etc. smartly.
+						// (we've been calling this cubie-to-center, even though that's not always the case)
 	}
 	
 	// Modes
@@ -57,7 +52,13 @@ public class RotationHandler
 
 	public void reset4dView()
 	{
-		VecMath.identitymat( viewMat4d );
+		// Put us in a nice-looking start position.
+		this.viewMat4d = new double[][] {
+			{.732,-.196,.653,0},
+			{.681,.187,-.707,0},
+			{.016,.963,.270,0},
+			{0,0,0,1} };
+		VecMath.gramschmidt( viewMat4d, viewMat4d );
 	}
 	
 	// Handles updating our rotation matrices based on mouse dragging.
@@ -104,7 +105,7 @@ public class RotationHandler
 			spinDelta[2][3] += dy;
 		}
 
-		// XXX - move upward
+		// Handle the sensitivity.
         VecMath.mxs( spinDelta, spinDelta, .005 * this.sensitivity );
 		
 		applySpinDelta();
