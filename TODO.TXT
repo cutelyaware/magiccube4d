@@ -5,9 +5,10 @@ PUZZLES
   First just for the appropriately sized cubes and eventually for all puzzles.
 * DONE - Figure out how to support rotations for generic puzzles & history.
 * DONE - Implement Jenn3D-style 4D rotates via Shift-left drag.
-* Comment out broken or redundant puzzles before shipping.
+* before shipping, comment out broken or redundant puzzles and change default to "{4,3,3} 3"
 * Make twist speed adjustable mid-twist.
 * Need isSolved method to determine when a true solve has been achieved.
+* Add an MC120-like piece finding functionality.
 
 HIGHLIGHTING
 * Disallow 360 degree twists.
@@ -18,6 +19,8 @@ GUI
 * Choose better slider ranges.
 * Fix or remove contigious cubies mode.
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
+* Make initial EyeW a function of puzzle size and maybe remove slider altogether?
+* Add cross-eyed stereo viewing mode.
 * DONE - Add a debugging FPS meter.
 * DONE - Replace the AWT class usages with Swing versions.
 * DONE - Move control panel to the west.
@@ -31,7 +34,10 @@ LOG FILES
 * DONE - Save transform matrix in the file.
 
 BUGS
+* DONE - Fix Cheat after scramble.
+* Fix scramble for edge lengths > 4. (Different faces can have effectively different numbers of slices).
 * Fix Quick Moves.
+* Full scramble on simplex yields inconsistent numbers of history twists. (Watch twist counter in lower right.)
 * DONE - Fix color buttons and remove the 6 fixed color choices.
 * DONE - Fix macro cancel.
 * DONE - Fix slices masks.

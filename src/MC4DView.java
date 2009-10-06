@@ -6,7 +6,6 @@ import java.io.PushbackReader;
 import java.util.Vector;
 import java.util.Enumeration;
 
-import javax.swing.JPanel;
 import javax.swing.Timer;
 
 
@@ -149,12 +148,16 @@ public class MC4DView extends Component {
     public static boolean isLeftMouseButton(MouseEvent anEvent) {
          return ((anEvent.getModifiers() & InputEvent.BUTTON1_MASK) != 0);
     }
+    
+    public void setHistory(History h) {
+    	this.animationQueue = new AnimationQueue(h);
+    }
 
     public MC4DView(PuzzleState state, PolygonManager polymgr, RotationHandler rotations, History hist, int nfaces) {
         this.state = state;
         this.polymgr = polymgr;
         this.rotationHandler = rotations;
-        this.animationQueue = new AnimationQueue(hist);
+        this.setHistory(hist);
         faceRGB = YUV.generateVisuallyDistinctRGBs(nfaces, .7f, .1f); //generateHSVColors(12, 10, .5f);
         this.setFocusable(true);
         
@@ -468,11 +471,16 @@ public class MC4DView extends Component {
                 return animating.twist;
             while( ! queue.isEmpty()) {
                 Object item = queue.remove(0);
-                if(item instanceof QueueItem) {
+                if(item instanceof QueueItem) { // this is an animatable item.
                     animating = (QueueItem)item;
 
                     int iTwistGrip = animating.twist.grip.id_within_cube;
-                    int order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[iTwistGrip];
+                    int[] orders = genericGlue.genericPuzzleDescription.getGripSymmetryOrders();
+                    if(0 > iTwistGrip || iTwistGrip >= orders.length) {
+                    	System.err.println("order inxexing error in MC4CView.AnimationQueue.getAnimating()");
+                    	continue;
+                    }
+                    int order = orders[iTwistGrip];
                     double totalRotationAngle = 2*Math.PI/order;                    
                     
                     genericGlue.nTwist = genericGlue.calculateNTwists( totalRotationAngle, polymgr.getTwistFactor() );
@@ -480,9 +488,9 @@ public class MC4DView extends Component {
                     genericGlue.iTwistGrip = iTwistGrip;
                     genericGlue.twistDir = animating.twist.direction;
                     genericGlue.twistSliceMask = animating.twist.slicemask;
-                    break;
+                    break; // successfully dequeued a twist which is now animating.
                 }
-                if(item instanceof Character)
+                if(item instanceof Character) // apply the queued mark and continue dequeuing.
                     queueHist.mark(((Character)item).charValue());
             }
             return animating == null ? null : animating.twist;

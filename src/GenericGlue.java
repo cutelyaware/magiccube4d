@@ -56,9 +56,6 @@ public class GenericGlue
 {
 	public static int verboseLevel = 0; // set to something else to debug
 
-    //
-    // State.  And not much of it!
-    //
     public GenericPuzzleDescription genericPuzzleDescription = null;
     public int genericPuzzleState[] = null;
 
@@ -268,124 +265,6 @@ public class GenericGlue
     	return (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor);
     }
     
-    public void undoAction(Component view, JLabel statusLabel, float twistFactor)
-    {
-        GenericGlue glue = this;
-        if (glue.undoPartSize > 0)
-        {
-            if (glue.iTwist < glue.nTwist)
-            {
-                // Twist already in progress.
-                // XXX should add this one to a queue.
-                // XXX for now, just prohibit it.
-                System.err.println("    BEEP! SLOW DOWN!"); // XXX obnoxious
-                return;
-            }
-
-            GenericGlue.HistoryNode node = (GenericGlue.HistoryNode)glue.undoq.get(--glue.undoPartSize);
-
-            //
-            // Initiate the undo twist (opposite dir from original)
-            //
-            int order = glue.genericPuzzleDescription.getGripSymmetryOrders()[node.iGrip];
-            double totalRotationAngle = 2*Math.PI/order;
-            glue.nTwist = calculateNTwists( totalRotationAngle, twistFactor );
-            glue.iTwist = 0;
-            glue.iTwistGrip = node.iGrip;
-            glue.twistDir = -node.dir;
-            glue.twistSliceMask = node.slicemask;
-
-            view.repaint();
-        }
-        else
-            statusLabel.setText("Nothing to undo.");
-    } // undoAction
-
-    public void redoAction(Component view, JLabel statusLabel, float twistFactor)
-    {
-        GenericGlue glue = this;
-        if (glue.undoq.size()-glue.undoPartSize > 0)
-        {
-            if (glue.iTwist < glue.nTwist)
-            {
-                // Twist already in progress.
-                // XXX should add this one to a queue.
-                // XXX for now, just prohibit it.
-                System.err.println("    BEEP! SLOW DOWN!"); // XXX obnoxious
-                return;
-            }
-
-            GenericGlue.HistoryNode node = (GenericGlue.HistoryNode)glue.undoq.get(glue.undoPartSize++);
-
-            //
-            // Initiate the redo twist (same dir as original)
-            //
-            int order = glue.genericPuzzleDescription.getGripSymmetryOrders()[node.iGrip];
-            double totalRotationAngle = 2*Math.PI/order;
-            glue.nTwist = calculateNTwists( totalRotationAngle, twistFactor );
-            glue.iTwist = 0;
-            glue.iTwistGrip = node.iGrip;
-            glue.twistDir = node.dir;
-            glue.twistSliceMask = node.slicemask;
-
-            view.repaint();
-        }
-        else
-            statusLabel.setText("Nothing to redo.");
-    } // redoAction
-
-    public void cheatAction(Component view, JLabel statusLabel)
-    {
-        GenericGlue glue = this;
-        glue.cheating = true; // each repaint will trigger another til done
-        view.repaint();
-        statusLabel.setText("");
-    } // cheatAction
-
-    public void scrambleAction(Component view, JLabel statusLabel, int scramblechenfrengensen)
-    {
-        GenericGlue glue = this;
-        java.util.Random rand = new java.util.Random();
-        int previous_face = -1;
-        for(int s = 0; s < scramblechenfrengensen; s++) {
-            // select a random grip that is unrelated to the last one (if any)
-            int iGrip, iFace, order;
-            do {
-                iGrip = rand.nextInt(glue.genericPuzzleDescription.nGrips());
-                iFace = glue.genericPuzzleDescription.getGrip2Face()[iGrip];
-                order = glue.genericPuzzleDescription.getGripSymmetryOrders()[iGrip];
-            }
-            while (
-                order < 2 || // don't use trivial ones
-                iFace == previous_face || // mixing it up
-                (previous_face!=-1 && glue.genericPuzzleDescription.getFace2OppositeFace()[previous_face] == iFace));
-            previous_face = iFace;
-            int slicemask = 1<<rand.nextInt(2); // XXX there's no getLength()! oh I think it's because I didn't think that was a generic enough concept to put in GenericPuzzleDescription, but I might have to rethink that.  for now, we just pick the first or second slice... this is fine for up to 4x, and even 5x (sort of)
-            int dir = rand.nextBoolean() ? -1 : 1;
-
-            glue.genericPuzzleDescription.applyTwistToState(
-                    glue.genericPuzzleState,
-                    iGrip,
-                    dir,
-                    slicemask);
-
-            glue.undoq.setSize(glue.undoPartSize); // clear redo part
-            glue.undoq.addElement(new GenericGlue.HistoryNode(
-                                            iGrip,
-                                            dir,
-                                            slicemask));
-            glue.undoPartSize++;
-
-        }
-        view.repaint();
-        boolean fully = scramblechenfrengensen == MagicCube.FULL_SCRAMBLE;
-        // scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL; XXX do we need to do this here?
-        statusLabel.setText(fully ? "Fully Scrambled" : scramblechenfrengensen + " Random Twist" + (scramblechenfrengensen==1?"":"s"));
-    } // scrambleAction
-
-
-
-
 
     public void mouseMovedAction(MouseEvent e,
                                  Component view)
