@@ -101,8 +101,8 @@ public class MC4DView extends Component {
         quickMoves = val;
     }
 
-    public void allowSpinDrag(boolean val) {
-        rotationHandler.setAllowSpinDrag(val);
+    public void allowAutoRotate(boolean val) {
+        rotationHandler.setAllowAutoRotate(val);
         repaint();
     }
     
@@ -483,7 +483,7 @@ public class MC4DView extends Component {
                     int order = orders[iTwistGrip];
                     double totalRotationAngle = 2*Math.PI/order;                    
                     
-                    genericGlue.nTwist = genericGlue.calculateNTwists( totalRotationAngle, polymgr.getTwistFactor() );
+                    genericGlue.nTwist = quickMoves ? 1 : genericGlue.calculateNTwists( totalRotationAngle, polymgr.getTwistFactor() );
                     genericGlue.iTwist = 0;
                     genericGlue.iTwistGrip = iTwistGrip;
                     genericGlue.twistDir = animating.twist.direction;
