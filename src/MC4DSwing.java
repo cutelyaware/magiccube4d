@@ -225,7 +225,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 while( ! toundo.isEmpty()) {
                     MagicCube.TwistData last = toundo.pop();
                     MagicCube.TwistData inv = new MagicCube.TwistData(last.grip, -last.direction, last.slicemask);
-                    //System.out.println("Cheating grip: " + inv.grip.id_within_cube + " dir: " + inv.direction  + " slicemask: " + inv.slicemask);
+                    //System.out.println("Cheating grip: " + inv.grip.id_within_puzzle + " dir: " + inv.direction  + " slicemask: " + inv.slicemask);
                     view.animate(inv, true);
                 }
                 statusLabel.setText("");
@@ -491,7 +491,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 				                            slicemask);
 				                    // and save it in the history.
 				                    MagicCube.Stickerspec ss = new MagicCube.Stickerspec();
-				                    ss.id_within_cube = iGrip; // slamming new id. do we need to set the other members?
+				                    ss.id_within_puzzle = iGrip; // slamming new id. do we need to set the other members?
 				                    ss.face = genericGlue.genericPuzzleDescription.getGrip2Face()[iGrip];
 				                    hist.apply(ss, dir, slicemask);
 				                    updateProgress(s);
@@ -806,7 +806,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     int c;
                     for(c=reader.read(); !(c=='*' || c==-1); c=reader.read()) ; // read past state data
                     if(hist.read(new PushbackReader(reader)))
-                    	title +=  " - " + schlafli + " - " + logfile.getName();
+                    	title += " - " + logfile.getName();
                     else
                      	System.out.println("Error reading puzzle history");
                     setTitle(title);
@@ -832,13 +832,13 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         try {
 	        for(Enumeration<MagicCube.TwistData> moves=hist.moves(); moves.hasMoreElements(); ) {
 	        	MagicCube.TwistData move = moves.nextElement();
-	        	if(move.grip.id_within_cube == -1) {
-	        		System.err.println("Bad move in MC4DSwing.initPuzzle: " + move.grip.id_within_cube);
+	        	if(move.grip.id_within_puzzle == -1) {
+	        		System.err.println("Bad move in MC4DSwing.initPuzzle: " + move.grip.id_within_puzzle);
 	        		return;
 	        	}
 		        genericGlue.genericPuzzleDescription.applyTwistToState(
 	        		genericGlue.genericPuzzleState,
-	                move.grip.id_within_cube,
+	                move.grip.id_within_puzzle,
 	                move.direction,
 	                move.slicemask);
 	        }

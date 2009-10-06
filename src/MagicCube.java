@@ -48,7 +48,7 @@ public class MagicCube {
     public final static class Stickerspec {
         public int
             coords[] = new int[NDIMS],
-            face, dim, id_within_cube, id_within_face;
+            face, dim, id_within_puzzle, id_within_face;
     }
     
 	/**
@@ -74,11 +74,11 @@ public class MagicCube {
         public TwistData(MagicCube.Stickerspec grip, int direction, int slicemask) {
             this.grip = grip; this.slicemask = slicemask; this.direction = direction;
         }
-        public TwistData(int id_within_cube, int direction, int slicemask) {
+        public TwistData(int id_within_puzzle, int direction, int slicemask) {
             this.direction = direction;
             this.slicemask = slicemask;
             this.grip = new MagicCube.Stickerspec();
-            grip.id_within_cube = id_within_cube;
+            grip.id_within_puzzle = id_within_puzzle;
             //PolygonManager.fillStickerspecFromIdAndLength(grip, 3);       
         }
     }

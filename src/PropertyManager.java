@@ -8,7 +8,7 @@ import java.net.*;
 /**
  * Title:        PropertyManager
  * Description:  Methods for getting property strings from cascading Properties objects.
- *               The order of precidence is as follows:
+ *               The order of precedence is as follows:
  *               <code>
  *                   top
  *                   system
@@ -19,7 +19,7 @@ import java.net.*;
  *
  *               The root of the chain is stored in the public static "top" member which should be
  *               accessed for nearly all application purposes. Applications can set values there
- *               as well which will take precidence over lower-level defaults but will not be
+ *               as well which will take precedence over lower-level defaults but will not be
  *               persisted across sessions.
  *
  *               Property file names are assumed to be rooted in a folder named "resources"
@@ -41,14 +41,14 @@ import java.net.*;
  *                     main.logo.small=/newcorp.gif
  *               will resolve to:
  *                     newcorp.com/analyer/resources/newcorp.gif
- *               Also, quoted values will have their quotes striipped. This is in case a user
+ *               Also, quoted values will have their quotes stripped. This is in case a user
  *               wants to create a path or other property that begins with '/'.
  *
  *               Another special properties object in the chain is "userprefs" which is for end
  *               user preferences which are stored in a file on the user's local machine in their home directory.
  *               Under Windows this tends to be "C:\Documents and Settings\[username]\Desktop".
  *               Properties that are set into this object are immediately persisted to the file
- *               for retrival in the current and future sessions.
+ *               for retrieval in the current and future sessions.
  *
  *
  * Copyright 2005 - Superliminal Software
@@ -111,7 +111,7 @@ public class PropertyManager extends Properties {
      * All argument names are expected to begin with a minus. If followed by an argument
      * without a minus, that argument is taken as the value for the one with the minus.
      * Arguments followed directly by another flagged argument are taken as boolean arguments
-     * whos values are set to the string "true".
+     * Whose values are set to the string "true".
      *
      * @param args typically an args array from a main method
      * but with extracted elements possibly nulled out.
@@ -120,7 +120,7 @@ public class PropertyManager extends Properties {
     public static void loadProps(String args[], Properties into) {
         for (int i = 0; i < args.length; i++) {
             if(args[i] == null)
-                continue; // skip any nulled out elements (caller propably used and extracted them)
+                continue; // skip any nulled out elements (caller probably used and extracted them)
             if (args[i].startsWith("-")) {
                 // Make sure there's another arg
                 if ((i + 1) < args.length) {
