@@ -207,7 +207,7 @@ public class MC4DView extends Component {
                 }
                 else {
                 	MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
-                    clicked.id_within_cube = grip; // slamming new id. do we need to set the other members?
+                    clicked.id_within_puzzle = grip; // slamming new id. do we need to set the other members?
                     clicked.face = genericGlue.genericPuzzleDescription.getGrip2Face()[grip];
                     //clicked.coords = genericGlue.genericPuzzleDescription.getGripCoords( grip );
                     System.out.println("face: " + clicked.face);
@@ -474,7 +474,7 @@ public class MC4DView extends Component {
                 if(item instanceof QueueItem) { // this is an animatable item.
                     animating = (QueueItem)item;
 
-                    int iTwistGrip = animating.twist.grip.id_within_cube;
+                    int iTwistGrip = animating.twist.grip.id_within_puzzle;
                     int[] orders = genericGlue.genericPuzzleDescription.getGripSymmetryOrders();
                     if(0 > iTwistGrip || iTwistGrip >= orders.length) {
                     	System.err.println("order inxexing error in MC4CView.AnimationQueue.getAnimating()");

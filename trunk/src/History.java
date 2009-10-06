@@ -192,7 +192,7 @@ public class History {
      * Simply calls 3-arg version with data from given move.
      */
     public void append(MagicCube.TwistData move) {
-        append(move.grip.id_within_cube, move.direction, move.slicemask);
+        append(move.grip.id_within_puzzle, move.direction, move.slicemask);
     }
 
     /*
@@ -225,7 +225,7 @@ public class History {
      */
     public void apply(MagicCube.Stickerspec sticker, int dir, int slicesmask) {
         truncate();
-        append(sticker.id_within_cube, dir, slicesmask);
+        append(sticker.id_within_puzzle, dir, slicesmask);
     }
 
     /**
@@ -722,7 +722,7 @@ public class History {
             // Figure out the grip
             //
             MagicCube.Stickerspec grip = scratchGrip;
-            grip.id_within_cube = stickerid;
+            grip.id_within_puzzle = stickerid;
             //PolygonManager.fillStickerspecFromIdAndLength(grip, 3); // XXX crashes with non cubes
 
             //
@@ -733,7 +733,7 @@ public class History {
             {
                 Vec_h._VXM4i(grip.coords, grip.coords, current_matrix);
                 PolygonManager.fillStickerspecFromCoordsAndLength(grip, 3);
-                stickerid = grip.id_within_cube;
+                stickerid = grip.id_within_puzzle;
             }
 
             int face = PolygonManager.faceOfGrip(stickerid);
@@ -899,7 +899,7 @@ public class History {
                                 /*
                                  * Result is 1 twist CCW.
                                  */
-                                insertNode(first, grip.id_within_cube, MagicCube.CCW, slicesmask);
+                                insertNode(first, grip.id_within_puzzle, MagicCube.CCW, slicesmask);
                                 break;
                             }
                             angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CW);
@@ -908,7 +908,7 @@ public class History {
                                 /*
                                  * Result is 1 twist CW.
                                  */
-                                insertNode(first, grip.id_within_cube, MagicCube.CW, slicesmask);
+                                insertNode(first, grip.id_within_puzzle, MagicCube.CW, slicesmask);
                                 break;
                             }
                             int dir = Math.random() > 0.5 ? MagicCube.CW : MagicCube.CCW;
@@ -917,8 +917,8 @@ public class History {
                             Vec_h._MXM4i(testmat, testmat, testmat);
                             if (Vec_h._EQMAT4(testmat, sliceTwistMat)) {
                                 // Result is 2 twists
-                                insertNode(first, grip.id_within_cube, dir, slicesmask);
-                                insertNode(first, grip.id_within_cube, dir, slicesmask);
+                                insertNode(first, grip.id_within_puzzle, dir, slicesmask);
+                                insertNode(first, grip.id_within_puzzle, dir, slicesmask);
                                 break;
                             }
                             Assert(false);
@@ -967,7 +967,7 @@ public class History {
                 * It's a rotate.  Just preconcatenate it
                 * to the current matrix and remove.
                 */
-                grip.id_within_cube = (nodeptr).stickerid;
+                grip.id_within_puzzle = (nodeptr).stickerid;
                 PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
                 float angle = PolygonManager.getTwistTotalAngle(grip.dim, (nodeptr).dir);
                 Math4d.get4dTwistMat(grip.coords, angle, incmat);
@@ -979,11 +979,11 @@ public class History {
                 * Apply the current matrix to the coords of
                 * the grip.
                 */
-                grip.id_within_cube = (nodeptr).stickerid;
+                grip.id_within_puzzle = (nodeptr).stickerid;
                 PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
                 Vec_h._VXM4i(grip.coords, grip.coords, current_matrix);
                 PolygonManager.fillStickerspecFromCoordsAndLength(grip, 3);
-                (nodeptr).stickerid = grip.id_within_cube;
+                (nodeptr).stickerid = grip.id_within_puzzle;
             }
         }
         /*
@@ -1040,7 +1040,7 @@ public class History {
                      */
                     Vec_h._IDENTMAT4(current_matrix);
                     for (node=first_on_this_face; node!=past_last_on_this_face; node=node.next) {
-                        grip.id_within_cube = node.stickerid;
+                        grip.id_within_puzzle = node.stickerid;
                         PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
                         float angle = PolygonManager.getTwistTotalAngle(grip.dim, node.dir);
                         Math4d.get4dTwistMat(grip.coords, angle, incmat);
@@ -1093,7 +1093,7 @@ public class History {
                                 /*
                                  * Result is 1 twist CCW.
                                  */
-                                insertNode(past_last_on_this_face, grip.id_within_cube, MagicCube.CCW, 1);
+                                insertNode(past_last_on_this_face, grip.id_within_puzzle, MagicCube.CCW, 1);
                                 break;
                             }
                             angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CW);
@@ -1102,7 +1102,7 @@ public class History {
                                 /*
                                  * Result is 1 twist CW.
                                  */
-                                insertNode(past_last_on_this_face, grip.id_within_cube, MagicCube.CW, 1);
+                                insertNode(past_last_on_this_face, grip.id_within_puzzle, MagicCube.CW, 1);
                                 break;
                             }
                             dir = Math.random() > 0.5 ? MagicCube.CW : MagicCube.CCW;
@@ -1111,8 +1111,8 @@ public class History {
                             Vec_h._MXM4i(testmat, testmat, testmat);
                             if (Vec_h._EQMAT4(testmat, current_matrix)) {
                                 // Result is 2 twists
-                                insertNode(past_last_on_this_face, grip.id_within_cube, dir, 1);
-                                insertNode(past_last_on_this_face, grip.id_within_cube, dir, 1);
+                                insertNode(past_last_on_this_face, grip.id_within_puzzle, dir, 1);
+                                insertNode(past_last_on_this_face, grip.id_within_puzzle, dir, 1);
                                 break;
                             }
                             Assert(false);
@@ -1131,7 +1131,7 @@ public class History {
     	for(Enumeration<MagicCube.TwistData> e=hist.moves(); e.hasMoreElements(); ) {
     		MagicCube.TwistData move = e.nextElement();
     		System.out.print(
-    				" " + move.grip.id_within_cube +
+    				" " + move.grip.id_within_puzzle +
     				"," + move.direction +
     				"," + move.slicemask);
     	}

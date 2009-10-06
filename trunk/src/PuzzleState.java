@@ -37,7 +37,7 @@ public class PuzzleState {
         int gridLen = 2 * length + 1;  // -n to +n or shifted into zero base, 0 to 2n inclusive.
         char stickerGrid[][][][] = new char[gridLen][gridLen][gridLen][gridLen];
         for(int i=0; i<the_state.length; i++) {
-            tmpsticker.id_within_cube = i;
+            tmpsticker.id_within_puzzle = i;
             polymgr.fillStickerspecFromId(tmpsticker);
             int coords[] = tmpsticker.coords;
             for(int j=0; j<coords.length; j++)
@@ -250,7 +250,7 @@ public class PuzzleState {
         for (int i = 0; i < nstickers; ++i)
         {
             MagicCube.Stickerspec tempsticker = new MagicCube.Stickerspec();
-            tempsticker.id_within_cube = i;
+            tempsticker.id_within_puzzle = i;
             polymgr.fillStickerspecFromId(tempsticker);
             int j;
             for (j = 0; j < nranges; ++j)
@@ -261,11 +261,11 @@ public class PuzzleState {
                 Vec_h._VXM4i(tempsticker.coords, tempsticker.coords, mat);
                 polymgr.fillStickerspecFromCoords(tempsticker);
                 //assert(INRANGE(0 <=, tempsticker.id_within_cube, <nstickers));
-                if(tempsticker.id_within_cube < 0 || tempsticker.id_within_cube >= nstickers) {
-                    System.err.println(tempsticker.id_within_cube + " out of range 0.." + nstickers);
+                if(tempsticker.id_within_puzzle < 0 || tempsticker.id_within_puzzle >= nstickers) {
+                    System.err.println(tempsticker.id_within_puzzle + " out of range 0.." + nstickers);
                     break;
                 }
-                dest[tempsticker.id_within_cube] = the_state[i];
+                dest[tempsticker.id_within_puzzle] = the_state[i];
                 break;
             }
             if (j == nranges)       /* it didn't fall in any of the ranges */
@@ -347,7 +347,7 @@ public class PuzzleState {
         PolygonManager polymgr = new PolygonManager();
         PuzzleState puzzle = new PuzzleState(polymgr);
         MagicCube.Stickerspec tempsticker = new MagicCube.Stickerspec();
-        tempsticker.id_within_cube = 5;
+        tempsticker.id_within_puzzle = 5;
         polymgr.fillStickerspecFromId(tempsticker);
         puzzle.twist(tempsticker, MagicCube.CW, 1);
         System.out.println(puzzle);

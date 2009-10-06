@@ -477,15 +477,15 @@ public class PolygonManager {
 
 	public static int faceOfGrip(int id) {
 	    MagicCube.Stickerspec grip = new MagicCube.Stickerspec();
-	    grip.id_within_cube = id;
+	    grip.id_within_puzzle = id;
 	    fillStickerspecFromIdAndLength(grip, 3);
 	    return grip.face;
 	}
 
 	public static void fillStickerspecFromIdAndLength(MagicCube.Stickerspec sticker, int length) {
 	    int i, ax, sgn, id, face0coords[] = new int[4], mat[][] = new int[4][4];
-	    sticker.id_within_face = sticker.id_within_cube % intpow(length, MagicCube.NDIMS - 1);
-	    sticker.face = sticker.id_within_cube / intpow(length, MagicCube.NDIMS - 1);
+	    sticker.id_within_face = sticker.id_within_puzzle % intpow(length, MagicCube.NDIMS - 1);
+	    sticker.face = sticker.id_within_puzzle / intpow(length, MagicCube.NDIMS - 1);
 	    ax = FACETOAXIS(sticker.face);
 	    sgn = FACETOSIGN(sticker.face);
 	    Math4d.getCanonicalMatThatTakesAxisToMinusW(ax, sgn, mat);
@@ -515,7 +515,7 @@ public class PolygonManager {
     public static void fillStickerspecFromFaceAndIdAndLength(MagicCube.Stickerspec sticker, int length) {
 	    int face = sticker.face;
 	    int id_within_face = sticker.id_within_face;
-	    sticker.id_within_cube = face * length * length * length + id_within_face;
+	    sticker.id_within_puzzle = face * length * length * length + id_within_face;
 	    fillStickerspecFromIdAndLength(sticker, length);
 //	    assert(sticker.face == face);
 //	    assert(sticker.id_within_face == id_within_face);
@@ -552,7 +552,7 @@ public class PolygonManager {
 	        sticker.id_within_face += (newcoords[i] + length - 1) / 2;
 	    }
 //	    assert(INRANGE(0 <=, sticker.id_within_face, <intpow(length, NDIMS - 1)));
-	    sticker.id_within_cube = sticker.face * intpow(length, MagicCube.NDIMS - 1) + sticker.id_within_face;
+	    sticker.id_within_puzzle = sticker.face * intpow(length, MagicCube.NDIMS - 1) + sticker.id_within_face;
 	}
 
     public void fillStickerspecFromCoords(MagicCube.Stickerspec sticker) {
@@ -712,7 +712,7 @@ public class PolygonManager {
 	            if (!short_are_CCW(verts[quads[i][j]], verts[quads[i][(j + 1) % 4]], thispoint))
 	                break;
 	        if (j == 4) { /* they were all CCW, so we hit a quad */
-	            sticker.id_within_cube = frame.quadids[i] / 6;
+	            sticker.id_within_puzzle = frame.quadids[i] / 6;
 	            fillStickerspecFromId(sticker);
 	            return i;
 	        }
@@ -722,7 +722,7 @@ public class PolygonManager {
 
 	public void getUntwistedFrame(MagicCube.Frame frame, float usermat[][], float[] sunvec, boolean cullbackfaces) {
         MagicCube.Stickerspec sticker = new MagicCube.Stickerspec();
-	    sticker.id_within_cube = 0;
+	    sticker.id_within_puzzle = 0;
 	    fillStickerspecFromId(sticker);
 	    getFrame(sticker, MagicCube.CCW, 0, 0, 1, usermat, sunvec, cullbackfaces, frame);
 	}
