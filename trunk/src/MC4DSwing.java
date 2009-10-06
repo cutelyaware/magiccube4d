@@ -2,6 +2,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.Enumeration;
+import java.util.Random;
 import java.util.Stack;
 
 import javax.swing.*;
@@ -19,7 +20,7 @@ import de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel;
  * @author Melinda Green
  */
 @SuppressWarnings("serial")
-public class MC4DSwing extends JFrame {
+public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 	private final String initialPuzzle = "{5}x{4}"; // "{4,3,3}"
 
     private final static int
@@ -182,8 +183,10 @@ public class MC4DSwing extends JFrame {
                 }
                 else {
                     MagicCube.TwistData toUndo = hist.undo();
-                    if(toUndo != null)
+                    if(toUndo != null) {
+                    	//System.out.println("Undoing grip: " + toUndo.grip + " dir: " + toUndo.direction  + " slicemask: " + toUndo.slicemask);
                         view.animate(toUndo, false);
+                    }
                     else
                         statusLabel.setText("Nothing to undo.");
                 }
@@ -222,6 +225,7 @@ public class MC4DSwing extends JFrame {
                 while( ! toundo.isEmpty()) {
                     MagicCube.TwistData last = toundo.pop();
                     MagicCube.TwistData inv = new MagicCube.TwistData(last.grip, -last.direction, last.slicemask);
+                    //System.out.println("Cheating grip: " + inv.grip.id_within_cube + " dir: " + inv.direction  + " slicemask: " + inv.slicemask);
                     view.animate(inv, true);
                 }
                 statusLabel.setText("");
@@ -311,17 +315,29 @@ public class MC4DSwing extends JFrame {
                 System.exit(0);
             }
         },
+        // Resets the current puzzle and calls a callback when finished 
+        // if one is supplied in the action event.
         reset = new AbstractAction("Reset") {
-            public void actionPerformed(ActionEvent ae) {
+            public void actionPerformed(final ActionEvent ae) {
                 cancel.doit(ae);
-                double length = genericGlue.genericPuzzleDescription.getEdgeLength();
+                progressBar.setVisible(true);
+                final double length = genericGlue.genericPuzzleDescription.getEdgeLength();
                 genericGlue.initPuzzle(
             		genericGlue.genericPuzzleDescription.getSchlafliProduct(),
-            		""+length, progressBar, statusLabel, false, viewRepainter);
-                hist.clear((int)length);
-                scrambleState = SCRAMBLE_NONE;
-                updateTwistsLabel();
-                view.repaint();
+            		""+length, progressBar, statusLabel, true, 
+            		new GenericGlue.Callback() {
+            	    	public void call() {
+                            hist.clear((int)length);
+                            scrambleState = SCRAMBLE_NONE;
+                            updateTwistsLabel();
+                            view.repaint();
+                            if(ae.getSource() instanceof GenericGlue.Callback)
+                            {
+                            	((GenericGlue.Callback)ae.getSource()).call();
+                            }
+            	    	}
+            	    }
+            	);
             }
         },
         read = new AbstractAction("Read") {
@@ -401,7 +417,6 @@ public class MC4DSwing extends JFrame {
         
         saveasitem.addActionListener(saveas); // no hotkey
 
-        
         JMenu filemenu = new JMenu("File");
         filemenu.add(openitem);
         filemenu.addSeparator();
@@ -417,45 +432,89 @@ public class MC4DSwing extends JFrame {
         editmenu.add(cheatitem);
         editmenu.add(solveitem);
         JMenu scramblemenu = new JMenu("Scramble");
-
+        
         // Scrambling
         //
         class Scrambler extends ProbableAction {
-            private int scramblechens;
+            private int scramblechenfrengensen;
             public Scrambler(int scramblechens) {
                 super("Scramble " + scramblechens);
-                this.scramblechens = scramblechens;
+                this.scramblechenfrengensen = scramblechens;
             }
+            // This becomes a little crazy but bear with me...
+            // This action runs in the background using a ProgressManager to keep the progress bar updated
+            // during long scrambles of big puzzles. Problem is that it needs to first reset the puzzle
+            // which itself wants to run in the background. We therefore send a callback object the reset action 
+            // which it calls when the reset is finished. That callback then kicks off the scrambling action.
+            // Chaining of background tasks like this is risky but it seems to work well. If ever it becomes
+            // suspect, try changing the reset method to not run in the background (change it's progress manager
+            // flag) then unpackage the call method to perform it's work directly after the reset finishes.
             public void doit(ActionEvent e) {
-                reset.actionPerformed(null);
-                if (genericGlue.isActive())
-                {
-                    genericGlue.scrambleAction(view, statusLabel, scramblechens);
-                    return;
-                }
-                MagicCube.Stickerspec grip = new MagicCube.Stickerspec();
-                java.util.Random rand = new java.util.Random();
-                for(int previous_face=-1,s=0; s<scramblechens; s++) {
-                    // select a random grip that is unrelated to the last one (if any) 
-                    do {
-                        grip.id_within_cube = rand.nextInt(MagicCube.NGRIPS);
-                        PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
-                    }
-                    while (
-                        //grip.dim != 2 || // to only use 90 degree twists
-                        grip.id_within_face == 13 || // can't twist about center cubies
-                        s > 0 && grip.face == previous_face || // mixing it up
-                        s > 0 && grip.face == PolygonManager.oppositeFace(previous_face)); // can be same as previous
-                    previous_face = grip.face; // remember for next twist
-                    int slicesmask = 1<<rand.nextInt(polymgr.getLength()-1); // pick a random slice
-                    puzzle.twist(grip, MagicCube.CCW, slicesmask);
-                    hist.apply(grip, MagicCube.CCW, slicesmask);
-                }
-                hist.mark(History.MARK_SCRAMBLE_BOUNDARY);
-                view.repaint();
-                boolean fully = scramblechens == MagicCube.FULL_SCRAMBLE;
-                scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL;
-                statusLabel.setText(fully ? "Fully Scrambled" : scramblechens + " Random Twist" + (scramblechens==1?"":"s"));
+                progressBar.setVisible(true);
+                reset.actionPerformed(new ActionEvent(new GenericGlue.Callback(){
+					@Override
+					public void call() { // will be called by the reset action when it completes.
+		                progressBar.setVisible(true);
+		                new ProgressManager(progressBar) {
+							@Override
+							protected Void doInBackground() throws Exception {
+				                int previous_face = -1;
+				                int totalTwistsNeededToFullyScramble = 
+				                		genericGlue.genericPuzzleDescription.nFaces() // needed twists is proportional to nFaces
+				                		* (int)genericGlue.genericPuzzleDescription.getEdgeLength() // and to number of slices
+				                		* 2; // and to a fudge factor that brings the 3^4 close to the original 40.
+				                int scrambleTwists = scramblechenfrengensen == -1 ? totalTwistsNeededToFullyScramble : scramblechenfrengensen;
+								Random rand = new Random();
+								init("Scrambling", scrambleTwists);
+				                for(int s = 0; s < scrambleTwists; s++) {
+				                    // select a random grip that is unrelated to the last one (if any)
+				                    int iGrip, iFace, order;
+				                    do {
+				                        iGrip = rand.nextInt(genericGlue.genericPuzzleDescription.nGrips());
+				                        iFace = genericGlue.genericPuzzleDescription.getGrip2Face()[iGrip];
+				                        order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[iGrip];
+				                    }
+				                    while (
+				                        order < 2 || // don't use 360 degree twists
+				                        iFace == previous_face || // mixing it up
+				                        (previous_face!=-1 && genericGlue.genericPuzzleDescription.getFace2OppositeFace()[previous_face] == iFace));
+				                    previous_face = iFace;
+				                    // XXX Instead of 2 below we really need something like (int)genericGlue.genericPuzzleDescription.getEdgeLength().
+				                    // The problem is the number of possible slices can be less when slicing into a non-cubic face.
+				                    int slicemask = 1<<rand.nextInt(2);
+				                    int dir = rand.nextBoolean() ? -1 : 1;
+				                    // apply the twist to the puzzle state.
+				                    genericGlue.genericPuzzleDescription.applyTwistToState(
+				                    		genericGlue.genericPuzzleState,
+				                            iGrip,
+				                            dir,
+				                            slicemask);
+				                    // and save it in the history.
+				                    MagicCube.Stickerspec ss = new MagicCube.Stickerspec();
+				                    ss.id_within_cube = iGrip; // slamming new id. do we need to set the other members?
+				                    ss.face = genericGlue.genericPuzzleDescription.getGrip2Face()[iGrip];
+				                    hist.apply(ss, dir, slicemask);
+				                    updateProgress(s);
+				                	//System.out.println("Adding scramble twist grip: " + iGrip + " dir: " + dir + " slicemask: " + slicemask);
+				                }
+				
+								// TODO Auto-generated method stub
+								return null;
+							} // end doInBackground
+
+							@Override
+							public void done() {
+				                hist.mark(History.MARK_SCRAMBLE_BOUNDARY);
+				                view.repaint();
+				                boolean fully = scramblechenfrengensen == -1;
+				                scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL;
+				                statusLabel.setText(fully ? "Fully Scrambled" : scramblechenfrengensen + " Random Twist" + (scramblechenfrengensen==1?"":"s"));
+								super.done();
+							}
+				        }.execute();
+
+					}
+				}, 0, "callback"));
             }
         }
         JMenuItem scrambleItem = null;
@@ -467,12 +526,11 @@ public class MC4DSwing extends JFrame {
             scramblemenu.add(scrambleItem);
         }
         scramblemenu.addSeparator();
-        scrambler = new Scrambler(MagicCube.FULL_SCRAMBLE);
+        scrambler = new Scrambler(-1);
         scrambleItem = new JMenuItem("Full     ");
         StaticUtils.addHotKey(KeyEvent.VK_F, scrambleItem, "Full", scrambler);
         scramblemenu.add(scrambleItem);
         
-
         // Puzzle lengths
         //
         JMenu puzzlemenu = new JMenu("Puzzle");
@@ -666,6 +724,45 @@ public class MC4DSwing extends JFrame {
         macroControlsContainer.validate();
     }
     
+    public void twisted(MagicCube.TwistData twisted) {
+        if(macroMgr.isOpen()) {
+            if(macroMgr.recording()) {
+                macroMgr.addTwist(twisted);
+                view.animate(twisted, true);
+            } else {
+                macroMgr.addRef(twisted.grip);
+                if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
+                    if(applyingMacro != 0) {
+                        view.setBackground(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
+                        MagicCube.Stickerspec[] refs = macroMgr.close();
+                        MagicCube.TwistData[] moves = lastMacro.getTwists(refs);
+                        if(moves == null)
+                            statusLabel.setText("Reference sticker pattern doesn't match macro definition.");
+                        else {
+                            if(applyingMacro < 0)
+                                Macro.reverse(moves);
+                            statusLabel.setText("Applying macro '" + lastMacro.getName() + "'");
+                            hist.mark(History.MARK_MACRO_OPEN);
+                            view.animate(moves, true);
+                            view.append(History.MARK_MACRO_CLOSE);
+                        }
+                        applyingMacro = 0;
+                    }
+                    else {
+                        statusLabel.setText("Now recording macro twists. Hit <ctrl>m when finished.");
+                        view.setBackground(Color.black);
+                    }
+                }
+                else statusLabel.setText(""+macroMgr.numRefs()); // a little camera sound here would be great.
+            }
+        }
+        else {
+            statusLabel.setText("");
+            view.animate(twisted, true);
+        }
+    }
+
+    
     /*
      * Format: 
      * 0 - Magic Number 
@@ -735,6 +832,10 @@ public class MC4DSwing extends JFrame {
         try {
 	        for(Enumeration<MagicCube.TwistData> moves=hist.moves(); moves.hasMoreElements(); ) {
 	        	MagicCube.TwistData move = moves.nextElement();
+	        	if(move.grip.id_within_cube == -1) {
+	        		System.err.println("Bad move in MC4DSwing.initPuzzle: " + move.grip.id_within_cube);
+	        		return;
+	        	}
 		        genericGlue.genericPuzzleDescription.applyTwistToState(
 	        		genericGlue.genericPuzzleState,
 	                move.grip.id_within_cube,
@@ -745,6 +846,12 @@ public class MC4DSwing extends JFrame {
         	e.printStackTrace();
         }
         
+        if(view != null) {
+        	// attempt to make the old view garbage-collectible.
+        	view.removeTwistListener(this);
+        	view.genericGlue = null;
+        	view.setHistory(null);
+        }
         view = new MC4DView(puzzle, polymgr, rotations, hist, genericGlue.genericPuzzleDescription.nFaces());
         view.genericGlue = genericGlue; // make it share mine
         view.setScale(scale); // XXX added-- I think this is needed, otherwise the Property's scale doesn't get applied til I hit the scale slider! -don
@@ -792,45 +899,7 @@ public class MC4DSwing extends JFrame {
             }
         });
 
-        view.addTwistListener(new MC4DView.TwistListener() {
-            public void twisted(MagicCube.TwistData twisted) {
-                if(macroMgr.isOpen()) {
-                    if(macroMgr.recording()) {
-                        macroMgr.addTwist(twisted);
-                        view.animate(twisted, true);
-                    } else {
-                        macroMgr.addRef(twisted.grip);
-                        if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
-                            if(applyingMacro != 0) {
-                                view.setBackground(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
-                                MagicCube.Stickerspec[] refs = macroMgr.close();
-                                MagicCube.TwistData[] moves = lastMacro.getTwists(refs);
-                                if(moves == null)
-                                    statusLabel.setText("Reference sticker pattern doesn't match macro definition.");
-                                else {
-                                    if(applyingMacro < 0)
-                                        Macro.reverse(moves);
-                                    statusLabel.setText("Applying macro '" + lastMacro.getName() + "'");
-                                    hist.mark(History.MARK_MACRO_OPEN);
-                                    view.animate(moves, true);
-                                    view.append(History.MARK_MACRO_CLOSE);
-                                }
-                                applyingMacro = 0;
-                            }
-                            else {
-                                statusLabel.setText("Now recording macro twists. Hit <ctrl>m when finished.");
-                                view.setBackground(Color.black);
-                            }
-                        }
-                        else statusLabel.setText(""+macroMgr.numRefs()); // a little camera sound here would be great.
-                    }
-                }
-                else {
-                    statusLabel.setText("");
-                    view.animate(twisted, true);
-                }
-            }
-        });
+        view.addTwistListener(this);
 
         Macro[] macros = macroMgr.getMacros();
         if(macros.length > 0)

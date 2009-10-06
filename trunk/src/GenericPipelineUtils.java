@@ -679,6 +679,8 @@ public class GenericPipelineUtils
             {
                 int iSticker = drawList[iItem][0];
                 int iPolyThisSticker = drawList[iItem][1];
+                if(iSticker >= stickerInds.length || iPolyThisSticker >= stickerInds[iSticker].length)
+                	continue; // shouldn't happen but does when switching from a big puzzle to a smaller one.
                 int poly[] = stickerInds[iSticker][iPolyThisSticker];
                 float brightness = brightnesses[iSticker][iPolyThisSticker];
                 int colorOfSticker = puzzleState[iSticker];

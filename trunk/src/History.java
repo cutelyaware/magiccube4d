@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.*;
 
 
+
 /**
  * Maintains a sequence of twists, rotates, and marks applied to a MagicCube4D puzzle.
  * Supports undo/redo and macro moves and is able to save and restore from log files.
@@ -93,13 +94,23 @@ public class History {
 
     public Enumeration<MagicCube.TwistData> moves() {
         return new Enumeration<MagicCube.TwistData>() {
-            private HistoryNode cur = first;
-            public boolean hasMoreElements() { return cur != null; }
-            public MagicCube.TwistData nextElement() {
-                MagicCube.TwistData ret = new MagicCube.TwistData(cur.stickerid, cur.dir, cur.slicesmask);
-                cur = cur.next;
-                return ret;
-            }
+        	private Queue<HistoryNode> queue = findTwists();
+			@Override
+			public boolean hasMoreElements() {
+				return !queue.isEmpty();
+			}
+			@Override
+			public MagicCube.TwistData nextElement() {
+				HistoryNode n = queue.remove();
+				return new MagicCube.TwistData(n.stickerid, n.dir, n.slicesmask);
+			} 
+			private Queue<HistoryNode> findTwists() {
+				Queue<HistoryNode> twists = new LinkedList<HistoryNode>();
+				for(HistoryNode n = first; n!=null && n!=current; n=n.next)
+	        		if(n.mark == 0)
+	        			twists.add(n);
+				return twists;
+			}
         };
     }
 
@@ -488,7 +499,7 @@ public class History {
                     	return outahere();
                     int slicesmask = readInt(pr);
                     append(sticker, direction, slicesmask);
-                    System.out.println("read " + sticker + "," + direction + "," + slicesmask);
+                    //System.out.println("read " + sticker + "," + direction + "," + slicesmask);
                 } else if (c == 'm') {
                     c = pr.read();
                     mark((char)c);
