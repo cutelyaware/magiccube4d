@@ -462,7 +462,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 				                int totalTwistsNeededToFullyScramble = 
 				                		genericGlue.genericPuzzleDescription.nFaces() // needed twists is proportional to nFaces
 				                		* (int)genericGlue.genericPuzzleDescription.getEdgeLength() // and to number of slices
-				                		* 2; // and to a fudge factor that brings the 3^4 close to the original 40.
+				                		* 2; // and to a fudge factor that brings the 3^4 close to the original 40 twists.
 				                int scrambleTwists = scramblechenfrengensen == -1 ? totalTwistsNeededToFullyScramble : scramblechenfrengensen;
 								Random rand = new Random();
 								init("Scrambling", scrambleTwists);
@@ -512,7 +512,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 								super.done();
 							}
 				        }.execute();
-
 					}
 				}, 0, "callback"));
             }
@@ -861,7 +860,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         view.setGround(PropertyManager.getBoolean("ground", true) ? gc : null);
         view.setShowShadows(PropertyManager.getBoolean("shadows", true));
         view.setQuickMoves(PropertyManager.getBoolean("quickmoves", false));
-        view.allowSpinDrag(PropertyManager.getBoolean("spindrag", true));
+        view.allowAutoRotate(PropertyManager.getBoolean("autorotate", true));
         view.allowAntiAliasing(PropertyManager.getBoolean("antialiasing", true));
         view.setHighlightByCubie(PropertyManager.getBoolean("highlightbycubie", false));
         view.setSnapMode(PropertyManager.getBoolean("ctrlrotbyface", true) ? RotationHandler.Snap.Snap_Cell : RotationHandler.Snap.Snap_Smart);
@@ -1033,12 +1032,12 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     PropertyManager.userprefs.setProperty("quickmoves", ""+quickmoves);
                 }
             });
-            final JCheckBox allowSpinDrag = new JCheckBox("Allow Spin Dragging", PropertyManager.getBoolean("spindrag", true));
-            allowSpinDrag.addActionListener(new ActionListener() {
+            final JCheckBox allowAutoRotate = new JCheckBox("Allow Auto-Rotation", PropertyManager.getBoolean("autorotate", true));
+            allowAutoRotate.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
-                    boolean spindrag = allowSpinDrag.isSelected();
-                    MC4DSwing.this.view.allowSpinDrag(spindrag);
-                    PropertyManager.userprefs.setProperty("spindrag", ""+spindrag);
+                    boolean autorotate = allowAutoRotate.isSelected();
+                    MC4DSwing.this.view.allowAutoRotate(autorotate);
+                    PropertyManager.userprefs.setProperty("autorotate", ""+autorotate);
                 }
             });
             final JCheckBox allowAntiAliasing = new JCheckBox("Allow Antialiasing", PropertyManager.getBoolean("antialiasing", true));
@@ -1106,12 +1105,12 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             JPanel general = new JPanel();
             general.setLayout(new BoxLayout(general, BoxLayout.Y_AXIS));
             general.add(sliders);
-            general.add(contigiousCubies);
             general.add(showShadows);
-            general.add(allowSpinDrag);
+            general.add(allowAutoRotate);
             general.add(highlightByCubie);
             general.add(quickMoves);
             general.add(allowAntiAliasing);
+            //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
             general.add(rotateMode);
             general.add(ctrlRotateByFace);
             general.add(ctrlRotateByCubie);

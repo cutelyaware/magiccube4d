@@ -23,11 +23,11 @@ public class RotationHandler
 	}
 	
 	// Modes
-	private boolean allowSpinDrag = true;
+	private boolean allowAutoRotate = true;
 	private Snap snapSetting = Snap.Snap_Cell;
 	private float sensitivity = 0.5f;	// Scaled this so decent values between 0 and 1.
-	public void setAllowSpinDrag(boolean allowSpinDrag) { this.allowSpinDrag = allowSpinDrag; }
-	public boolean getAllowsSpinDrag() { return allowSpinDrag; }
+	public void setAllowAutoRotate(boolean allowAutoRotate) { this.allowAutoRotate = allowAutoRotate; }
+	public boolean getAllowsAutoRotate() { return allowAutoRotate; }
 	public void setSnapSetting(Snap snapSetting) { this.snapSetting = snapSetting; }
 	public Snap getSnapSetting() { return snapSetting; }
 	public void setSensitivity( float sensitivity ) { this.sensitivity = sensitivity; }
@@ -141,7 +141,7 @@ public class RotationHandler
 	// Returns true if our settings are such that we should continue.
 	public boolean continueSpin()
 	{
-		if( allowSpinDrag && spinDelta != null )
+		if( allowAutoRotate && spinDelta != null )
 		{
 			applySpinDelta();
 			return true;
