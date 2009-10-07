@@ -88,9 +88,10 @@ public class ColorButton extends JButton {
         //setContrastingForeground();
         PropertyManager.userprefs.setProperty(prefKey, newColor.getRed()+"," + newColor.getGreen()+"," + newColor.getBlue());        
     }
-    private void setContrastingForeground() {
-        setForeground((color.getRed() + color.getGreen() + color.getBlue()) / 3 >= 128 ? Color.BLACK : Color.WHITE);
-    }
+    
+//    private void setContrastingForeground() {
+//        setForeground((color.getRed() + color.getGreen() + color.getBlue()) / 3 >= 128 ? Color.BLACK : Color.WHITE);
+//    }
     
 	@Override
 	public void paintComponent(Graphics g) {

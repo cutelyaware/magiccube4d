@@ -25,22 +25,6 @@ import java.util.*;
  */
 public class History {
 
-    private static void randomPermutation(int perm[])
-    {
-        for (int i = 0; i < perm.length; ++i)
-            perm[i] = i;
-        for (int i = perm.length-1; i >= 0; --i)
-        {
-            int j = (int)(Math.random()*(i+1)); // in [0..i]
-            if (j != i)
-            {
-                int temp = perm[i];
-                perm[i] = perm[j];
-                perm[j] = temp;
-            }
-        }
-    }
-
     static private void Assert(boolean condition) { if (!condition) throw new Error("Assertion failed"); }
 
     public final static char
@@ -660,472 +644,491 @@ public class History {
      * and current is not allowed to be set.
      */
     public void compress(boolean sweepRotatesForward) {
-
-    	//int startCount = this.countMoves(false);
-    	
-        if (sweepRotatesForward)
-        {
-            Assert(current == null);
-            reverse();
-            compress(false);
-            reverse();
-            return;
-        }
-
-        /*
-         * Truncate
-         */
-        truncate();
-
-        /*
-         * Remove all non-moves
-         */
-        for (HistoryNode node = first; node != null; node = node.next)
-            if (node.stickerid == -1)
-                deleteNode(node);
-
-        /*
-         * Traverse from end to beginning,
-         * constructing a new list of "mega-moves".
-         * Each mega-move is a set of twists on parallel slices.
-         * Sweep the current rotation towards the beginning as we go.
-         */
-        MagicCube.Stickerspec scratchGrip = new MagicCube.Stickerspec(); // scratch
-        int scratchMat[][] = new int[4][4];
-        int scratchCoords[] = new int[4];
-
-        class MegaMove {
-            public int face; // must be less than its opposite
-            public int sliceTwistMats[][][] = new int[length][4][4];
-            public MegaMove(int face, int length)
-            {
-                this.face = face;
-                this.sliceTwistMats = new int[length][4][4];
-                for (int i = 0; i < length; ++i)
-                    Vec_h._IDENTMAT4(sliceTwistMats[i]);
-            }
-            public String toString()
-            {
-                return "{face="+face+"...}";
-            }
-        };
-        int current_matrix[][] = new int[4][4];
-        Vec_h._IDENTMAT4(current_matrix);
-        LinkedList<MegaMove> megaMoves = new LinkedList<MegaMove>();
-        for (HistoryNode node = last; node != null; node = node.prev)
-        {
-            int stickerid = node.stickerid;
-            int slicesmask = node.slicesmask;
-            int dir = node.dir;
-
-            //
-            // Figure out the grip
-            //
-            MagicCube.Stickerspec grip = scratchGrip;
-            grip.id_within_puzzle = stickerid;
-            //PolygonManager.fillStickerspecFromIdAndLength(grip, 3); // XXX crashes with non cubes
-
-            //
-            // Transform the move by current_matrix,
-            // by applying current_matrix to the coords of the grip,
-            // then get the new stickerid back out of it.
-            //
-            {
-                Vec_h._VXM4i(grip.coords, grip.coords, current_matrix);
-                PolygonManager.fillStickerspecFromCoordsAndLength(grip, 3);
-                stickerid = grip.id_within_puzzle;
-            }
-
-            int face = PolygonManager.faceOfGrip(stickerid);
-            int oppositeFace = PolygonManager.oppositeFace(face);
-
-            //
-            // See if this move can be part of the first megamove.
-            // If not, insert a new megamove for it.
-            //
-            MegaMove firstMegaMove = (megaMoves.isEmpty() ? null
-                                             : megaMoves.getFirst());
-            if (firstMegaMove == null
-             || (face != firstMegaMove.face
-              && oppositeFace != firstMegaMove.face))
-            {
-                // Can't combine with the existing first megamove,
-                // so make a new one.
-                firstMegaMove = new MegaMove(Math.min(face, oppositeFace),
-                                             length);
-                megaMoves.addFirst(firstMegaMove);
-            }
-
-            //
-            // Twist this move's slices on the megamove
-            //
-            float angle = PolygonManager.getTwistTotalAngle(grip.dim, dir);
-            Math4d.get4dTwistMat(grip.coords, angle, scratchMat);
-            for (int iSlice = 0; iSlice < length; ++iSlice)
-            {
-                if (((slicesmask>>iSlice)&1) != 0)
-                {
-                    int iSliceCanonical = (oppositeFace<face ? length-1-iSlice
-                                                             : iSlice);
-                    Vec_h._MXM4i(firstMegaMove.sliceTwistMats[iSliceCanonical],
-                                 scratchMat,
-                                 firstMegaMove.sliceTwistMats[iSliceCanonical]);
-                }
-            }
-
-            //
-            // The slices now vote on what rotation to factor out
-            // of the megamove.
-            // If they all agree, then it's
-            // a pure rotation in which case the mega-move turns
-            // into a no-op, which can be removed.
-            //
-            if (true)
-            {
-                int winnerVotes = -1;
-                int winnerSlice = -1;
-                for (int iSlice = 0; iSlice < length; ++iSlice)
-                {
-                    int nSameAsISlice = 1;
-                    for (int jSlice = iSlice+1; jSlice < length; ++jSlice)
-                        if (Vec_h._EQMAT4(firstMegaMove.sliceTwistMats[jSlice],
-                                          firstMegaMove.sliceTwistMats[iSlice]))
-                            nSameAsISlice++;
-                    if (nSameAsISlice > winnerVotes)
-                    {
-                        winnerVotes = nSameAsISlice;
-                        winnerSlice = iSlice;
-                    }
-                }
-                Vec_h._MXM4i(current_matrix,
-                             current_matrix,
-                             firstMegaMove.sliceTwistMats[winnerSlice]);
-                Vec_h._TRANSPOSE4(scratchMat, firstMegaMove.sliceTwistMats[winnerSlice]); // inverse
-                for (int iSlice = 0; iSlice < length; ++iSlice)
-                    Vec_h._MXM4i(firstMegaMove.sliceTwistMats[iSlice],
-                                 scratchMat,
-                                 firstMegaMove.sliceTwistMats[iSlice]);
-                if (winnerVotes == length)
-                {
-                    megaMoves.removeFirst(); // it was a pure rotation
-                    firstMegaMove = null;
-                }
-            }
-        }
-
-        //
-        // The proper thing to do now would be to add the rotate(s)
-        // representing current_matrix
-        // to the beginning of the mega-moves, but I'm not bothering,
-        // since the only thing this function is used for anyway
-        // is the cheat-solve.
-        //
-
-        //
-        // Convert the mega-moves back into twists...
-        //
-        clear();
-        int scratchPermutation[] = new int[length];
-        while (!megaMoves.isEmpty())
-        {
-            // So we look at slices in a random order
-            randomPermutation(scratchPermutation);
-
-            MegaMove firstMegaMove = (MegaMove)megaMoves.removeLast();
-            int face = firstMegaMove.face;
-            for (int _iSlice = 0; _iSlice < length; ++_iSlice)
-            {
-                int iSlice = scratchPermutation[_iSlice];
-                int sliceTwistMat[][] = firstMegaMove.sliceTwistMats[iSlice];
-                if (!Vec_h._ISIDENTMAT4(sliceTwistMat))
-                {
-                    int slicesmask = 1<<iSlice;
-                    for (int jSlice = 0; jSlice < length; ++jSlice)
-                    {
-                        if (Vec_h._EQMAT4(firstMegaMove.sliceTwistMats[jSlice],
-                                          sliceTwistMat))
-                        {
-                            slicesmask |= 1<<jSlice;
-                            // Clear it so we don't do it again
-                            // as an iSlice later.  But do NOT clear [iSlice],
-                            // since sliceTwistMat is still pointing to it.
-                            if (jSlice != iSlice)
-                                Vec_h._IDENTMAT4(firstMegaMove.sliceTwistMats[jSlice]);
-                        }
-                    }
-
-                    /*
-                     * Figure out how to accomplish this rotation
-                     * of the slices with one or two twists on a single grip.
-                     */
-
-                    /*
-                     * Find a sticker on this face that's not
-                     * moved by the matrix; that will be the grip of the
-                     * concatenated move.
-                     */
-                    MagicCube.Stickerspec grip = scratchGrip;
-                    grip.face = face;
-                    for (grip.id_within_face = 0;
-                         grip.id_within_face < MagicCube.GRIPS_PER_FACE;
-                         grip.id_within_face++)
-                    {
-                        PolygonManager.fillStickerspecFromFaceAndIdAndLength(grip, 3);
-                        if (grip.dim >= 3)
-                            continue;
-                        int newcoords[] = scratchCoords;
-                        Vec_h._VXM4(newcoords, grip.coords, sliceTwistMat);
-                        if (Vec_h._EQVEC4(newcoords, grip.coords)) {
-                            /*
-                             * Found the right grip;
-                             * see if any of the following work:
-                             *  0 twists
-                             *  1 twist CW
-                             *  1 twist CCW
-                             *  2 twists in random direction
-                             */
-                            int testmat[][] = scratchMat;
-                            Vec_h._IDENTMAT4(testmat);
-                            if (Vec_h._EQMAT4(testmat, sliceTwistMat)) {
-                                /*
-                                 * Result is 0 twists.
-                                 */
-                                break;
-                            }
-
-                            float angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CCW);
-                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
-                            if (Vec_h._EQMAT4(testmat, sliceTwistMat)) {
-                                /*
-                                 * Result is 1 twist CCW.
-                                 */
-                                insertNode(first, grip.id_within_puzzle, MagicCube.CCW, slicesmask);
-                                break;
-                            }
-                            angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CW);
-                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
-                            if (Vec_h._EQMAT4(testmat, sliceTwistMat)) {
-                                /*
-                                 * Result is 1 twist CW.
-                                 */
-                                insertNode(first, grip.id_within_puzzle, MagicCube.CW, slicesmask);
-                                break;
-                            }
-                            int dir = Math.random() > 0.5 ? MagicCube.CW : MagicCube.CCW;
-                            angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CCW);
-                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
-                            Vec_h._MXM4i(testmat, testmat, testmat);
-                            if (Vec_h._EQMAT4(testmat, sliceTwistMat)) {
-                                // Result is 2 twists
-                                insertNode(first, grip.id_within_puzzle, dir, slicesmask);
-                                insertNode(first, grip.id_within_puzzle, dir, slicesmask);
-                                break;
-                            }
-                            Assert(false);
-                        }
-                    }
-                    Assert(grip.id_within_face < 3 * 3 * 3);
-                }
-            }
-        }
-        //int endCount = this.countMoves(false);
-        //System.out.println("compressed " + startCount+ " twist sequence to " + endCount + " (" + (startCount - endCount)*100f/startCount + "%)");
-    } // end compress
-
-    
-    public void oldcompress() {
-        // TODO: perform on the fly, as the cheat-solve is happening, otherwise long wait if the history is long.
-        HistoryNode node, nodeptr;
-        int
-            current_matrix[][] = new int[4][4],
-            incmat[][] = new int[4][4],
-            testmat[][] = new int[4][4],
-            newcoords[] = new int[4];
-        MagicCube.Stickerspec grip = new MagicCube.Stickerspec();
-        int face, dir, thisface, nextface, temp;
-
-        /*
-         * Truncate
-         */
-        truncate();
-
-        /*
-         * Remove all non-moves
-         */
-        for (nodeptr = first; nodeptr!=null; nodeptr=nodeptr.next) {
-            if (nodeptr.stickerid == -1)
-                deleteNode(nodeptr);
-        }
-
-        /*
-         * Sweep all rotates to beginning
-         */
-        Vec_h._IDENTMAT4(current_matrix);
-        for (nodeptr=last; nodeptr!=null; nodeptr=nodeptr.prev) {
-            if (isRotate(nodeptr.slicesmask)) {
-                /*
-                * It's a rotate.  Just preconcatenate it
-                * to the current matrix and remove.
-                */
-                grip.id_within_puzzle = (nodeptr).stickerid;
-                PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
-                float angle = PolygonManager.getTwistTotalAngle(grip.dim, (nodeptr).dir);
-                Math4d.get4dTwistMat(grip.coords, angle, incmat);
-                Vec_h._MXM4i(current_matrix, incmat, current_matrix);
-                deleteNode(nodeptr);
-            } else {
-                /*
-                * It's a twist (some slices stay and some move).
-                * Apply the current matrix to the coords of
-                * the grip.
-                */
-                grip.id_within_puzzle = (nodeptr).stickerid;
-                PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
-                Vec_h._VXM4i(grip.coords, grip.coords, current_matrix);
-                PolygonManager.fillStickerspecFromCoordsAndLength(grip, 3);
-                (nodeptr).stickerid = grip.id_within_puzzle;
-            }
-        }
-        /*
-         * The proper thing to do now would be to add the rotates
-         * to the beginning of the history, but I'm not bothering,
-         * since the only thing this function is used for anyway
-         * is the cheat-solve.
-         */
-
-        /*
-         * Put opposite-face twists in canonical order,
-         * which can put some same-face twists together for the next pass.
-         */
-        for (node = first; node!=null; ) {
-            if (node.slicesmask == 1 && node.next!=null && node.next.slicesmask == 1) {
-                thisface = PolygonManager.faceOfGrip(node.stickerid);
-                nextface = PolygonManager.faceOfGrip(node.next.stickerid);
-                if (nextface < thisface && nextface == PolygonManager.oppositeFace(thisface)) {
-                    temp=node.stickerid; node.stickerid=node.next.stickerid; node.next.stickerid=temp;     // swap
-                    temp=node.dir; node.dir=node.next.dir; node.next.dir=temp;                             // swap
-                    temp=node.slicesmask; node.slicesmask=node.next.slicesmask; node.next.slicesmask=temp; // swap
-                    // XXX wtf is the following doing?? doesn't hurt, but I don't understand what it does -Don
-                    if (node.prev != null)
-                        node = node.prev;
-                }
-                else
-                    node = node.next;
-            }
-            else
-                node = node.next;
-        }
-
-        /*
-         * Merge same-face twists
-         */
-        HistoryNode first_on_this_face, past_last_on_this_face;
-        for (first_on_this_face = first; first_on_this_face!=null; ) {
-            if (first_on_this_face.slicesmask == 1) {
-                face = PolygonManager.faceOfGrip(first_on_this_face.stickerid);
-                past_last_on_this_face = first_on_this_face.next;
-                while (past_last_on_this_face!=null &&
-                       past_last_on_this_face.slicesmask == 1 &&
-                       PolygonManager.faceOfGrip(past_last_on_this_face.stickerid) == face)
-                {
-                    past_last_on_this_face = past_last_on_this_face.next;
-                }
-
-                if (past_last_on_this_face != first_on_this_face.next) {
-                    /*
-                     * There is more than one twist on this face.
-                     * Concatenate together all the matrices of these
-                     * twists, and then figure out how to accomplish it
-                     * with one or two twists on a single grip.
-                     */
-                    Vec_h._IDENTMAT4(current_matrix);
-                    for (node=first_on_this_face; node!=past_last_on_this_face; node=node.next) {
-                        grip.id_within_puzzle = node.stickerid;
-                        PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
-                        float angle = PolygonManager.getTwistTotalAngle(grip.dim, node.dir);
-                        Math4d.get4dTwistMat(grip.coords, angle, incmat);
-                        Vec_h._MXM4i(current_matrix, current_matrix, incmat);
-                    }
-
-                    /*
-                     * We now have all the information we need;
-                     * delete the twists from the history
-                     */
-                    while (first_on_this_face != past_last_on_this_face) {
-                        deleteNode(first_on_this_face);
-                        first_on_this_face = first_on_this_face.next;
-                    }
-
-                    /*
-                     * Find a sticker on this face that's not
-                     * moved by the matrix; that will be the grip of the
-                     * concatenated move.
-                     */
-                    grip.face = face;
-                    for (grip.id_within_face = 0;
-                         grip.id_within_face < MagicCube.GRIPS_PER_FACE;
-                         grip.id_within_face++)
-                    {
-                        PolygonManager.fillStickerspecFromFaceAndIdAndLength(grip, 3);
-                        if (grip.dim >= 3)
-                            continue;
-                        Vec_h._VXM4(newcoords, grip.coords, current_matrix);
-                        if (Vec_h._EQVEC4(newcoords, grip.coords)) {
-                            /*
-                             * Found the right grip;
-                             * see if any of the following work:
-                             *  0 twists
-                             *  1 twist CW
-                             *  1 twist CCW
-                             *  2 twists in random direction
-                             */
-                            Vec_h._IDENTMAT4(testmat);
-                            if (Vec_h._EQMAT4(testmat, current_matrix)) {
-                                /*
-                                 * Result is 0 twists.
-                                 */
-                                break;
-                            }
-
-                            float angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CCW);
-                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
-                            if (Vec_h._EQMAT4(testmat, current_matrix)) {
-                                /*
-                                 * Result is 1 twist CCW.
-                                 */
-                                insertNode(past_last_on_this_face, grip.id_within_puzzle, MagicCube.CCW, 1);
-                                break;
-                            }
-                            angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CW);
-                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
-                            if (Vec_h._EQMAT4(testmat, current_matrix)) {
-                                /*
-                                 * Result is 1 twist CW.
-                                 */
-                                insertNode(past_last_on_this_face, grip.id_within_puzzle, MagicCube.CW, 1);
-                                break;
-                            }
-                            dir = Math.random() > 0.5 ? MagicCube.CW : MagicCube.CCW;
-                            angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CCW);
-                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
-                            Vec_h._MXM4i(testmat, testmat, testmat);
-                            if (Vec_h._EQMAT4(testmat, current_matrix)) {
-                                // Result is 2 twists
-                                insertNode(past_last_on_this_face, grip.id_within_puzzle, dir, 1);
-                                insertNode(past_last_on_this_face, grip.id_within_puzzle, dir, 1);
-                                break;
-                            }
-                            Assert(false);
-                        }
-                    }
-                    Assert(grip.id_within_face < 3 * 3 * 3);
-                }
-                first_on_this_face = past_last_on_this_face;
-            }
-            else
-                first_on_this_face = first_on_this_face.next;
-        }
-    }  // end oldcompress
+    	// TODO: Uncomment the body below and fix.
+    }
+//
+//    	//int startCount = this.countMoves(false);
+//    	
+//        if (sweepRotatesForward)
+//        {
+//            Assert(current == null);
+//            reverse();
+//            compress(false);
+//            reverse();
+//            return;
+//        }
+//
+//        /*
+//         * Truncate
+//         */
+//        truncate();
+//
+//        /*
+//         * Remove all non-moves
+//         */
+//        for (HistoryNode node = first; node != null; node = node.next)
+//            if (node.stickerid == -1)
+//                deleteNode(node);
+//
+//        /*
+//         * Traverse from end to beginning,
+//         * constructing a new list of "mega-moves".
+//         * Each mega-move is a set of twists on parallel slices.
+//         * Sweep the current rotation towards the beginning as we go.
+//         */
+//        MagicCube.Stickerspec scratchGrip = new MagicCube.Stickerspec(); // scratch
+//        int scratchMat[][] = new int[4][4];
+//        int scratchCoords[] = new int[4];
+//
+//        class MegaMove {
+//            public int face; // must be less than its opposite
+//            public int sliceTwistMats[][][] = new int[length][4][4];
+//            public MegaMove(int face, int length)
+//            {
+//                this.face = face;
+//                this.sliceTwistMats = new int[length][4][4];
+//                for (int i = 0; i < length; ++i)
+//                    Vec_h._IDENTMAT4(sliceTwistMats[i]);
+//            }
+//            public String toString()
+//            {
+//                return "{face="+face+"...}";
+//            }
+//        };
+//        int current_matrix[][] = new int[4][4];
+//        Vec_h._IDENTMAT4(current_matrix);
+//        LinkedList<MegaMove> megaMoves = new LinkedList<MegaMove>();
+//        for (HistoryNode node = last; node != null; node = node.prev)
+//        {
+//            int stickerid = node.stickerid;
+//            int slicesmask = node.slicesmask;
+//            int dir = node.dir;
+//
+//            //
+//            // Figure out the grip
+//            //
+//            MagicCube.Stickerspec grip = scratchGrip;
+//            grip.id_within_puzzle = stickerid;
+//            //PolygonManager.fillStickerspecFromIdAndLength(grip, 3); // XXX crashes with non cubes
+//
+//            //
+//            // Transform the move by current_matrix,
+//            // by applying current_matrix to the coords of the grip,
+//            // then get the new stickerid back out of it.
+//            //
+//            {
+//                Vec_h._VXM4i(grip.coords, grip.coords, current_matrix);
+//                PolygonManager.fillStickerspecFromCoordsAndLength(grip, 3);
+//                stickerid = grip.id_within_puzzle;
+//            }
+//
+//            int face = PolygonManager.faceOfGrip(stickerid);
+//            int oppositeFace = PolygonManager.oppositeFace(face);
+//
+//            //
+//            // See if this move can be part of the first megamove.
+//            // If not, insert a new megamove for it.
+//            //
+//            MegaMove firstMegaMove = (megaMoves.isEmpty() ? null
+//                                             : megaMoves.getFirst());
+//            if (firstMegaMove == null
+//             || (face != firstMegaMove.face
+//              && oppositeFace != firstMegaMove.face))
+//            {
+//                // Can't combine with the existing first megamove,
+//                // so make a new one.
+//                firstMegaMove = new MegaMove(Math.min(face, oppositeFace),
+//                                             length);
+//                megaMoves.addFirst(firstMegaMove);
+//            }
+//
+//            //
+//            // Twist this move's slices on the megamove
+//            //
+//            float angle = PolygonManager.getTwistTotalAngle(grip.dim, dir);
+//            Math4d.get4dTwistMat(grip.coords, angle, scratchMat);
+//            for (int iSlice = 0; iSlice < length; ++iSlice)
+//            {
+//                if (((slicesmask>>iSlice)&1) != 0)
+//                {
+//                    int iSliceCanonical = (oppositeFace<face ? length-1-iSlice
+//                                                             : iSlice);
+//                    Vec_h._MXM4i(firstMegaMove.sliceTwistMats[iSliceCanonical],
+//                                 scratchMat,
+//                                 firstMegaMove.sliceTwistMats[iSliceCanonical]);
+//                }
+//            }
+//
+//            //
+//            // The slices now vote on what rotation to factor out
+//            // of the megamove.
+//            // If they all agree, then it's
+//            // a pure rotation in which case the mega-move turns
+//            // into a no-op, which can be removed.
+//            //
+//            if (true)
+//            {
+//                int winnerVotes = -1;
+//                int winnerSlice = -1;
+//                for (int iSlice = 0; iSlice < length; ++iSlice)
+//                {
+//                    int nSameAsISlice = 1;
+//                    for (int jSlice = iSlice+1; jSlice < length; ++jSlice)
+//                        if (Vec_h._EQMAT4(firstMegaMove.sliceTwistMats[jSlice],
+//                                          firstMegaMove.sliceTwistMats[iSlice]))
+//                            nSameAsISlice++;
+//                    if (nSameAsISlice > winnerVotes)
+//                    {
+//                        winnerVotes = nSameAsISlice;
+//                        winnerSlice = iSlice;
+//                    }
+//                }
+//                Vec_h._MXM4i(current_matrix,
+//                             current_matrix,
+//                             firstMegaMove.sliceTwistMats[winnerSlice]);
+//                Vec_h._TRANSPOSE4(scratchMat, firstMegaMove.sliceTwistMats[winnerSlice]); // inverse
+//                for (int iSlice = 0; iSlice < length; ++iSlice)
+//                    Vec_h._MXM4i(firstMegaMove.sliceTwistMats[iSlice],
+//                                 scratchMat,
+//                                 firstMegaMove.sliceTwistMats[iSlice]);
+//                if (winnerVotes == length)
+//                {
+//                    megaMoves.removeFirst(); // it was a pure rotation
+//                    firstMegaMove = null;
+//                }
+//            }
+//        }
+//
+//        //
+//        // The proper thing to do now would be to add the rotate(s)
+//        // representing current_matrix
+//        // to the beginning of the mega-moves, but I'm not bothering,
+//        // since the only thing this function is used for anyway
+//        // is the cheat-solve.
+//        //
+//
+//        //
+//        // Convert the mega-moves back into twists...
+//        //
+//        clear();
+//        int scratchPermutation[] = new int[length];
+//        while (!megaMoves.isEmpty())
+//        {
+//            // So we look at slices in a random order
+//            randomPermutation(scratchPermutation);
+//
+//            MegaMove firstMegaMove = (MegaMove)megaMoves.removeLast();
+//            int face = firstMegaMove.face;
+//            for (int _iSlice = 0; _iSlice < length; ++_iSlice)
+//            {
+//                int iSlice = scratchPermutation[_iSlice];
+//                int sliceTwistMat[][] = firstMegaMove.sliceTwistMats[iSlice];
+//                if (!Vec_h._ISIDENTMAT4(sliceTwistMat))
+//                {
+//                    int slicesmask = 1<<iSlice;
+//                    for (int jSlice = 0; jSlice < length; ++jSlice)
+//                    {
+//                        if (Vec_h._EQMAT4(firstMegaMove.sliceTwistMats[jSlice],
+//                                          sliceTwistMat))
+//                        {
+//                            slicesmask |= 1<<jSlice;
+//                            // Clear it so we don't do it again
+//                            // as an iSlice later.  But do NOT clear [iSlice],
+//                            // since sliceTwistMat is still pointing to it.
+//                            if (jSlice != iSlice)
+//                                Vec_h._IDENTMAT4(firstMegaMove.sliceTwistMats[jSlice]);
+//                        }
+//                    }
+//
+//                    /*
+//                     * Figure out how to accomplish this rotation
+//                     * of the slices with one or two twists on a single grip.
+//                     */
+//
+//                    /*
+//                     * Find a sticker on this face that's not
+//                     * moved by the matrix; that will be the grip of the
+//                     * concatenated move.
+//                     */
+//                    MagicCube.Stickerspec grip = scratchGrip;
+//                    grip.face = face;
+//                    for (grip.id_within_face = 0;
+//                         grip.id_within_face < MagicCube.GRIPS_PER_FACE; // TODO: need way to know how many 
+//                         grip.id_within_face++)
+//                    {
+//                        PolygonManager.fillStickerspecFromFaceAndIdAndLength(grip, 3);
+//                        if (grip.dim >= 3)
+//                            continue;
+//                        int newcoords[] = scratchCoords;
+//                        Vec_h._VXM4(newcoords, grip.coords, sliceTwistMat);
+//                        if (Vec_h._EQVEC4(newcoords, grip.coords)) {
+//                            /*
+//                             * Found the right grip;
+//                             * see if any of the following work:
+//                             *  0 twists
+//                             *  1 twist CW
+//                             *  1 twist CCW
+//                             *  2 twists in random direction
+//                             */
+//                            int testmat[][] = scratchMat;
+//                            Vec_h._IDENTMAT4(testmat);
+//                            if (Vec_h._EQMAT4(testmat, sliceTwistMat)) {
+//                                /*
+//                                 * Result is 0 twists.
+//                                 */
+//                                break;
+//                            }
+//
+//                            float angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CCW);
+//                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
+//                            if (Vec_h._EQMAT4(testmat, sliceTwistMat)) {
+//                                /*
+//                                 * Result is 1 twist CCW.
+//                                 */
+//                                insertNode(first, grip.id_within_puzzle, MagicCube.CCW, slicesmask);
+//                                break;
+//                            }
+//                            angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CW);
+//                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
+//                            if (Vec_h._EQMAT4(testmat, sliceTwistMat)) {
+//                                /*
+//                                 * Result is 1 twist CW.
+//                                 */
+//                                insertNode(first, grip.id_within_puzzle, MagicCube.CW, slicesmask);
+//                                break;
+//                            }
+//                            int dir = Math.random() > 0.5 ? MagicCube.CW : MagicCube.CCW;
+//                            angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CCW);
+//                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
+//                            Vec_h._MXM4i(testmat, testmat, testmat);
+//                            if (Vec_h._EQMAT4(testmat, sliceTwistMat)) {
+//                                // Result is 2 twists
+//                                insertNode(first, grip.id_within_puzzle, dir, slicesmask);
+//                                insertNode(first, grip.id_within_puzzle, dir, slicesmask);
+//                                break;
+//                            }
+//                            Assert(false);
+//                        }
+//                    }
+//                    Assert(grip.id_within_face < 3 * 3 * 3);
+//                }
+//            }
+//        }
+//        //int endCount = this.countMoves(false);
+//        //System.out.println("compressed " + startCount+ " twist sequence to " + endCount + " (" + (startCount - endCount)*100f/startCount + "%)");
+//    } // end compress
+//    
+//
+//    private static void randomPermutation(int perm[])
+//    {
+//        for (int i = 0; i < perm.length; ++i)
+//            perm[i] = i;
+//        for (int i = perm.length-1; i >= 0; --i)
+//        {
+//            int j = (int)(Math.random()*(i+1)); // in [0..i]
+//            if (j != i)
+//            {
+//                int temp = perm[i];
+//                perm[i] = perm[j];
+//                perm[j] = temp;
+//            }
+//        }
+//    }
+//
+//    
+//    public void oldcompress() {
+//        // TODO: perform on the fly, as the cheat-solve is happening, otherwise long wait if the history is long.
+//        HistoryNode node, nodeptr;
+//        int
+//            current_matrix[][] = new int[4][4],
+//            incmat[][] = new int[4][4],
+//            testmat[][] = new int[4][4],
+//            newcoords[] = new int[4];
+//        MagicCube.Stickerspec grip = new MagicCube.Stickerspec();
+//        int face, dir, thisface, nextface, temp;
+//
+//        /*
+//         * Truncate
+//         */
+//        truncate();
+//
+//        /*
+//         * Remove all non-moves
+//         */
+//        for (nodeptr = first; nodeptr!=null; nodeptr=nodeptr.next) {
+//            if (nodeptr.stickerid == -1)
+//                deleteNode(nodeptr);
+//        }
+//
+//        /*
+//         * Sweep all rotates to beginning
+//         */
+//        Vec_h._IDENTMAT4(current_matrix);
+//        for (nodeptr=last; nodeptr!=null; nodeptr=nodeptr.prev) {
+//            if (isRotate(nodeptr.slicesmask)) {
+//                /*
+//                * It's a rotate.  Just preconcatenate it
+//                * to the current matrix and remove.
+//                */
+//                grip.id_within_puzzle = (nodeptr).stickerid;
+//                PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
+//                float angle = PolygonManager.getTwistTotalAngle(grip.dim, (nodeptr).dir);
+//                Math4d.get4dTwistMat(grip.coords, angle, incmat);
+//                Vec_h._MXM4i(current_matrix, incmat, current_matrix);
+//                deleteNode(nodeptr);
+//            } else {
+//                /*
+//                * It's a twist (some slices stay and some move).
+//                * Apply the current matrix to the coords of
+//                * the grip.
+//                */
+//                grip.id_within_puzzle = (nodeptr).stickerid;
+//                PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
+//                Vec_h._VXM4i(grip.coords, grip.coords, current_matrix);
+//                PolygonManager.fillStickerspecFromCoordsAndLength(grip, 3);
+//                (nodeptr).stickerid = grip.id_within_puzzle;
+//            }
+//        }
+//        /*
+//         * The proper thing to do now would be to add the rotates
+//         * to the beginning of the history, but I'm not bothering,
+//         * since the only thing this function is used for anyway
+//         * is the cheat-solve.
+//         */
+//
+//        /*
+//         * Put opposite-face twists in canonical order,
+//         * which can put some same-face twists together for the next pass.
+//         */
+//        for (node = first; node!=null; ) {
+//            if (node.slicesmask == 1 && node.next!=null && node.next.slicesmask == 1) {
+//                thisface = PolygonManager.faceOfGrip(node.stickerid);
+//                nextface = PolygonManager.faceOfGrip(node.next.stickerid);
+//                if (nextface < thisface && nextface == PolygonManager.oppositeFace(thisface)) {
+//                    temp=node.stickerid; node.stickerid=node.next.stickerid; node.next.stickerid=temp;     // swap
+//                    temp=node.dir; node.dir=node.next.dir; node.next.dir=temp;                             // swap
+//                    temp=node.slicesmask; node.slicesmask=node.next.slicesmask; node.next.slicesmask=temp; // swap
+//                    // XXX wtf is the following doing?? doesn't hurt, but I don't understand what it does -Don
+//                    if (node.prev != null)
+//                        node = node.prev;
+//                }
+//                else
+//                    node = node.next;
+//            }
+//            else
+//                node = node.next;
+//        }
+//
+//        /*
+//         * Merge same-face twists
+//         */
+//        HistoryNode first_on_this_face, past_last_on_this_face;
+//        for (first_on_this_face = first; first_on_this_face!=null; ) {
+//            if (first_on_this_face.slicesmask == 1) {
+//                face = PolygonManager.faceOfGrip(first_on_this_face.stickerid);
+//                past_last_on_this_face = first_on_this_face.next;
+//                while (past_last_on_this_face!=null &&
+//                       past_last_on_this_face.slicesmask == 1 &&
+//                       PolygonManager.faceOfGrip(past_last_on_this_face.stickerid) == face)
+//                {
+//                    past_last_on_this_face = past_last_on_this_face.next;
+//                }
+//
+//                if (past_last_on_this_face != first_on_this_face.next) {
+//                    /*
+//                     * There is more than one twist on this face.
+//                     * Concatenate together all the matrices of these
+//                     * twists, and then figure out how to accomplish it
+//                     * with one or two twists on a single grip.
+//                     */
+//                    Vec_h._IDENTMAT4(current_matrix);
+//                    for (node=first_on_this_face; node!=past_last_on_this_face; node=node.next) {
+//                        grip.id_within_puzzle = node.stickerid;
+//                        PolygonManager.fillStickerspecFromIdAndLength(grip, 3);
+//                        float angle = PolygonManager.getTwistTotalAngle(grip.dim, node.dir);
+//                        Math4d.get4dTwistMat(grip.coords, angle, incmat);
+//                        Vec_h._MXM4i(current_matrix, current_matrix, incmat);
+//                    }
+//
+//                    /*
+//                     * We now have all the information we need;
+//                     * delete the twists from the history
+//                     */
+//                    while (first_on_this_face != past_last_on_this_face) {
+//                        deleteNode(first_on_this_face);
+//                        first_on_this_face = first_on_this_face.next;
+//                    }
+//
+//                    /*
+//                     * Find a sticker on this face that's not
+//                     * moved by the matrix; that will be the grip of the
+//                     * concatenated move.
+//                     */
+//                    grip.face = face;
+//                    for (grip.id_within_face = 0;
+//                         grip.id_within_face < MagicCube.GRIPS_PER_FACE;
+//                         grip.id_within_face++)
+//                    {
+//                        PolygonManager.fillStickerspecFromFaceAndIdAndLength(grip, 3);
+//                        if (grip.dim >= 3)
+//                            continue;
+//                        Vec_h._VXM4(newcoords, grip.coords, current_matrix);
+//                        if (Vec_h._EQVEC4(newcoords, grip.coords)) {
+//                            /*
+//                             * Found the right grip;
+//                             * see if any of the following work:
+//                             *  0 twists
+//                             *  1 twist CW
+//                             *  1 twist CCW
+//                             *  2 twists in random direction
+//                             */
+//                            Vec_h._IDENTMAT4(testmat);
+//                            if (Vec_h._EQMAT4(testmat, current_matrix)) {
+//                                /*
+//                                 * Result is 0 twists.
+//                                 */
+//                                break;
+//                            }
+//
+//                            float angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CCW);
+//                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
+//                            if (Vec_h._EQMAT4(testmat, current_matrix)) {
+//                                /*
+//                                 * Result is 1 twist CCW.
+//                                 */
+//                                insertNode(past_last_on_this_face, grip.id_within_puzzle, MagicCube.CCW, 1);
+//                                break;
+//                            }
+//                            angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CW);
+//                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
+//                            if (Vec_h._EQMAT4(testmat, current_matrix)) {
+//                                /*
+//                                 * Result is 1 twist CW.
+//                                 */
+//                                insertNode(past_last_on_this_face, grip.id_within_puzzle, MagicCube.CW, 1);
+//                                break;
+//                            }
+//                            dir = Math.random() > 0.5 ? MagicCube.CW : MagicCube.CCW;
+//                            angle = PolygonManager.getTwistTotalAngle(grip.dim, MagicCube.CCW);
+//                            Math4d.get4dTwistMat(grip.coords, angle, testmat);
+//                            Vec_h._MXM4i(testmat, testmat, testmat);
+//                            if (Vec_h._EQMAT4(testmat, current_matrix)) {
+//                                // Result is 2 twists
+//                                insertNode(past_last_on_this_face, grip.id_within_puzzle, dir, 1);
+//                                insertNode(past_last_on_this_face, grip.id_within_puzzle, dir, 1);
+//                                break;
+//                            }
+//                            Assert(false);
+//                        }
+//                    }
+//                    Assert(grip.id_within_face < 3 * 3 * 3);
+//                }
+//                first_on_this_face = past_last_on_this_face;
+//            }
+//            else
+//                first_on_this_face = first_on_this_face.next;
+//        }
+//    }  // end oldcompress
 
     private static void print(History hist) {
     	for(Enumeration<MagicCube.TwistData> e=hist.moves(); e.hasMoreElements(); ) {

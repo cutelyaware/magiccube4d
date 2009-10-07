@@ -158,7 +158,7 @@ public class MC4DView extends Component {
         this.polymgr = polymgr;
         this.rotationHandler = rotations;
         this.setHistory(hist);
-        faceRGB = YUV.generateVisuallyDistinctRGBs(nfaces, .7f, .1f); //generateHSVColors(12, 10, .5f);
+        faceRGB = ColorUtils.generateVisuallyDistinctRGBs(nfaces, .7f, .1f); //generateHSVColors(12, 10, .5f);
         this.setFocusable(true);
         
         // manage slicemask as user holds and releases number keys

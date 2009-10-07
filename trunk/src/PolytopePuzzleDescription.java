@@ -506,7 +506,6 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 	                    cut++;
 	                }
 	            }
-	            cut = cut;
             }
         }
         

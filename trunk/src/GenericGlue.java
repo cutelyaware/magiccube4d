@@ -166,7 +166,7 @@ public class GenericGlue
     // Really we'd like to bound the max acceleration.
     public int calculateNTwists( double totalRotationAngle, double twistFactor )
     {
-    	return (int)(totalRotationAngle/(Math.PI/2) * MagicCube.NFRAMES_180 * twistFactor);
+    	return (int)(totalRotationAngle/(Math.PI/2) * 11 * twistFactor);
     }
     
 
