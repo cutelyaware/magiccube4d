@@ -257,7 +257,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 			public void doit(ActionEvent ae) {
                 if(macroMgr.isOpen())  { // finished with macro definition
                     String name = JOptionPane.showInputDialog("Name your macro");
-                    view.setBackground(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
+                    view.setSky(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
                     if(name == null) {
                         macroMgr.cancel();
                         statusLabel.setText("");
@@ -272,7 +272,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 } else { // begin macro definition
                     macroMgr.open();
                     statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
-                    view.setBackground(Color.white);
+                    view.setSky(Color.white);
                 }
             }
         },
@@ -284,7 +284,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     return;
                 macroMgr.cancel();
                 statusLabel.setText("Cancelled");
-                view.setBackground(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
+                view.setSky(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
                 applyingMacro = 0;
             }
         },
@@ -306,7 +306,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 boolean modified = ae.getID() == ActionEvent.CTRL_MASK;
                 applyingMacro = modified? -1 : 1;
                 statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
-                view.setBackground(new Color(255, 170, 170));
+                view.setSky(new Color(255, 170, 170));
             }
         };
         
@@ -770,7 +770,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 macroMgr.addRef(twisted.grip);
                 if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
                     if(applyingMacro != 0) {
-                        view.setBackground(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
+                        view.setSky(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
                         MagicCube.Stickerspec[] refs = macroMgr.close();
                         MagicCube.TwistData[] moves = lastMacro.getTwists(refs);
                         if(moves == null)
@@ -787,7 +787,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     }
                     else {
                         statusLabel.setText("Now recording macro twists. Hit <ctrl>m when finished.");
-                        view.setBackground(Color.black);
+                        view.setSky(Color.black);
                     }
                 }
                 else statusLabel.setText(""+macroMgr.numRefs()); // a little camera sound here would be great.
@@ -1152,7 +1152,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             ColorButton backgroundColor = new ColorButton("Background", "background.color", MagicCube.BACKGROUND,
                 new ColorButton.ColorChangeListener() {
                     public void colorChanged(Color newColor) {
-                        view.setBackground(newColor);
+                        view.setSky(newColor);
                     }
                 }, true
             );
