@@ -904,12 +904,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 redoitem.setEnabled(hist.hasNextMove());
                 cheatitem.setEnabled(hist.hasPreviousMove());
                 solveitem.setEnabled(!puzzle.isSolved() && polymgr.getLength()<4);
-                if (genericGlue.isActive())
-                {
-                    undoitem.setEnabled(true); // so I don't have to think
-                    redoitem.setEnabled(true); // so I don't have to think
-                    cheatitem.setEnabled(true); // so I don't have to think
-                }
                 updateTwistsLabel();
                 if(puzzle.isSolved()) {
                     switch (scrambleState) {

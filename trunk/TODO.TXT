@@ -37,7 +37,7 @@ LOG FILES
 BUGS
 * Canceled cheats don't finish properly when restarted.
 * DONE - Fix Cheat after scramble.
-* Fix scramble for edge lengths > 4. (Different faces can have effectively different numbers of slices).
+* DONE - Fix scramble for edge lengths > 4. (Different faces can have effectively different numbers of slices).
 * DONE - Fix Quick Moves.
 * Full scramble on simplex yields inconsistent numbers of history twists. (Watch twist counter in lower right.)
 * DONE - Fix color buttons and remove the 6 fixed color choices.
