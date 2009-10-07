@@ -479,9 +479,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 				                        iFace == previous_face || // mixing it up
 				                        (previous_face!=-1 && genericGlue.genericPuzzleDescription.getFace2OppositeFace()[previous_face] == iFace));
 				                    previous_face = iFace;
-				                    // XXX Instead of 2 below we really need something like (int)genericGlue.genericPuzzleDescription.getEdgeLength().
-				                    // The problem is the number of possible slices can be less when slicing into a non-cubic face.
-				                    int slicemask = 1<<rand.nextInt(2);
+				                    int gripSlices = genericGlue.genericPuzzleDescription.getNumSlicesForGrip(iGrip);
+				                    int slicemask = 1<<rand.nextInt(gripSlices);
 				                    int dir = rand.nextBoolean() ? -1 : 1;
 				                    // apply the twist to the puzzle state.
 				                    genericGlue.genericPuzzleDescription.applyTwistToState(
