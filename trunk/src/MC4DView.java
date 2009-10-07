@@ -64,8 +64,7 @@ public class MC4DView extends Component {
         repaint();
     }
     
-    @Override
-	public void setBackground(Color bg) {
+    public void setSky(Color bg) {
         if(bg == null)
             return;
         this.bg = bg;
@@ -73,6 +72,7 @@ public class MC4DView extends Component {
     }
     public void setGround(Color ground) {
         this.ground = ground;
+        System.out.println(ground);
         repaint();
     }
     
