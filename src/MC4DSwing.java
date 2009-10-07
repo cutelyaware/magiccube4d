@@ -257,7 +257,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 			public void doit(ActionEvent ae) {
                 if(macroMgr.isOpen())  { // finished with macro definition
                     String name = JOptionPane.showInputDialog("Name your macro");
-                    view.setSky(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
                     if(name == null) {
                         macroMgr.cancel();
                         statusLabel.setText("");
@@ -272,7 +271,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 } else { // begin macro definition
                     macroMgr.open();
                     statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
-                    view.setSky(Color.white);
+                    view.setSkyOverride(Color.white);
                 }
             }
         },
@@ -284,7 +283,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     return;
                 macroMgr.cancel();
                 statusLabel.setText("Cancelled");
-                view.setSky(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
+                view.setSkyOverride(null);
                 applyingMacro = 0;
             }
         },
@@ -306,7 +305,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 boolean modified = ae.getID() == ActionEvent.CTRL_MASK;
                 applyingMacro = modified? -1 : 1;
                 statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
-                view.setSky(new Color(255, 170, 170));
+                view.setSkyOverride(new Color(255, 170, 170));
             }
         };
         
@@ -770,7 +769,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 macroMgr.addRef(twisted.grip);
                 if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
                     if(applyingMacro != 0) {
-                        view.setSky(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
+                        view.setSkyOverride(null);
                         MagicCube.Stickerspec[] refs = macroMgr.close();
                         MagicCube.TwistData[] moves = lastMacro.getTwists(refs);
                         if(moves == null)
@@ -787,7 +786,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     }
                     else {
                         statusLabel.setText("Now recording macro twists. Hit <ctrl>m when finished.");
-                        view.setSky(Color.black);
+                        view.setSkyOverride(Color.black);
                     }
                 }
                 else statusLabel.setText(""+macroMgr.numRefs()); // a little camera sound here would be great.
@@ -891,19 +890,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         }
         view = new MC4DView(puzzle, polymgr, rotations, hist, genericGlue.genericPuzzleDescription.nFaces());
         view.genericGlue = genericGlue; // make it share mine
-        view.setScale(scale); // XXX added-- I think this is needed, otherwise the Property's scale doesn't get applied til I hit the scale slider! -don
 
-        view.setBackground(PropertyManager.getColor("background.color"));
-        Color gc = PropertyManager.getColor("ground.color", MagicCube.GROUND);
-        view.setGround(PropertyManager.getBoolean("ground", true) ? gc : null);
-        view.setShowShadows(PropertyManager.getBoolean("shadows", true));
-        view.setQuickMoves(PropertyManager.getBoolean("quickmoves", false));
-        view.allowAutoRotate(PropertyManager.getBoolean("autorotate", true));
-        view.allowAntiAliasing(PropertyManager.getBoolean("antialiasing", true));
-        view.setHighlightByCubie(PropertyManager.getBoolean("highlightbycubie", false));
-        view.setSnapMode(PropertyManager.getBoolean("ctrlrotbyface", true) ? RotationHandler.Snap.Snap_Cell : RotationHandler.Snap.Snap_Smart);
-        Color ol = PropertyManager.getColor("outlines.color", Color.BLACK);
-        view.setOutlined(PropertyManager.getBoolean("outlines", false) ? ol : null);
         viewcontainer.removeAll(); 
         viewcontainer.add(view, "Center");
         
@@ -985,14 +972,14 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     public void adjustmentValueChanged(AdjustmentEvent ae) {
                         twistfactor = (float)twistfactorSlider.getFloatValue();
                         PropertyManager.userprefs.setProperty("twistfactor", ""+twistfactor);
-                        view.setTwistFactor(twistfactor);
+                        view.repaint();
                     }
                 });
             scaleSlider.addAdjustmentListener(new AdjustmentListener() {
                     public void adjustmentValueChanged(AdjustmentEvent ae) {
                         scale = (float)scaleSlider.getFloatValue();
                         PropertyManager.userprefs.setProperty("scale", ""+scale);
-                        view.setScale(scale);
+                        view.repaint();
                     }
                 });
             sshrinkSlider.addAdjustmentListener(new AdjustmentListener() {
@@ -1052,15 +1039,14 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             showShadows.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean shadows = showShadows.isSelected();
-                    MC4DSwing.this.view.setShowShadows(shadows);
                     PropertyManager.userprefs.setProperty("shadows", ""+shadows);
+                    view.repaint();
                 }
             });
             final JCheckBox quickMoves = new JCheckBox("Quick Moves", PropertyManager.getBoolean("quickmoves", false));
             quickMoves.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean quickmoves = quickMoves.isSelected();
-                    MC4DSwing.this.view.setQuickMoves(quickmoves);
                     PropertyManager.userprefs.setProperty("quickmoves", ""+quickmoves);
                 }
             });
@@ -1068,7 +1054,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             allowAutoRotate.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean autorotate = allowAutoRotate.isSelected();
-                    MC4DSwing.this.view.allowAutoRotate(autorotate);
                     PropertyManager.userprefs.setProperty("autorotate", ""+autorotate);
                 }
             });
@@ -1076,15 +1061,14 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             allowAntiAliasing.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean antialiasing = allowAntiAliasing.isSelected();
-                    MC4DSwing.this.view.allowAntiAliasing(antialiasing);
                     PropertyManager.userprefs.setProperty("antialiasing", ""+antialiasing);
+                    view.repaint();
                 }
             });
             final JCheckBox highlightByCubie = new JCheckBox("Highlight by Cubie", PropertyManager.getBoolean("highlightbycubie", false));
             highlightByCubie.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean highlightbycubie = highlightByCubie.isSelected();
-                    MC4DSwing.this.view.setHighlightByCubie(highlightbycubie);
                     PropertyManager.userprefs.setProperty("highlightbycubie", ""+highlightbycubie);
                 }
             });
@@ -1103,7 +1087,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					boolean byFace = ctrlRotateByFace.isSelected();
-					MC4DSwing.this.view.setSnapMode(byFace ? RotationHandler.Snap.Snap_Cell : RotationHandler.Snap.Snap_Smart);
 					PropertyManager.userprefs.setProperty("ctrlrotbyface", ""+byFace);
 				}
             });
@@ -1111,7 +1094,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					boolean byCubie = ctrlRotateByCubie.isSelected();
-					MC4DSwing.this.view.setSnapMode(byCubie ? RotationHandler.Snap.Snap_Smart : RotationHandler.Snap.Snap_Cell);
 					PropertyManager.userprefs.setProperty("ctrlrotbyface", ""+!byCubie);
 				}
             });
@@ -1149,52 +1131,30 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             general.add(Box.createVerticalGlue());
 
             // background controls
-            ColorButton backgroundColor = new ColorButton("Background", "background.color", MagicCube.BACKGROUND,
-                new ColorButton.ColorChangeListener() {
-                    public void colorChanged(Color newColor) {
-                        view.setSky(newColor);
-                    }
-                }, true
-            );
+            ColorButton skyColor = new ColorButton("Sky", "sky.color", MagicCube.SKY, null, true);
             final JCheckBox drawGround = new JCheckBox("Draw Ground", PropertyManager.getBoolean("ground", true));
-            final ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND,
-                new ColorButton.ColorChangeListener() {
-                    public void colorChanged(Color newColor) {
-                        if( ! drawGround.isSelected())
-                            return;
-                        view.setGround(newColor);
-                    }
-                }, true
-            );
+            final ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND, null, true);
             drawGround.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean drawground = drawGround.isSelected();
-                    view.setGround(drawground ? ground.getColor() : null);
                     PropertyManager.userprefs.setProperty("ground", ""+drawground);
+                    view.repaint();
                 }
             });
             
             // outlining controls
             final JCheckBox drawOutlines = new JCheckBox("Draw Outlines", PropertyManager.getBoolean("outlines", false));
-            final ColorButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK,
-                new ColorButton.ColorChangeListener() {
-                    public void colorChanged(Color newColor) {
-                        if( ! drawOutlines.isSelected())
-                            return;
-                        view.setOutlined(newColor);
-                    }
-                }, true
-            );
+            final ColorButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK, null, true);
             drawOutlines.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean drawoutlines = drawOutlines.isSelected();
-                    view.setOutlined(drawoutlines ? outlinesColor.getColor() : null);
                     PropertyManager.userprefs.setProperty("outlines", ""+drawoutlines);
+                    view.repaint();
                 }
             });
             
             JPanel colors = new JPanel();
-            colors.add(backgroundColor);
+            colors.add(skyColor);
             colors.add(Box.createVerticalStrut(15));
             JPanel tmp = new JPanel();
             tmp.add(drawGround);

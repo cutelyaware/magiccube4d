@@ -6,6 +6,7 @@ import java.io.PushbackReader;
 import java.util.Vector;
 import java.util.Enumeration;
 
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 
@@ -35,93 +36,34 @@ public class MC4DView extends Component {
     public boolean isAnimating() { return animationQueue.isAnimating(); }
     private int slicemask; // bitmap representing which number keys are down
     private float faceRGB[][];
-    private boolean showShadows=true;
-    private Color outlineColor;
-    private Color
-        bg     = MagicCube.BACKGROUND,
-        ground = MagicCube.GROUND;
+    private Color skyOverride = null; // null means use the user's preference from the PropertyManager.
     private int xOff, yOff;
     private float pixels2polySF = .01f; // screen transform data
     private Point lastDrag; // non-null == dragging
     private long lastDragTime; // timestamp of last drag event
     private RotationHandler rotationHandler;
-    private boolean allowAntiAliasing = true; // whether to allow antialiasing at all
-    private float scale = 1;
-    private boolean highlightByCubie = false;
-    private boolean quickMoves = false; // whether to skip animations and perform moves in a single frame
-    public void setHighlightByCubie(boolean val) { highlightByCubie = val; }
     
     public RotationHandler getRotations() { return rotationHandler; } // const
     
-    public void setScale(float scale) {
-        this.scale = scale;
-        updateViewFactors();
+    /**
+     * Overrides the user's preference when not null. Set to null to revert.
+     */
+    public void setSkyOverride(Color so) {
+        this.skyOverride = so;
         repaint();
     }
 
-    public void setTwistFactor(float twistfactor) {
-        polymgr.setTwistFactor(twistfactor);
-        repaint();
-    }
-    
-    public void setSky(Color bg) {
-        if(bg == null)
-            return;
-        this.bg = bg;
-        repaint();
-    }
-    public void setGround(Color ground) {
-        this.ground = ground;
-        System.out.println(ground);
-        repaint();
-    }
-    
-    public void setOutlined(Color outlines) {
-        this.outlineColor = outlines;
-        repaint();
-    }
-    
-    public void setFaceColor(int face, float r, float g, float b) {
-        faceRGB[face][0] = r;
-        faceRGB[face][1] = g;
-        faceRGB[face][2] = b;
-        repaint();
-    }
-    public void setFaceColor(int face, Color color) {
-        float rgb[] = new float[3];
-        color.getRGBColorComponents(rgb);
-        setFaceColor(face, rgb[0], rgb[1], rgb[2]);
-    }
-
-    public void setShowShadows(boolean val) {
-        showShadows = val;
-        repaint();
-    }
-
-    public void setQuickMoves(boolean val) {
-        quickMoves = val;
-    }
-
-    public void allowAutoRotate(boolean val) {
-        rotationHandler.setAllowAutoRotate(val);
-        repaint();
-    }
-    
-    public void setSnapMode(RotationHandler.Snap snap) {
-        rotationHandler.setSnapSetting(snap);
-        repaint();
-    }
-
-    public void allowAntiAliasing(boolean val) {
-        allowAntiAliasing = val;
-        repaint();
-    }
-    
+    /**
+     * Performs a move and optionally applies it to the history when finished.
+     */
     public void animate(MagicCube.TwistData move, boolean applyToHist) {
         animationQueue.append(move, applyToHist);
         repaint();
     }
 
+    /**
+     * Performs a sequence of moves and optionally applies each to the history as they finished.
+     */
     public void animate(MagicCube.TwistData moves[], boolean applyToHist) {
         for(int i=0; i<moves.length; i++)
             animate(moves[i], applyToHist);
@@ -138,16 +80,6 @@ public class MC4DView extends Component {
 
     public void cancelAnimation() {
         animationQueue.cancelAnimation();
-    }
-
-    /*
-     * Shamelessly copied from SwingUtilities.java since that is in JDK 1.3 and we'd like to keep this to 1.2 and below.
-     */
-    public static boolean isMiddleMouseButton(MouseEvent anEvent) {
-        return ((anEvent.getModifiers() & InputEvent.BUTTON2_MASK) == InputEvent.BUTTON2_MASK);
-    }
-    public static boolean isLeftMouseButton(MouseEvent anEvent) {
-         return ((anEvent.getModifiers() & InputEvent.BUTTON1_MASK) != 0);
     }
     
     public void setHistory(History h) {
@@ -183,7 +115,7 @@ public class MC4DView extends Component {
 			public void mouseClicked(MouseEvent e) {
             	MC4DView.this.requestFocusInWindow(); // to start receiving key events.
             	
-            	boolean isViewRotation = e.isControlDown() || isMiddleMouseButton(e);
+            	boolean isViewRotation = e.isControlDown() || SwingUtilities.isMiddleMouseButton(e);
                 if( isViewRotation )
             	{
                 	// Pass it off to the generic glue (for now,
@@ -196,7 +128,6 @@ public class MC4DView extends Component {
 		                                               slicemask,
 		                                               MC4DView.this);
 		            }
-                	
                     return;
             	}
 
@@ -217,7 +148,7 @@ public class MC4DView extends Component {
                     System.out.println("face: " + clicked.face);
 
                     // Tell listeners about the legal twist and let them call animate() if desired.
-                    int dir = (isLeftMouseButton(e) || isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
+                    int dir = (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
                     //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
                     //    dir *= 2;
                     fireTwistEvent( new MagicCube.TwistData( clicked, dir, slicemask ) );
@@ -255,7 +186,7 @@ public class MC4DView extends Component {
                 drag_dir[1] *= -1;      // in Windows, Y is down, so invert it
                 
                 rotationHandler.mouseDragged( drag_dir[0], drag_dir[1],
-                		isLeftMouseButton(e), isMiddleMouseButton(e), e.isShiftDown() );
+                		SwingUtilities.isLeftMouseButton(e), SwingUtilities.isMiddleMouseButton(e), e.isShiftDown() );
                 frames = 0;
                 if(debugging)
                 	FPSTimer.restart();
@@ -338,7 +269,7 @@ public class MC4DView extends Component {
             min = W>H ? H : W;
         if(W*H == 0)
             return;
-        pixels2polySF = 1f / Math.min(W, H) / scale;
+        pixels2polySF = 1f / Math.min(W, H) / PropertyManager.getFloat("scale", 1);
         xOff = ((W>H) ? (W-H)/2 : 0) + min/2;
         yOff = ((H>W) ? (H-W)/2 : 0) + min/2;
     }
@@ -404,46 +335,46 @@ public class MC4DView extends Component {
         // antialiasing makes for a beautiful image but can also be expensive to draw therefore
         // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
         if(g instanceof Graphics2D) {
-            boolean okToAntialias = allowAntiAliasing && lastDrag==null && rotationHandler.isSpinning()
+            boolean okToAntialias = PropertyManager.getBoolean("antialiasing", true) && lastDrag==null && rotationHandler.isSpinning()
                                  && !(genericGlue!=null ? genericGlue.isAnimating() : isAnimating());
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
         }
 
         // paint the background
-        g.setColor(bg);
+        g.setColor(skyOverride == null ? PropertyManager.getColor("sky.color", MagicCube.SKY) : skyOverride);
         g.fillRect(0, 0, getWidth(), getHeight());
-        if(ground != null) {
-            g.setColor(ground);
+        if(PropertyManager.getBoolean("ground", true)) {
+            g.setColor(PropertyManager.getColor("ground.color"));
             g.fillRect(0, getHeight()*6/9, getWidth(), getHeight());
-        }
+        }   
         
         // paint the puzzle
         if (genericGlue != null)
         {
             genericGlue.computeAndPaintFrame(
               // used by compute part...
-                polymgr.getFaceShrink(),
-                polymgr.getStickerShrink(),
+            	PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),
+            	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
                 rotationHandler,
-                polymgr.getEyeW(),
+                PropertyManager.getFloat("eyew", MagicCube.EYEW),
                 MagicCube.EYEZ,
-                scale,
+                PropertyManager.getFloat("scale", 1),
                 pixels2polySF,
                 xOff,
                 yOff,
                 MagicCube.SUNVEC,
 
               // used by compute and paint part...
-                showShadows,
+                PropertyManager.getBoolean("shadows", true),
 
               // used by paint part only...
-                ground,
+                PropertyManager.getBoolean("ground", false) ? PropertyManager.getColor("ground.color") : null,
                 faceRGB,
-                highlightByCubie,
-                outlineColor,
+                PropertyManager.getBoolean("highlightbycubie", false),
+                PropertyManager.getBoolean("outlines", false) ? PropertyManager.getColor("outlines.color") : null,
                 g,
-                polymgr.getTwistFactor(),
+                PropertyManager.getFloat("twistfactor", 1),
                 this);
             
             if(FPSTimer.isRunning() && rotationHandler.continueSpin() && lastDrag == null) {
@@ -491,7 +422,7 @@ public class MC4DView extends Component {
                     int order = orders[iTwistGrip];
                     double totalRotationAngle = 2*Math.PI/order;                    
                     
-                    genericGlue.nTwist = quickMoves ? 1 : genericGlue.calculateNTwists( totalRotationAngle, polymgr.getTwistFactor() );
+                    genericGlue.nTwist = PropertyManager.getBoolean("quickmoves", false) ? 1 : genericGlue.calculateNTwists( totalRotationAngle, polymgr.getTwistFactor() );
                     genericGlue.iTwist = 0;
                     genericGlue.iTwistGrip = iTwistGrip;
                     genericGlue.twistDir = animating.twist.direction;

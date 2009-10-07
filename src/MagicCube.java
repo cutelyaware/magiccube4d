@@ -155,6 +155,6 @@ public class MagicCube {
     public final static int FILE_VERSION = 3;
     
     public final static Color
-        BACKGROUND = new Color(20,170,235),
-        GROUND     = new Color(20, 130, 20);
+        SKY    = new Color(20,170,235),
+        GROUND = new Color(20, 130, 20);
 }

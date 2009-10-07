@@ -50,12 +50,13 @@ public class ColorButton extends JButton {
         addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 final Color oldColor = PropertyManager.getColor(prefKey, def);
+                if(oldColor != null)
                 tcc.setColor(oldColor);
                 JColorChooser.createDialog(ColorButton.this, "Select Color", true, tcc, 
                    new ActionListener() {
                        public void actionPerformed(ActionEvent arg0) {
                            //System.out.println("ok");
-                           if( ! continuous)
+                           if( ! continuous && changer != null)
                                changer.colorChanged(ColorButton.this.getBackground());
                        }
                    },
@@ -63,7 +64,7 @@ public class ColorButton extends JButton {
                        public void actionPerformed(ActionEvent arg0) {
                            //System.out.println("cancel");
                            setColor(oldColor);
-                           if(continuous)
+                           if(continuous && changer != null)
                                changer.colorChanged(oldColor);
                        }
                    }
@@ -76,7 +77,7 @@ public class ColorButton extends JButton {
                 Color newColor = tcc.getColor();
                 //System.out.println("state changed " + newColor);
                 setColor(newColor);
-                if(continuous)
+                if(continuous && changer != null)
                     changer.colorChanged(newColor);
             }
         });        
