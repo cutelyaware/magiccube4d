@@ -1076,6 +1076,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         {
             return grip2face;
         }
+        
         public float[/*nDims*/] getFaceCenter( int faceIndex )
         {
         	if( faceIndex < 0 || faceIndex >= nFaces() )
@@ -1083,6 +1084,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             
         	return faceCenters[faceIndex];
         }
+        
         public float[/*nDims*/] getGripCoords( int gripIndex )
         {
         	if( gripIndex < 0 || gripIndex >= nGrips() )
@@ -1090,6 +1092,19 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         	
         	return gripCentersF[gripIndex];
         }
+
+        public int getNumSlicesForGrip( int gripIndex )
+        {
+        	if( gripIndex < 0 || gripIndex >= nGrips() )
+        		throw new IllegalArgumentException( "getNumSlicesForGrip called with bad grip index " + gripIndex + ", there are " + nGrips() + " grips!" );
+        	
+            int iFace = grip2face[gripIndex];
+            double thisFaceCutOffsets[] = faceCutOffsets[iFace];
+            int numSlices = thisFaceCutOffsets.length+1;
+            //System.out.println( "number of slices available for twist = " + numSlices );
+            return numSlices;
+        }
+        
         public int[/*nFaces*/] getFace2OppositeFace()
         {
             return face2OppositeFace;
