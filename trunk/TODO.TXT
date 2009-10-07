@@ -2,7 +2,8 @@
 PUZZLES
 * Support from 2 to N-dimensional puzzles (yeah right!).
 * Port the solve and compress functions to the new puzzles. 
-  First just for the appropriately sized cubes and eventually for all puzzles.
+  - First just for the appropriately sized cubes and eventually for all puzzles.
+  - Consider including and using Don's N-D solve rather than port MC4D version?
 * DONE - Figure out how to support rotations for generic puzzles & history.
 * DONE - Implement Jenn3D-style 4D rotates via Shift-left drag.
 * before shipping, comment out broken or redundant puzzles and change default to "{4,3,3} 3"
@@ -17,7 +18,7 @@ HIGHLIGHTING
 
 GUI
 * Choose better slider ranges.
-* Fix or remove contigious cubies mode.
+* DONE- Fix or remove contigious cubies mode.
 * Reimplement ctrl-right-click to rotate "from" center.
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
 * Make initial EyeW a function of puzzle size and maybe remove slider altogether?
