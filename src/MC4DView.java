@@ -64,7 +64,8 @@ public class MC4DView extends Component {
         repaint();
     }
     
-    public void setBackground(Color bg) {
+    @Override
+	public void setBackground(Color bg) {
         if(bg == null)
             return;
         this.bg = bg;
@@ -163,12 +164,14 @@ public class MC4DView extends Component {
         
         // manage slicemask as user holds and releases number keys
         this.addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent arg0) {
+            @Override
+			public void keyPressed(KeyEvent arg0) {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
                 if(1 <= numkey && numkey <= 9)
                     slicemask |= 1<<numkey-1; // turn on the specified bit
             }
-            public void keyReleased(KeyEvent arg0) {
+            @Override
+			public void keyReleased(KeyEvent arg0) {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
                 if(1 <= numkey && numkey <= 9)
                     slicemask &= ~(1<<numkey-1); // turn off the specified bit
@@ -176,7 +179,8 @@ public class MC4DView extends Component {
         });
         this.addMouseListener(new MouseAdapter() {
             // look for and initiate twist and rotation animations
-            public void mouseClicked(MouseEvent e) {
+            @Override
+			public void mouseClicked(MouseEvent e) {
             	MC4DView.this.requestFocusInWindow(); // to start receiving key events.
             	
             	boolean isViewRotation = e.isControlDown() || isMiddleMouseButton(e);
@@ -221,13 +225,15 @@ public class MC4DView extends Component {
                 }
             }
             // watch for dragging starts and stops
-            public void mousePressed(MouseEvent arg0) {
+            @Override
+			public void mousePressed(MouseEvent arg0) {
                 lastDrag = arg0.getPoint();
                 lastDragTime = arg0.getWhen();
                 rotationHandler.stopSpinning();
                 FPSTimer.stop();
             }
-            public void mouseReleased(MouseEvent arg0) {
+            @Override
+			public void mouseReleased(MouseEvent arg0) {
                 long timedelta = arg0.getWhen() - lastDragTime;
                 lastDrag = null;
                 if(timedelta > 0) {
@@ -238,7 +244,8 @@ public class MC4DView extends Component {
         });
         // watch for dragging gestures to rotate the 3D view
         this.addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent e) {
+            @Override
+			public void mouseDragged(MouseEvent e) {
                 if(lastDrag == null)
                     return;
                 float[]
@@ -257,7 +264,8 @@ public class MC4DView extends Component {
                 lastDragTime = e.getWhen();
                 repaint();
             }
-            public void mouseMoved(MouseEvent arg0) {
+            @Override
+			public void mouseMoved(MouseEvent arg0) {
                 super.mouseMoved(arg0);
                 if (genericGlue != null )
                 {
@@ -376,7 +384,8 @@ public class MC4DView extends Component {
 		}
     });
 
-    public void paint(Graphics g) {
+    @Override
+	public void paint(Graphics g) {
     	frames++;
         updateViewFactors();
 
@@ -549,7 +558,8 @@ public class MC4DView extends Component {
         frame.add(view);
         frame.setBounds(100, 100, 650, 650);
         frame.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent arg0) {
+            @Override
+			public void windowClosing(WindowEvent arg0) {
                 //hist.compress();
                 System.out.println("writing " + hist.countTwists() + " twist" + (hist.countTwists()==1 ? "" : "s"));
                 try {

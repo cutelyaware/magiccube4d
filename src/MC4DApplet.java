@@ -14,7 +14,8 @@ import java.io.PushbackReader;
 public class MC4DApplet extends Applet {
     public MC4DApplet() {
     }
-    public void init() {
+    @Override
+	public void init() {
         String lengthstr = getParameter("length");
         int length = lengthstr == null ? 3 : Integer.parseInt(lengthstr);
         System.out.println("length = " + length);

@@ -225,7 +225,7 @@ public class GenericGlue
 
             double nicePointD[] = new double[4];
             for (int i = 0; i < 4; ++i)
-                nicePointD[i] = (double)nicePoint[i];
+                nicePointD[i] = nicePoint[i];
 
             double nicePointOnScreen[] = VecMath.vxm( nicePointD, rotationHandler.current4dView() );
             VecMath.normalize(nicePointOnScreen, nicePointOnScreen); // if it's not already
@@ -287,7 +287,8 @@ public class GenericGlue
         // steal PolygonManager's stuff-- this should be an interface but that's not allowed here apparently
         abstract class InterpFunc { public abstract float func(float f); }
         InterpFunc sine_interp = new InterpFunc() {
-            public float func(float x) { return (float)(Math.sin((x - .5) * Math.PI) + 1) / 2; }
+            @Override
+			public float func(float x) { return (float)(Math.sin((x - .5) * Math.PI) + 1) / 2; }
         };
         /*
         InterpFunc linear_interp = new InterpFunc() {
@@ -339,7 +340,7 @@ public class GenericGlue
             twistDir = genericGlue.twistDir;
             slicemask = genericGlue.twistSliceMask;
 
-            fracIntoTwist = (float)interp.func((genericGlue.iTwist+1)/(float)genericGlue.nTwist);
+            fracIntoTwist = interp.func((genericGlue.iTwist+1)/(float)genericGlue.nTwist);
             //System.out.println("    "+genericGlue.iTwist+"/"+genericGlue.nTwist+" -> "+(genericGlue.iTwist+1)+"/"+genericGlue.nTwist+"");
 
             view.repaint(); // make sure we keep drawing while there's more to do
@@ -381,7 +382,7 @@ public class GenericGlue
             eyeZ,
             new float[][]{{scaleFudge2d*scale/pixels2polySF, 0},
                           {0, -scaleFudge2d*scale/pixels2polySF},           
-                          {(float)xOff, (float)yOff}},
+                          {xOff, yOff}},
             VecMath.normalize(towardsSunVec),
             groundNormal,
             groundOffset);

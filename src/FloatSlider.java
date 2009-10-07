@@ -163,7 +163,8 @@ public class FloatSlider extends JScrollBar {
         frame.add(mainpanel);
         frame.setSize(new Dimension(800, 100));
         frame.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent we) {
+            @Override
+			public void windowClosing(WindowEvent we) {
                 System.exit(1);
             }
         });
