@@ -7,44 +7,8 @@
 // onto MC4DSwing/MC4DView with as minimal impact on the existing code
 // as possible, prior to Melinda getting a look at it
 // and figuring out where it should really go.
-//
-// Functions currently in here:
-//
-//    - GenericGlue() constructor
-//            MC4DSwing creates one of these on startup and stores it
-//            in its member genericGlue;
-//            it also points the MC4DView's genericGlue member
-//            to the same GenericGlue object.
-//    - addItemsToPuzzleMenu()
-//            MC4DSwing should call this after it adds its
-//            standard items to the puzzle menu.
-//            This function installs callbacks that activate
-//            and deactivate the genericGlue object
-//            in response to the relevant PuzzleMenu items.
-//    - isActive()
-//            Whether this GenericGlue object is active
-//            (i.e. contains a valid puzzle).
-//            This will be true whenever the MC4DView's "current puzzle"
-//            is a generic puzzle (rather than a standard one).
-//
-//    - undoAction()
-//          use in place if the usual undo action when isActive() is true
-//    - redoAction()
-//          use in place if the usual redo action when isActive() is true
-//    - cheatAction()
-//          use in place if the usual cheat action when isActive() is true
-//    - scrambleAction()
-//          use in place if the usual cheat action when isActive() is true
-//
-//    - isAnimating()
-//          use in place of the usual isAnimating when isActive() is true
-//
-//    - compute
-//    - computeAndPaintFrame()
-//          MC4DView calls this from its repaint() method
-//          in place of its usual calls to paintFrame(),
-//          if isActive() is true
-//
+
+import com.donhatchsw.util.VecMath;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -75,35 +39,11 @@ public class GenericGlue
     public int iTwistGrip;     // of twist in progress, if any
     public int twistDir;      // of twist in progress, if any
     public int twistSliceMask; // of twist in progress, if any
-    public int twistIsUndo; // of twist in progress, if any-- when finished, don't put on undo stack
-    //
-    // A cheat is in progress if cheating == true.
-    //
-    public boolean cheating;
-
+    
     //
     // The sticker and cubie that the mouse is currently hovering over.
     //
     public int iStickerUnderMouse = -1;
-
-
-    //
-    // Rudimentary undo queue.
-    //
-    public static class HistoryNode
-    {
-        public int iGrip;
-        public int dir;
-        public int slicemask;
-        public HistoryNode(int iGrip, int dir, int slicemask)
-        {
-            this.iGrip = iGrip;
-            this.dir = dir;
-            this.slicemask = slicemask;
-        }
-    }
-    java.util.Vector<HistoryNode> undoq = new java.util.Vector<HistoryNode>(); // of HistoryNode
-    int undoPartSize = 0; // undoq has undo part followed by redo part
 
     //
     // Two scratch Frames to use for computing and painting.
@@ -126,10 +66,7 @@ public class GenericGlue
             @Override
             public Void doInBackground() {
             	genericPuzzleDescription = buildPuzzle(schlafli, lengthString, this);
-                genericPuzzleState = com.donhatchsw.util.VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
-
-                undoq.setSize(0);
-                undoPartSize = 0;
+                genericPuzzleState = VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
             	return null;
     		}
 
@@ -161,15 +98,6 @@ public class GenericGlue
         if (verboseLevel >= 1) System.out.println("out GenericGlue ctor");
     }
 
-    public boolean isActive()
-    {
-        return genericPuzzleDescription != null;
-    }
-    public void deactivate()
-    {
-    	genericPuzzleDescription = null;
-        genericPuzzleState = null;
-    }
     public boolean isAnimating()
     {
         return iRotation < nRotation
@@ -299,10 +227,10 @@ public class GenericGlue
             for (int i = 0; i < 4; ++i)
                 nicePointD[i] = (double)nicePoint[i];
 
-            double nicePointOnScreen[] = com.donhatchsw.util.VecMath.vxm( nicePointD, rotationHandler.current4dView() );
-            com.donhatchsw.util.VecMath.normalize(nicePointOnScreen, nicePointOnScreen); // if it's not already
+            double nicePointOnScreen[] = VecMath.vxm( nicePointD, rotationHandler.current4dView() );
+            VecMath.normalize(nicePointOnScreen, nicePointOnScreen); // if it's not already
             double minusWAxis[] = {0,0,0,-1};
-            double totalRotationAngle = com.donhatchsw.util.VecMath.angleBetweenUnitVectors(
+            double totalRotationAngle = VecMath.angleBetweenUnitVectors(
                                 nicePointOnScreen,
                                 minusWAxis);
 
@@ -381,9 +309,9 @@ public class GenericGlue
 
             double incFrac = interp.func((genericGlue.iRotation+1)/(float)genericGlue.nRotation)
                            - interp.func(genericGlue.iRotation/(float)genericGlue.nRotation);
-            double incmatD[][] = com.donhatchsw.util.VecMath.makeRowRotMatThatSlerps(genericGlue.rotationFrom, genericGlue.rotationTo, incFrac);
-            copy = com.donhatchsw.util.VecMath.mxm(copy, incmatD);
-            com.donhatchsw.util.VecMath.gramschmidt(copy, copy);
+            double incmatD[][] = VecMath.makeRowRotMatThatSlerps(genericGlue.rotationFrom, genericGlue.rotationTo, incFrac);
+            copy = VecMath.mxm(copy, incmatD);
+            VecMath.gramschmidt(copy, copy);
 
             for (int i = 0; i < 4; ++i)
             for (int j = 0; j < 4; ++j)
@@ -427,7 +355,7 @@ public class GenericGlue
 
         // XXX I don't seem to be quite the same as the original... unless I correct it here
         float scaleFudge4d = 1.f;
-        float scaleFudge3d = 1.f;
+        //float scaleFudge3d = 1.f;
         float scaleFudge2d = 4.7f;
 
         float viewMat4df[][] = new float[4][4];
@@ -448,13 +376,13 @@ public class GenericGlue
               slicemask,
               fracIntoTwist,
 
-            com.donhatchsw.util.VecMath.mxs(viewMat4df, scaleFudge4d),
+            VecMath.mxs(viewMat4df, scaleFudge4d),
             eyeW,
             eyeZ,
             new float[][]{{scaleFudge2d*scale/pixels2polySF, 0},
                           {0, -scaleFudge2d*scale/pixels2polySF},           
                           {(float)xOff, (float)yOff}},
-            com.donhatchsw.util.VecMath.normalize(towardsSunVec),
+            VecMath.normalize(towardsSunVec),
             groundNormal,
             groundOffset);
 
@@ -479,45 +407,13 @@ public class GenericGlue
             if (genericGlue.iTwist == genericGlue.nTwist)
             {
                 // End of twist animation-- apply the twist to the state.
-                // The move has already been recorded in the undo queue
-                // (if it's a forward move and not an undo).
                 genericGlue.genericPuzzleDescription.applyTwistToState(
                             genericGlue.genericPuzzleState,
                             genericGlue.iTwistGrip,
                             genericGlue.twistDir,
                             genericGlue.twistSliceMask);
                 // XXX need to update the hovered-over sticker! I think.
-                // XXX it would suffice to just call the mouseMoved callback... but maybe we don't want to do that after every frame in the cheat
-            }
-        }
-        if (genericGlue.iTwist == genericGlue.nTwist
-         && genericGlue.cheating)
-        {
-            // End of a twist that's part of a cheat
-            if (genericGlue.undoPartSize == 0)
-            {
-                // End of the cheat.
-                genericGlue.cheating = false;
-            }
-            else
-            {
-                // Initiate the next undo twist in the cheat.
-                // XXX duplicate code from the undo menu item-- make a function out of this
-
-                GenericGlue.HistoryNode node = (GenericGlue.HistoryNode)genericGlue.undoq.get(--genericGlue.undoPartSize);
-
-                //
-                // Initiate the undo twist (opposite dir from original)
-                //
-                int order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[node.iGrip];
-                double totalRotationAngle = 2*Math.PI/order;
-                genericGlue.nTwist = calculateNTwists( totalRotationAngle, twistFactor ); 
-                genericGlue.iTwist = 0;
-                genericGlue.iTwistGrip = node.iGrip;
-                genericGlue.twistDir = -node.dir;
-                genericGlue.twistSliceMask = node.slicemask;
-
-                view.repaint();
+                // XXX it would suffice to just call the mouseMoved callback.
             }
         }
     } // computeAndPaintFrame

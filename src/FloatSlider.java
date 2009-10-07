@@ -22,7 +22,7 @@ import javax.swing.JScrollBar;
  */
 @SuppressWarnings("serial")
 public class FloatSlider extends JScrollBar {
-    private final static int DEFAULT_RANGE = 1000; // number of descrete steps
+    private final static int DEFAULT_RANGE = 1000; // number of discrete steps
     private final static int DEFAULT_VISIBLE = 20; // pixel width of thumb
     private double curFloat, minFloat, maxFloat;
     private boolean isLogScale;

@@ -184,7 +184,7 @@ public class MC4DView extends Component {
             	{
                 	// Pass it off to the generic glue (for now,
                 	// a view rotation helper will be created soon)
-                	if( genericGlue != null && genericGlue.isActive() )
+                	if( genericGlue != null )
 		            {
 		                genericGlue.mouseClickedAction(e,
 		                                               rotationHandler,
@@ -259,7 +259,7 @@ public class MC4DView extends Component {
             }
             public void mouseMoved(MouseEvent arg0) {
                 super.mouseMoved(arg0);
-                if (genericGlue != null && genericGlue.isActive())
+                if (genericGlue != null )
                 {
                     genericGlue.mouseMovedAction(arg0, MC4DView.this);
                     return;
@@ -396,8 +396,7 @@ public class MC4DView extends Component {
         // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
         if(g instanceof Graphics2D) {
             boolean okToAntialias = allowAntiAliasing && lastDrag==null && rotationHandler.isSpinning()
-                                 && !(genericGlue!=null && genericGlue.isActive() ? genericGlue.isAnimating()
-                                                                                  : isAnimating());
+                                 && !(genericGlue!=null ? genericGlue.isAnimating() : isAnimating());
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
         }
@@ -411,7 +410,7 @@ public class MC4DView extends Component {
         }
         
         // paint the puzzle
-        if (genericGlue != null && genericGlue.isActive())
+        if (genericGlue != null)
         {
             genericGlue.computeAndPaintFrame(
               // used by compute part...
