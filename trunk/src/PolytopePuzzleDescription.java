@@ -831,7 +831,8 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         }
     } // ctor from schlafli and length
 
-    public String toString()
+    @Override
+	public String toString()
     {
         String nl = System.getProperty("line.separator");
         CSG.Polytope[][] allElements = slicedPolytope.p.getAllElements();

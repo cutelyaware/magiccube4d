@@ -57,7 +57,7 @@ public class MacroManager {
         Writer writer = new FileWriter(filePath);
         for (int i = 0; i < macros.size(); ++i)
         {
-            Macro aMacro = (Macro)macros.get(i);
+            Macro aMacro = macros.get(i);
             aMacro.write(writer);
         }
         writer.close();
@@ -82,7 +82,7 @@ public class MacroManager {
      * @return the currently contained list of macros.
      */
     public Macro[] getMacros() {
-        return (Macro[])macros.toArray(new Macro[0]);
+        return macros.toArray(new Macro[0]);
     }
 
     /**

@@ -169,7 +169,8 @@ public class PropertyManager extends Properties {
         /**
          * Calls super.setProperty() and then immediately attempts to store the entire contents to the user's preference file.
          */
-        public synchronized Object setProperty(String key, String value) {
+        @Override
+		public synchronized Object setProperty(String key, String value) {
             Object ret = super.setProperty(key, value);
             writeToFile();
             return ret;
@@ -177,14 +178,16 @@ public class PropertyManager extends Properties {
         /**
          * Calls super.clear() and then immediately attempts to store the entire contents to the user's preference file.
          */
-        public void clear() {
+        @Override
+		public void clear() {
             super.clear();
             writeToFile();
         }
         /**
          * Calls super.remove() and then immediately attempts to store the entire contents to the user's preference file.
          */
-        public Object remove(Object key) {
+        @Override
+		public Object remove(Object key) {
             Object ret = super.remove(key);
             writeToFile();
             return ret;
@@ -234,7 +237,8 @@ public class PropertyManager extends Properties {
          * given to the constructor. Also, quoted values will have their quotes striipped.
          * This is in case a user wants to create a path or other property beginning with '/'.
          */
-        public String getProperty(String key) {
+        @Override
+		public String getProperty(String key) {
             // for debugging vendor props, if uncommented, this will provide a good line
             // on which to set a breakpoint:
             //if(key.equalsIgnoreCase("main.logo.small"))
@@ -248,7 +252,8 @@ public class PropertyManager extends Properties {
                 val = val.substring(1, val.length()-1);
             return val;
         }
-        public String getProperty(String key, String dflt) {
+        @Override
+		public String getProperty(String key, String dflt) {
             String val = getProperty(key);
             return val == null ? dflt : val;
         }

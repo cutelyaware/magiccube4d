@@ -135,7 +135,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     //
     private ProbableAction
         open = new ProbableAction("Open") {
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
                 if(logFileChooser.showOpenDialog(MC4DSwing.this) == JFileChooser.APPROVE_OPTION) {
                     String filepath = logFileChooser.getSelectedFile().getAbsolutePath();
                     PropertyManager.userprefs.setProperty("logfile", filepath);
@@ -145,7 +146,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         },
         save = new ProbableAction("Save") {
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
             	// Save to the previously used log file, if any, otherwise the default.
                 String fname = logFileChooser.getSelectedFile() == null ? null : logFileChooser.getSelectedFile().getAbsolutePath();
                 if(fname == null)
@@ -154,7 +156,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         },
         saveas = new ProbableAction("Save As...") {
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
                 if(logFileChooser.showSaveDialog(MC4DSwing.this) == JFileChooser.APPROVE_OPTION) {
                 	String path = logFileChooser.getSelectedFile().getAbsolutePath();
                 	if( !path.endsWith(".log")) {
@@ -165,7 +168,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         },
         undo = new ProbableAction("Undo") {
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
                 statusLabel.setText("");
                 if(hist.atScrambleBoundary()) {
                     statusLabel.setText("Can't undo past scramble boundary.");
@@ -193,7 +197,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         },
         redo = new ProbableAction("Redo") {
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
                 statusLabel.setText("");
                 if(hist.atMacroOpen()) {
                     statusLabel.setText("redoing macro");
@@ -215,7 +220,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         },
         cheat = new ProbableAction("Cheat") {
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
                 scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
                 // TODO: extend compress to work with non cubes.
                 //hist.compress(false); // so fewest moves are required and solution least resembles original moves.
@@ -232,7 +238,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         },
         solve = new ProbableAction("Solve") {
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
                 MagicCube.TwistData[] solution;
                 try { solution = puzzle.solve(); }
                 catch(Error e) {
@@ -246,7 +253,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         },
         macro = new ProbableAction("Start/End") { // toggles macro definition start/end
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
                 if(macroMgr.isOpen())  { // finished with macro definition
                     String name = JOptionPane.showInputDialog("Name your macro");
                     view.setBackground(PropertyManager.getColor("background.color", MagicCube.BACKGROUND));
@@ -269,7 +277,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         },
         cancel = new ProbableAction("Cancel Macro Definition") {
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
                 view.cancelAnimation(); // also stops any animation
                 if( ! macroMgr.isOpen())
                     return;
@@ -280,7 +289,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         },
         last = new ProbableAction("Apply Last Macro") {
-            public void doit(ActionEvent ae) {
+            @Override
+			public void doit(ActionEvent ae) {
                 if(macroMgr.isOpen()) {
                     System.err.println("Warning: Macro already open.");
                     return;

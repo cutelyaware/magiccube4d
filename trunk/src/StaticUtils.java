@@ -67,8 +67,10 @@ public class StaticUtils {
      */
     public static abstract class PopperUpper extends MouseAdapter {
         // To work properly on all platforms, must check on mouse press as well as release
-        public void mousePressed(MouseEvent e)  { if(e.isPopupTrigger()) popUp(e); }
-        public void mouseReleased(MouseEvent e) { if(e.isPopupTrigger()) popUp(e); }
+        @Override
+		public void mousePressed(MouseEvent e)  { if(e.isPopupTrigger()) popUp(e); }
+        @Override
+		public void mouseReleased(MouseEvent e) { if(e.isPopupTrigger()) popUp(e); }
         protected abstract void popUp(MouseEvent e);
     }
 
@@ -137,10 +139,12 @@ public class StaticUtils {
             this.extention = extention;
             this.description = description;
         }
-        public boolean accept(File f) {
+        @Override
+		public boolean accept(File f) {
             return f.isDirectory() || extention.equalsIgnoreCase(getExtension(f));
         }
-        public String getDescription() {
+        @Override
+		public String getDescription() {
             return description;
         }
         public static String getExtension(File f) {

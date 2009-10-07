@@ -276,7 +276,8 @@ public class PuzzleState {
     } // end twist
 
 
-    public String toString() {
+    @Override
+	public String toString() {
         int i, nstickersperface = length * length * length;
         StringBuffer buf = new StringBuffer();
         for (i=0; i<nstickers; ++i) {
