@@ -83,7 +83,7 @@ public class Macro {
         if(det < 0)
             reverse(twists);
         return twists;
-    }
+    } // end getTwists
 
     public static void reverse(MagicCube.TwistData[] twists) {
         // reverse move order
@@ -117,7 +117,7 @@ public class Macro {
             e.printStackTrace();
         }
         moves.write(writer);
-    }
+    } // end write
 
 
 //    /**
@@ -180,6 +180,6 @@ public class Macro {
             return null;
         }
         return restored;
-    }
+    } // end read
 
-}
+} // end class Macro

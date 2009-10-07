@@ -160,4 +160,4 @@ public class MacroControls extends JPanel {
         frame.add(mc);
         frame.setVisible(true);
     }
-}
+} // end class MacroControls

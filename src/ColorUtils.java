@@ -1,7 +1,9 @@
+
 import java.util.Random;
 
 
-public class YUV {
+public class ColorUtils {
+	private ColorUtils() {} // To disallow instantiation.
 	private final static float
 		U_OFF = .436f,
 		V_OFF = .615f;
@@ -96,13 +98,11 @@ public class YUV {
     
     private static double worstFit(float[][] colors) {
     	float worst = 8888;
-    	int worstID = 0;
     	for(int i=1; i<colors.length; i++) {
     		for(int j=0; j<i; j++) {
 	    		float dist = sqrdist(colors[i], colors[j]);
 	    		if(dist < worst) {
 	    			worst = dist;
-	    			worstID = i;
 	    		}
     		}
     	}

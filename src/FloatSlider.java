@@ -1,7 +1,4 @@
 
-// AND SHOULD NOT BE COMPILED WITH POST JDK 1.4 COMPILERS.
-//
-
 import java.awt.*;
 import java.awt.event.*;
 

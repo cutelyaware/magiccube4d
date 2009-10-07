@@ -164,4 +164,4 @@ public class MacroManager {
         macros.remove(macro);
     }
 
-}
+} // end class MacroManager
