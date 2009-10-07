@@ -135,6 +135,11 @@ interface GenericPuzzleDescription {
     public float[/*nDims*/] getGripCoords( int gripIndex );
     
     /**
+     * Get the number of slices a particular grip can affect.
+     */
+    public int getNumSlicesForGrip( int gripIndex );  
+    
+    /**
     * Apply a move to an array of colors (face indices)
     * representing the current puzzle state.
     */
