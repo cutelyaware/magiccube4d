@@ -663,9 +663,38 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 submenu.add(new JMenuItem(schlafli==null ? name : "   "+lengthString+"  ")).addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent ae)
                     {
+                    	String newSchlafli = schlafli;
+                    	String newLengthString = lengthString;
+                        if (schlafli == null)
+                        {
+                            String prompt = "Enter your invention:";
+                            String initialInput = 
+                            	genericGlue.genericPuzzleDescription.getSchlafliProduct() + " " +
+                                genericGlue.genericPuzzleDescription.getEdgeLength();
+
+                            while (true)
+                            {
+                                String reply = JOptionPane.showInputDialog(prompt, initialInput);
+                                if (reply == null)
+                                {
+                                    return; // Canceled
+                                }
+                                String schlafliAndLength[] = reply.trim().split("\\s+");
+                                if (schlafliAndLength.length != 2)
+                                {
+                                    prompt = "Can not build your invention.\nYou must specify the schlafli product symbol (with no spaces),\nfollowed by a space, followed by the puzzle length. Try again!";
+                                    initialInput = reply;
+                                    continue;
+                                }
+                                newSchlafli = schlafliAndLength[0];
+                                newLengthString = schlafliAndLength[1];
+                                break; // got it
+                            }
+                        }
                 		progressView.setVisible(true);
-                    	genericGlue.initPuzzle(schlafli, lengthString, progressView, statusLabel, true, viewRepainter);
-                    	hist.clear((int)Double.parseDouble(lengthString));
+                		System.out.println(newSchlafli + " " + newLengthString);
+                    	genericGlue.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true, viewRepainter);
+                    	hist.clear((int)Double.parseDouble(newLengthString));
                     	updateTwistsLabel();
                     	scrambleState = SCRAMBLE_NONE;
                     	view.repaint();

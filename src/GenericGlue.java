@@ -178,30 +178,6 @@ public class GenericGlue
 
     
     public static GenericPuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
-        if (schlafli == null)
-        {
-            String prompt = "Enter your invention:";
-            String initialInput = "{4,3,3} 3";
-
-            while (true)
-            {
-                String reply = JOptionPane.showInputDialog(prompt, initialInput);
-                if (reply == null)
-                {
-                    return null; // Canceled
-                }
-                String schlafliAndLength[] = reply.trim().split("\\s+");
-                if (schlafliAndLength.length != 2)
-                {
-                    prompt = "Can not build your invention.\nYou must specify the schlafli product symbol (with no spaces),\nfollowed by a space, followed by the puzzle length. Try again!";
-                    initialInput = reply;
-                    continue;
-                }
-                schlafli = schlafliAndLength[0];
-                lengthString = schlafliAndLength[1];
-                break; // got it
-            }
-        }
         double len;
         try { len = Double.parseDouble(lengthString); }
         catch (java.lang.NumberFormatException e)
