@@ -36,16 +36,11 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     private int applyingMacro; // -1 == reversed, 0 == not, 1 == forward
     
     // These are the variables that will be (re)created in initPuzzle().
-    private PuzzleState puzzle;
     private History hist;
-    private PolygonManager polymgr;
     private MC4DView view;
     
     private JPanel viewcontainer = new JPanel(new BorderLayout()); // JComponent container so we can use addHotKey
     private JPanel macroControlsContainer = new JPanel(new BorderLayout());
-    private float
-        twistfactor = 1,
-        scale = 1;
     private JFileChooser
         logFileChooser = new JFileChooser(),
         macroFileChooser = new JFileChooser();
@@ -240,16 +235,16 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         solve = new ProbableAction("Solve") {
             @Override
 			public void doit(ActionEvent ae) {
-                MagicCube.TwistData[] solution;
-                try { solution = puzzle.solve(); }
-                catch(Error e) {
-                    statusLabel.setText("no solution");
-                    return;
-                }
-                solution = History.compress(solution, puzzle.getLength(), true);
-                view.animate(solution, true);
-                scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
-                statusLabel.setText("twists to solve = " + solution.length);
+//                MagicCube.TwistData[] solution;
+//                try { solution = puzzle.solve(); }
+//                catch(Error e) {
+//                    statusLabel.setText("no solution");
+//                    return;
+//                }
+//                solution = History.compress(solution, (int)genericGlue.genericPuzzleDescription.getEdgeLength(), true);
+//                view.animate(solution, true);
+//                scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
+//                statusLabel.setText("twists to solve = " + solution.length);
             }
         },
         macro = new ProbableAction("Start/End") { // toggles macro definition start/end
@@ -810,12 +805,10 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
      */
     private void initPuzzle(String log) {
         scrambleState = SCRAMBLE_NONE;
-        scale = PropertyManager.getFloat("scale", 1);
         double initialLength = MagicCube.DEFAULT_LENGTH;
         int iLength = (int)Math.ceil(initialLength);
         hist = new History(iLength);
         RotationHandler rotations = new RotationHandler();
-        String stateStr = "";
         if(log != null) { // read the log file, possibly reinitializing length and history.
             File logfile = new File(log);
             if(logfile.exists()) {
@@ -853,16 +846,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             else
                 statusLabel.setText("Couldn't find log file '" + log + "'");
         }
-        polymgr = new PolygonManager(iLength);
-        if(PropertyManager.top.getProperty("faceshrink") != null || PropertyManager.top.getProperty("stickershrink") != null)
-            polymgr.setShrinkers(
-                PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK), 
-                PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK));
-        polymgr.setEyeW(PropertyManager.getFloat("eyew", MagicCube.EYEW));
-        polymgr.setTwistFactor(PropertyManager.getFloat("twistfactor", 1));
-        puzzle = new PuzzleState(iLength, polymgr);
-        if(stateStr.length() > 0)
-            puzzle.init(stateStr);
         
         // initialize generic version state
         try {
@@ -885,11 +868,9 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         if(view != null) {
         	// attempt to make the old view garbage-collectible.
         	view.removeTwistListener(this);
-        	view.genericGlue = null;
         	view.setHistory(null);
         }
-        view = new MC4DView(puzzle, polymgr, rotations, hist, genericGlue.genericPuzzleDescription.nFaces());
-        view.genericGlue = genericGlue; // make it share mine
+        view = new MC4DView(genericGlue, rotations, hist, genericGlue.genericPuzzleDescription.nFaces());
 
         viewcontainer.removeAll(); 
         viewcontainer.add(view, "Center");
@@ -900,9 +881,9 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 undoitem.setEnabled(hist.countMoves(false) > 0);
                 redoitem.setEnabled(hist.hasNextMove());
                 cheatitem.setEnabled(hist.hasPreviousMove());
-                solveitem.setEnabled(!puzzle.isSolved() && polymgr.getLength()<4);
+                solveitem.setEnabled(!genericGlue.isSolved() && genericGlue.genericPuzzleDescription.getEdgeLength()<4);
                 updateTwistsLabel();
-                if(puzzle.isSolved()) {
+                if(genericGlue.isSolved()) {
                     switch (scrambleState) {
                         case SCRAMBLE_PARTIAL:
                             statusLabel.setText("Solved!");
@@ -962,31 +943,39 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         private void init() {
         	removeAll();
             final FloatSlider
-                twistfactorSlider = makeSlider(PropertyManager.getFloat("twistfactor", 1), .05f, 5),
+	            twistSpeedSlider = makeSlider(PropertyManager.getFloat("twistfactor", 1), .05f, 5),
+	            dragSpeedSlider = makeSlider(PropertyManager.getFloat("dragfactor", 1), .05f, 5),
                 scaleSlider = makeSlider(PropertyManager.getFloat("scale", 1), .1f, 5),
                 fshrinkSlider = makeSlider(PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK), .1f, 1.5f),
                 sshrinkSlider = makeSlider(PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK), .1f, 1.5f),
                 eyewScaleSlider = makeSlider(PropertyManager.getFloat("eyew", MagicCube.EYEW)/MagicCube.EYEW, .25f, 4);
             final JCheckBox contigiousCubies = new JCheckBox("Contigious Cubies", PropertyManager.getBoolean("contigiouscubies", false));
-            twistfactorSlider.addAdjustmentListener(new AdjustmentListener() {
-                    public void adjustmentValueChanged(AdjustmentEvent ae) {
-                        twistfactor = (float)twistfactorSlider.getFloatValue();
-                        PropertyManager.userprefs.setProperty("twistfactor", ""+twistfactor);
-                        view.repaint();
-                    }
-                });
+            twistSpeedSlider.addAdjustmentListener(new AdjustmentListener() {
+                public void adjustmentValueChanged(AdjustmentEvent ae) {
+                    float twistfactor = (float)twistSpeedSlider.getFloatValue();
+                    PropertyManager.userprefs.setProperty("twistfactor", ""+twistfactor);
+                    view.repaint();
+                }
+            });
+            dragSpeedSlider.addAdjustmentListener(new AdjustmentListener() {
+                public void adjustmentValueChanged(AdjustmentEvent ae) {
+                    float dragfactor = (float)dragSpeedSlider.getFloatValue();
+                    PropertyManager.userprefs.setProperty("dragfactor", ""+dragfactor);
+                    view.repaint();
+                }
+            });
             scaleSlider.addAdjustmentListener(new AdjustmentListener() {
                     public void adjustmentValueChanged(AdjustmentEvent ae) {
-                        scale = (float)scaleSlider.getFloatValue();
+                        float scale = (float)scaleSlider.getFloatValue();
                         PropertyManager.userprefs.setProperty("scale", ""+scale);
                         view.repaint();
                     }
                 });
             sshrinkSlider.addAdjustmentListener(new AdjustmentListener() {
                 public void adjustmentValueChanged(AdjustmentEvent ae) {
-                    int len = polymgr.getLength();
+                    int len = (int)genericGlue.genericPuzzleDescription.getEdgeLength();
                     float newsshrink = (float)sshrinkSlider.getFloatValue();
-                    float faceshrink = polymgr.getFaceShrink();
+                    float faceshrink = PropertyManager.getFloat("faceschrink", 1);
                     if(contigiousCubies.isSelected()) {
                         faceshrink = len / (len-1 + newsshrink); // s = n / (n-1 + s)
                         if( ! synchingsliders) {
@@ -996,16 +985,16 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                             PropertyManager.userprefs.setProperty("faceshrink", ""+faceshrink);
                         }
                     }
-                    polymgr.setShrinkers(faceshrink, newsshrink);
+                    PropertyManager.userprefs.setProperty("faceshrink", ""+faceshrink);
                     PropertyManager.userprefs.setProperty("stickershrink", ""+newsshrink);
                     view.repaint();
                 }
             });
             fshrinkSlider.addAdjustmentListener(new AdjustmentListener() {
                 public void adjustmentValueChanged(AdjustmentEvent ae) {
-                    int len = polymgr.getLength();
+                    int len = (int)genericGlue.genericPuzzleDescription.getEdgeLength();
                     float newfaceshrink = (float)fshrinkSlider.getFloatValue();
-                    float stickershrink = polymgr.getStickerShrink();
+                    float stickershrink = PropertyManager.getFloat("stickershrink", 1);
                     if(contigiousCubies.isSelected()) {
                         stickershrink = len * (1/newfaceshrink - 1) + 1; // s = n(1/f - 1) + 1
                         if( ! synchingsliders) {
@@ -1015,7 +1004,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                             PropertyManager.userprefs.setProperty("stickershrink", ""+stickershrink);
                         }
                     }
-                    polymgr.setShrinkers(newfaceshrink, stickershrink);
+                    PropertyManager.userprefs.setProperty("stickershrink", ""+stickershrink);
                     PropertyManager.userprefs.setProperty("faceshrink", ""+newfaceshrink);
                     view.repaint();
                 }
@@ -1030,7 +1019,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 public void adjustmentValueChanged(AdjustmentEvent ae) {
                     float newscale = (float)eyewScaleSlider.getFloatValue();
                     float neweyew = MagicCube.EYEW * newscale;
-                    polymgr.setEyeW(neweyew);
                     PropertyManager.userprefs.setProperty("eyew", ""+neweyew);
                     view.repaint();
                 }
@@ -1104,9 +1092,11 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             rotateMode.add(Box.createHorizontalGlue());
             ctrlClickLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             
-            JPanel sliders = new JPanel(new GridLayout(5, 2));
+            JPanel sliders = new JPanel(new GridLayout(6, 2));
             sliders.add(new JLabel("Twist Speed"));
-            sliders.add(twistfactorSlider);
+            sliders.add(twistSpeedSlider);
+            sliders.add(new JLabel("Drag Speed"));
+            sliders.add(dragSpeedSlider);
             sliders.add(new JLabel("View Scale"));
             sliders.add(scaleSlider);
             sliders.add(new JLabel("Face Shrink"));

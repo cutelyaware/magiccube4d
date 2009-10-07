@@ -103,9 +103,15 @@ public class GenericGlue
         return iRotation < nRotation
             || iTwist < nTwist;
     }
+    
+    
+    public boolean isSolved() {
+    	// TODO: implement me.
+    	return false;
+    }
 
     
-    public static GenericPuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
+    private static GenericPuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
         double len;
         try { len = Double.parseDouble(lengthString); }
         catch (java.lang.NumberFormatException e)
