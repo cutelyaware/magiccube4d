@@ -21,15 +21,7 @@ public class RotationHandler
 						// (we've been calling this cubie-to-center, even though that's not always the case)
 	}
 	
-	// Modes
-	private boolean allowAutoRotate = true;
-	private Snap snapSetting = Snap.Snap_Cell;
-	private float sensitivity = 0.5f;	// Scaled this so decent values between 0 and 1.
-	public void setAllowAutoRotate(boolean allowAutoRotate) { this.allowAutoRotate = allowAutoRotate; }
-	public boolean getAllowsAutoRotate() { return allowAutoRotate; }
-	public void setSnapSetting(Snap snapSetting) { this.snapSetting = snapSetting; }
-	public Snap getSnapSetting() { return snapSetting; }
-	public void setSensitivity( float sensitivity ) { this.sensitivity = sensitivity; }
+	public static Snap getSnapSetting() { return PropertyManager.getBoolean("ctrlrotbyface", true) ? Snap.Snap_Cell : Snap.Snap_Smart; }
 
 	// Persistence.
 	public void write( Writer writer ) throws IOException
@@ -118,7 +110,7 @@ public class RotationHandler
 		}
 
 		// Handle the sensitivity.
-        VecMath.mxs( spinDelta, spinDelta, .005 * this.sensitivity );
+        VecMath.mxs( spinDelta, spinDelta, .0025 * PropertyManager.getFloat("dragfactor", 1) );
 		
 		applySpinDelta();
         if( pixelsMoved < 2 )
@@ -140,7 +132,7 @@ public class RotationHandler
 	// Returns true if our settings are such that we should continue.
 	public boolean continueSpin()
 	{
-		if( allowAutoRotate && spinDelta != null )
+		if( PropertyManager.getBoolean("autorotate", true) && spinDelta != null )
 		{
 			applySpinDelta();
 			return true;

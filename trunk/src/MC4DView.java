@@ -6,6 +6,7 @@ import java.io.PushbackReader;
 import java.util.Vector;
 import java.util.Enumeration;
 
+import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
@@ -19,7 +20,7 @@ import javax.swing.Timer;
 @SuppressWarnings("serial")
 public class MC4DView extends Component {
 
-    public GenericGlue genericGlue = null; // caller can set this after I'm constructed
+    private GenericGlue genericGlue = null;
 
     public static interface TwistListener { public void twisted(MagicCube.TwistData twisted); }
     private Vector<TwistListener> twistListeners = new Vector<TwistListener>();
@@ -30,8 +31,6 @@ public class MC4DView extends Component {
             e.nextElement().twisted(twist);
     }
 
-    private PuzzleState state;
-    private PolygonManager polymgr;
     private AnimationQueue animationQueue;
     public boolean isAnimating() { return animationQueue.isAnimating(); }
     private int slicemask; // bitmap representing which number keys are down
@@ -86,9 +85,8 @@ public class MC4DView extends Component {
     	this.animationQueue = new AnimationQueue(h);
     }
 
-    public MC4DView(PuzzleState state, PolygonManager polymgr, RotationHandler rotations, History hist, int nfaces) {
-        this.state = state;
-        this.polymgr = polymgr;
+    public MC4DView(GenericGlue gg, RotationHandler rotations, History hist, int nfaces) {
+    	this.genericGlue = gg;
         this.rotationHandler = rotations;
         this.setHistory(hist);
         faceRGB = ColorUtils.generateVisuallyDistinctRGBs(nfaces, .7f, .1f); //generateHSVColors(12, 10, .5f);
@@ -124,7 +122,7 @@ public class MC4DView extends Component {
 		            {
 		                genericGlue.mouseClickedAction(e,
 		                                               rotationHandler,
-		                                               MC4DView.this.polymgr.getTwistFactor(),
+		                                               PropertyManager.getFloat("twistfactor", 1),
 		                                               slicemask,
 		                                               MC4DView.this);
 		            }
@@ -321,10 +319,8 @@ public class MC4DView extends Component {
         updateViewFactors();
 
 		if(animationQueue.isAnimating() && genericGlue.iTwist == genericGlue.nTwist) {
-			MagicCube.TwistData animating = animationQueue.getAnimating();
-			// time to apply the puzzle state change and stop the animation
-			int mask = animating.slicemask==0?1:animating.slicemask;
-			state.twist(animating.grip, animating.direction, mask);
+			animationQueue.getAnimating();
+			// time to stop the animation
 			animationQueue.finishedTwist(); // end animation
 			repaint();
 		}
@@ -422,7 +418,8 @@ public class MC4DView extends Component {
                     int order = orders[iTwistGrip];
                     double totalRotationAngle = 2*Math.PI/order;                    
                     
-                    genericGlue.nTwist = PropertyManager.getBoolean("quickmoves", false) ? 1 : genericGlue.calculateNTwists( totalRotationAngle, polymgr.getTwistFactor() );
+                    genericGlue.nTwist = PropertyManager.getBoolean("quickmoves", false) ? 1 : 
+                    	genericGlue.calculateNTwists( totalRotationAngle, PropertyManager.getFloat("twistfactor", 1) );
                     genericGlue.iTwist = 0;
                     genericGlue.iTwistGrip = iTwistGrip;
                     genericGlue.twistDir = animating.twist.direction;
@@ -469,7 +466,6 @@ public class MC4DView extends Component {
         int length = 3;
         System.out.println("version " + System.getProperty("java.version"));
         Frame frame = new Frame("test");
-        PolygonManager polymgr = new PolygonManager(length);
         final History hist = new History(length);
         final String logfilename = "mc4d.log";
         final java.io.File logfile = new java.io.File(logfilename);
@@ -480,7 +476,7 @@ public class MC4DView extends Component {
 //            System.out.println("couldn't read history file");
 //        else
 //            hist.read(new java.io.StringReader(Util.readFileFromURL(histurl)));
-        final MC4DView view = new MC4DView(new PuzzleState(length, polymgr), polymgr, new RotationHandler(), hist, 6);
+        final MC4DView view = new MC4DView(new GenericGlue("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist, 6);
         view.addTwistListener(new MC4DView.TwistListener() {
             public void twisted(MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
