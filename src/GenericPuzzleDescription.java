@@ -12,6 +12,7 @@ interface GenericPuzzleDescription {
 	
     public String getSchlafliProduct();
     public double getEdgeLength();
+    public String getFullPuzzleString();
     public int nDims();
     public int nVerts();
     public int nFaces();
@@ -79,6 +80,7 @@ interface GenericPuzzleDescription {
     * XXX floundering here... closest in what sense? normalized vectors on a sphere?
     * The is2x2x2x2Cell is used to control only looking at a subset of the grips.
     */
+    public int getClosestGrip(float pickCoords[/*4*/]);
     public int getClosestGrip(float pickCoords[/*4*/], int faceIndex, boolean is2x2x2Cell);
 
     /**
@@ -113,7 +115,7 @@ interface GenericPuzzleDescription {
     * This can be used to highlight all the stickers on a given cubie.
     */
     public int[/*nStickers*/] getSticker2Cubie();
-
+    
     /**
     * Get a table mapping face to opposite face (if any).
     */
@@ -125,19 +127,19 @@ interface GenericPuzzleDescription {
     public int[/*nGrips*/] getGrip2Face();
 
     /**
+     * Get the number of slices a particular grip can affect.
+     */
+    public int getNumSlicesForGrip( int gripIndex );  
+    
+    /**
      * Get a particular face center.
      */
     public float[/*nDims*/] getFaceCenter( int faceIndex );
-
+    
     /**
      * Get the coordinates for a particular grip.
      */
     public float[/*nDims*/] getGripCoords( int gripIndex );
-    
-    /**
-     * Get the number of slices a particular grip can affect.
-     */
-    public int getNumSlicesForGrip( int gripIndex );  
     
     /**
     * Apply a move to an array of colors (face indices)

@@ -33,16 +33,29 @@ public class MacroManager {
      */
     public MacroManager(String absPath) {
         filePath = absPath;
-        PushbackReader reader;
-        try { reader = new PushbackReader(new FileReader(absPath)); }
+        BufferedReader reader;
+        try { reader = new BufferedReader(new FileReader(absPath)); }
         catch (FileNotFoundException fnfe) {
             return; // no problem as the user may not have saved any macros yet.
         }
         // the file does exist so read the macros from it.
-        Macro aMacro;
-        while((aMacro = Macro.read(reader)) != null)
-            macros.add(aMacro);
-        try { reader.close(); }
+        try 
+        {
+        	// Read header info.
+        	// XXX - It'd be nice to get info about failures here out to the UI.
+            String firstlineStr = reader.readLine();
+            String firstline[] = firstlineStr.split( " " );
+            if( firstline.length != 2 || !MagicCube.MAGIC_NUMBER.equals( firstline[0] ) )
+                throw new IOException();
+            int readversion = Integer.parseInt(firstline[1]);
+            if( readversion != MagicCube.MACRO_FILE_VERSION ) 
+            	throw new IOException();
+            
+            Macro aMacro;
+            while((aMacro = Macro.read(reader)) != null)
+                macros.add(aMacro);
+        	reader.close(); 
+        }
         catch (IOException e) { e.printStackTrace(); }
     }
 
@@ -55,10 +68,16 @@ public class MacroManager {
      */
     public void write() throws IOException {
         Writer writer = new FileWriter(filePath);
+        
+        writer.write(
+                MagicCube.MAGIC_NUMBER + " " +
+                MagicCube.MACRO_FILE_VERSION + 
+                System.getProperty( "line.separator" ) );     
+        
         for (int i = 0; i < macros.size(); ++i)
         {
             Macro aMacro = macros.get(i);
-            aMacro.write(writer);
+            aMacro.write( writer );
         }
         writer.close();
     }
@@ -132,11 +151,25 @@ public class MacroManager {
     /**
      * Adds a reference sticker to the currently open macro.
      */
-    public void addRef(MagicCube.Stickerspec sticker) {
+    public void addRef( GenericPuzzleDescription puzzle, MagicCube.Stickerspec sticker ) {
         assert(nrefs<Macro.MAXREFS);
+        
+        // Make sure the same ref isn't used twice.
+        // We can't allow this because the behavior would not be uniquely determined.
+        // XXX - need better UI feedback for what is happening here.
+        for( int i=0; i<nrefs; i++ )
+        {
+        	if( refStickers[i].id_within_puzzle == sticker.id_within_puzzle )
+        		return;
+        }
+        
+        // XXX - We should also disallow 3 refs that are colinear with each other,
+        //		 or are colinear with the face center.  Any of these cases
+        //		 don't give us enough orientation information for the macro.
+        
         refStickers[nrefs++] = sticker;
         if(nrefs == Macro.MAXREFS) {
-            curMacro = new Macro(refStickers);
+            curMacro = new Macro( puzzle.getFullPuzzleString(), refStickers );
         }
     }
 
