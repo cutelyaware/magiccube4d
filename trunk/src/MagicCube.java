@@ -39,8 +39,8 @@ public class MagicCube {
      * Indexing data for a sticker or a grip.
      */
     public final static class Stickerspec {
+        public int coords[] = new int[NDIMS];	// XXX - only applies to old puzzles now, try to remove.
         public int
-            coords[] = new int[NDIMS],
             face, dim, id_within_puzzle, id_within_face;
     }
     
@@ -60,7 +60,6 @@ public class MagicCube {
             this.slicemask = slicemask;
             this.grip = new MagicCube.Stickerspec();
             grip.id_within_puzzle = id_within_puzzle;
-            //PolygonManager.fillStickerspecFromIdAndLength(grip, 3);       
         }
     }
     
@@ -98,7 +97,8 @@ public class MagicCube {
         MAGIC_NUMBER = "MagicCube4D"; // 1st string in log file for sanity checking
     
     public final static String PUZZLE_VERSION = "4.0.0";
-    public final static int FILE_VERSION = 3;
+    public final static int LOG_FILE_VERSION = 3;
+    public final static int MACRO_FILE_VERSION = 2;
     
     public final static Color
         SKY    = new Color(20,170,235),

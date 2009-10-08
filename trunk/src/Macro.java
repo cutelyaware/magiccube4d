@@ -1,8 +1,9 @@
-
 import java.io.*;
 
+import com.donhatchsw.util.VecMath;
+
 /**
- * Contains a sequence of moves relative to a set of reference stickers.
+ * Contains a sequence of moves relative to a set of reference stickers (XXX - now grips! is this ok?).
  * Has a method that can take other sets of reference stickers in the same pattern as the definition stickers
  * and returns a set of moves the same as would be generated had the definition moves been applied relative
  * to the given ones instead.
@@ -10,31 +11,36 @@ import java.io.*;
 public class Macro {
     public final static int MAXREFS = 3;
     private History moves = new History(3);
+    private String puzzleString;	// Macros are really relative to specific puzzles, so we save this out.
     private String name;
-    private int defRefs[][] = new int[MAXREFS][MagicCube.NDIMS]; // definition reference stickers
+    private MagicCube.Stickerspec defRefs[] = new MagicCube.Stickerspec[MAXREFS];
 
     private Macro() {}
 
     /**
      * Constructs an unnamed empty macro.
      */
-    public Macro(MagicCube.Stickerspec appStickers[]) { this("", appStickers); }
+    public Macro( String puzzleString, MagicCube.Stickerspec appStickers[] ) 
+    { 
+    	this( puzzleString, "", appStickers ); 
+    }
 
     /**
      * Constructs a named, empty macro with set of reference stickers.
      * @param name display name of the new macro.
      * @param defStickers is a set of "definition" reference stickers.
      */
-    public Macro(String name, MagicCube.Stickerspec defStickers[]) {
+    public Macro( String puzzleString, String name, MagicCube.Stickerspec defStickers[] ) 
+    {
+    	this.puzzleString = puzzleString;
         this.name = name;
         assert(defStickers.length == MAXREFS);
-        int[][] refs = stickers2refs(defStickers);
-        for(int i=0; i<MAXREFS; i++)
-            Vec_h._SET4(this.defRefs[i], refs[i]);
+        System.arraycopy( defStickers, 0, this.defRefs, 0, MAXREFS );
     }
 
     public void setName(String name) { this.name = name; }
     public String getName() { return name; }
+    public String getPuzzleString() { return puzzleString; }
 
     /**
      * @return the number of moves in this macro.
@@ -48,42 +54,83 @@ public class Macro {
         moves.apply(move);
     }
 
-    private static int[][] stickers2refs(MagicCube.Stickerspec stickers[]) {
-        int refs[][] = new int[Macro.MAXREFS][MagicCube.NDIMS];
-        for(int i=0; i<refs.length; i++)
-            System.arraycopy(stickers[i].coords, 0, refs[i], 0, MagicCube.NDIMS);
-        return refs;
+    // XXX - This is copied from PolytopePuzzleDescription.
+    //		 Move to a shared location.
+    private static float[] doubleToFloat(double in[])
+    {
+        float out[] = new float[in.length];
+        for (int i = 0; i < in.length; ++i)
+            out[i] = (float)in[i];
+        return out;
     }
-
-
+    
+    private static double[] floatToDouble(float in[])
+    {
+        double out[] = new double[in.length];
+        for (int i = 0; i < in.length; ++i)
+            out[i] = (double)in[i];
+        return out;
+    }
+    
+    private double[] getGripCoords( MagicCube.Stickerspec grip, GenericPuzzleDescription puzzle )
+    {
+    	return floatToDouble( puzzle.getGripCoords( grip.id_within_puzzle ) );
+    }
+    
     /**
-     * Applies a set of application reference stickers and returns a list of macro twists
-     * ready to apply the macro relative to those stickers.
-     * @param appStickers stickers to apply macro relative to.
+     * Applies a set of application reference grips and returns a list of macro twists
+     * ready to apply the macro relative to those grips.
+     * @param appGrips - grips to apply macro relative to.
      * @return array of twists in application space or null if pattern doesn't match.
      */
-    public MagicCube.TwistData[] getTwists(MagicCube.Stickerspec appStickers[]) {
-        int appRefs[][] = stickers2refs(appStickers);
-        int app2def[][] = new int[4][4];
-        if( ! Math4d.get4dMatThatRotatesThese3ToThose3(defRefs[0], defRefs[1], defRefs[2], appRefs[0], appRefs[1], appRefs[2], app2def))
-            return null;
-        int det = Vec_h._DET4(app2def); // MWAHAHAHA!
+    public MagicCube.TwistData[] getTwists( MagicCube.Stickerspec appGrips[],
+    	GenericPuzzleDescription puzzle ) 
+    {
+    	// Default Coordinates.
+    	// We also use one of the faces.
+    	double ref0[] = getGripCoords( defRefs[0], puzzle );
+    	double ref1[] = getGripCoords( defRefs[1], puzzle );
+    	double ref2[] = getGripCoords( defRefs[2], puzzle );
+    	int faceIndex = puzzle.getGrip2Face()[defRefs[0].id_within_puzzle];
+    	double ref3[] = floatToDouble( puzzle.getFaceCenter( faceIndex ) );
+    	
+    	// Clicked Coordinates.
+    	double s0[] = getGripCoords( appGrips[0], puzzle );
+    	double s1[] = getGripCoords( appGrips[1], puzzle );
+    	double s2[] = getGripCoords( appGrips[2], puzzle );
+    	faceIndex = puzzle.getGrip2Face()[appGrips[0].id_within_puzzle];
+    	double s3[] = floatToDouble( puzzle.getFaceCenter( faceIndex ) );
+    	
+        double transform[][] = new double[4][4];
+        if( !Math4d.get4dMatThatRotatesThese4ToThose4( ref0, ref1, ref2, ref3, s0, s1, s2, s3, transform ) )
+        	return null;
+        
         int expected = length();
         MagicCube.TwistData twists[] = new MagicCube.TwistData[expected];
         moves.goToBeginning();
-        for(int i=0; i<expected; i++) {
+        for( int i=0; i<expected; i++ ) 
+        {
             MagicCube.TwistData move = moves.redo();
-            if(move == null)
+            if( move == null )
                 return null;
-            Vec_h._VXM4i(move.grip.coords, move.grip.coords, app2def);
-            PolygonManager.fillStickerspecFromCoordsAndLength(move.grip, 3);
+            
+            // Transform to new grip.
+            int gripIndex = move.grip.id_within_puzzle;
+            double[] gripCoords = floatToDouble( puzzle.getGripCoords( gripIndex ) );
+            double[] newCoords = VecMath.vxm( gripCoords, transform );
+            int newGripIndex = puzzle.getClosestGrip( doubleToFloat( newCoords ) );
+            move.grip.id_within_puzzle = newGripIndex;
+
             twists[i] = move;
         }
-        assert(moves.redo() == null);
-        if(det < 0)
-            reverse(twists);
+        assert( moves.redo() == null );
+        
+        double det = VecMath.det( transform );      
+        if( det < 0 )
+            reverse( twists );
+        
         return twists;
-    } // end getTwists
+    }
 
     public static void reverse(MagicCube.TwistData[] twists) {
         // reverse move order
@@ -101,80 +148,67 @@ public class Macro {
      * Serializes a macro to a text writer.
      * @param writer is the text stream to write to.
      */
-    public void write(Writer writer) {
+    public void write( Writer writer ) throws IOException
+    {
         MagicCube.Stickerspec sticker = new MagicCube.Stickerspec();
-        try {
-            writer.write("@" + name + "@(");
-            for (int i = 0; i < defRefs.length; ++i) {
-                Vec_h._SET4(sticker.coords, defRefs[i]);
-                PolygonManager.fillStickerspecFromCoordsAndLength(sticker, 3);
-                writer.write(""+sticker.face + " "+sticker.id_within_face);
-                if (i + 1 < defRefs.length)
-                    writer.write(" ");
-            }
-            writer.write(") ");
-        } catch (IOException e) {
-            e.printStackTrace();
+        writer.write("@" + name + "@@" + puzzleString + "@(");
+        for( int i=0; i<defRefs.length; ++i ) 
+        {
+        	sticker = defRefs[i];
+            writer.write( "" + sticker.id_within_puzzle );
+            if( i+1 < defRefs.length )
+                writer.write(" ");
         }
-        moves.write(writer);
-    } // end write
+        writer.write(") ");
+        moves.write( writer );
+    }
 
-
-//    /**
-//     * @return Twist on success, null if at end of the macro.
-//     */
-//    public MagicCube.TwistData getMove(int dir_in, int mat[][]) {
-//        MagicCube.TwistData move = (dir_in < 0) ? moves.undo() : moves.redo();
-//        if(move == null)
-//            return null;
-//        Vec_h._VXM4i(move.grip.coords, move.grip.coords, mat);
-//        PolygonManager.fillStickerspecFromCoordsAndLength(move.grip, 3);
-//        //*dir_out *= det;
-//        return move;
-//    }
-
-
-//    private boolean get4dMatThatRotatesThese3ToMy3(int ref0[], int ref1[], int ref2[], int mat[][]) {
-//        return Math4d.get4dMatThatRotatesThese3ToThose3(defRefs[0], defRefs[1], defRefs[2], ref0, ref1, ref2, mat) == 1;
-//    }
-
+    private static String readStringHelper( PushbackReader pr, int ch ) throws IOException
+    {
+        if(ch != '@') return null;
+        char[] charbuf = new char[256];
+        int len=0;
+        do {
+            ch = pr.read();
+            charbuf[len++] = (char)ch;
+        } while( ! (ch=='@' || ch<=0));
+        if(ch != '@') return null;
+        return new String(charbuf, 0, len-1);
+    }
+    
     /**
      * Deserializes a macro from a text stream.
      * @param pr a text reader assumed to be positioned at the beginning of a previously saved macro.
      * @return macro represented by the text or null if invalid.
      */
-    public static Macro read(PushbackReader pr) {
+    public static Macro read( BufferedReader reader ) throws IOException
+    {
+    	PushbackReader pr = new PushbackReader( reader );
         Macro restored = new Macro();
-        try {
-            int ch;
-            do ch = pr.read();
-            //while(Character.isWhitespace(ch)); // isWhitespace doesn't exist in 1.4
-            while(" \t\n\r\f".indexOf(ch) != -1);
-            if(ch != '@') return null;
-            char[] charbuf = new char[256];
-            int len=0;
-            do {
-                ch = pr.read();
-                charbuf[len++] = (char)ch;
-            } while( ! (ch=='@' || ch<=0));
-            if(ch != '@') return null;
-            restored.name = new String(charbuf, 0, len-1);
-            ch = pr.read();
-            if(ch != '(') return null;
-            MagicCube.Stickerspec sticker = new MagicCube.Stickerspec();
-            for(int r=0; r<MAXREFS; r++) {
-                sticker.face = History.readInt(pr);
-                sticker.id_within_face = History.readInt(pr);
-                PolygonManager.fillStickerspecFromFaceAndIdAndLength(sticker, 3);
-                Vec_h._SET4(restored.defRefs[r], sticker.coords);
-            }
-            ch = pr.read();
-            assert(ch==')');
-            ch = pr.read();
-            assert(ch==' ');
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        int ch;
+        do ch = pr.read();
+        //while(Character.isWhitespace(ch)); // isWhitespace doesn't exist in 1.4
+        while(" \t\n\r\f".indexOf(ch) != -1);
+        
+        restored.name = readStringHelper( pr, ch );
+        ch = pr.read();
+        restored.puzzleString = readStringHelper( pr, ch );
+        if( restored.name == null || restored.puzzleString == null )
+        	return null;
+        
+        ch = pr.read();
+        if(ch != '(') return null;
+        for(int r=0; r<MAXREFS; r++) {
+        	MagicCube.Stickerspec sticker = new MagicCube.Stickerspec();
+            sticker.id_within_puzzle = History.readInt(pr);
+            restored.defRefs[r] = sticker;
         }
+        ch = pr.read();
+        assert(ch==')');
+        ch = pr.read();
+        assert(ch==' ');
+
         if( ! restored.moves.read(pr)) {
         	System.out.println("Error reading macro history");
             return null;

@@ -898,6 +898,9 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         public double getEdgeLength() {
         	return edgeLength;
         }
+        public String getFullPuzzleString() {
+        	return schlafliProduct + " " + edgeLength;
+        }
         public int nDims()
         {
             return slicedPolytope.p.fullDim;
@@ -970,6 +973,12 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         {
             return gripSymmetryOrders;
         }
+        
+        public int getClosestGrip( float pickCoords[/*4*/] )
+        {
+        	return getClosestGrip( pickCoords, -1, false );
+        }
+        
         public int getClosestGrip( float pickCoords[/*4*/], int faceIndex, boolean is2x2x2Cell )
         {
             int bestIndex = -1;
@@ -979,7 +988,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
             	// Only consider grips on this face.
             	// This helped some poor behavior on 2x2x2 cells,
             	// and is a good check in general I think.
-            	if( this.getGrip2Face()[i] != faceIndex )
+            	if( -1 != faceIndex && this.getGrip2Face()[i] != faceIndex )
             		continue;
             	
             	if( is2x2x2Cell && gripDims[i] < 2 )
@@ -1072,9 +1081,22 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         {
             return sticker2cubie;
         }
+        
         public int[/*nGrips*/] getGrip2Face()
         {
             return grip2face;
+        }
+        
+        public int getNumSlicesForGrip( int gripIndex )
+        {
+        	if( gripIndex < 0 || gripIndex >= nGrips() )
+        		throw new IllegalArgumentException( "getNumSlicesForGrip called with bad grip index " + gripIndex + ", there are " + nGrips() + " grips!" );
+        	
+            int iFace = grip2face[gripIndex];
+            double thisFaceCutOffsets[] = faceCutOffsets[iFace];
+            int numSlices = thisFaceCutOffsets.length+1;
+            //System.out.println( "number of slices available for twist = " + numSlices );
+            return numSlices;
         }
         
         public float[/*nDims*/] getFaceCenter( int faceIndex )
@@ -1091,18 +1113,6 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         		throw new IllegalArgumentException( "getGripCoords called with bad grip index " + gripIndex + ", there are " + nGrips() + " grips!" );
         	
         	return gripCentersF[gripIndex];
-        }
-
-        public int getNumSlicesForGrip( int gripIndex )
-        {
-        	if( gripIndex < 0 || gripIndex >= nGrips() )
-        		throw new IllegalArgumentException( "getNumSlicesForGrip called with bad grip index " + gripIndex + ", there are " + nGrips() + " grips!" );
-        	
-            int iFace = grip2face[gripIndex];
-            double thisFaceCutOffsets[] = faceCutOffsets[iFace];
-            int numSlices = thisFaceCutOffsets.length+1;
-            //System.out.println( "number of slices available for twist = " + numSlices );
-            return numSlices;
         }
         
         public int[/*nFaces*/] getFace2OppositeFace()

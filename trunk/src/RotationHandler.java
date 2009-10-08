@@ -110,11 +110,11 @@ public class RotationHandler
 		}
 
 		// Handle the sensitivity.
-        VecMath.mxs( spinDelta, spinDelta, .0025 * PropertyManager.getFloat("dragfactor", 1) );
+        VecMath.mxs( spinDelta, spinDelta, .0025 * PropertyManager.getFloat("dragfactor", .5f) );
 		
 		applySpinDelta();
         if( pixelsMoved < 2 )
-        	spinDelta = null;
+        	stopSpinning();
 	}
 	
 	private void applySpinDelta()

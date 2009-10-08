@@ -1,4 +1,4 @@
-
+import com.donhatchsw.util.VecMath;
 
 /**
  * Contains some high-level static methods built on top of Vec_h.java
@@ -80,11 +80,6 @@ public class Math4d
         }
     }
 
-    private static boolean VEQVXS3(int ai[], int ai1[], int i)
-    {
-        return ai[0] == ai1[0] * i && ai[1] == ai1[1] * i && ai[2] == ai1[2] * i;
-    }
-
     private static void get3dRotMatrixAboutAxis(float af[], float f, float af1[][])
     {
         float af2[][] = new float[3][3];
@@ -114,73 +109,60 @@ public class Math4d
         Vec_h._MXM3r(af1, af2, af1);
     }
 
-
-
-    /*
-     * TODO: find a better way to do this.
-     */
-    public static boolean get4dMatThatRotatesThese3ToThose3(
-                                int these0[], int these1[], int these2[], /* INPUTS */
-                                int those0[], int those1[], int those2[], int mat[][]) /* OUTPUTS */
+    // Returns true if the two vector magnitudes are close.
+    private static boolean magsClose( double v1[], double v2[] )
     {
-        int i, j, k, l, ii, temp[] = new int[4];
-        int these[][] = new int[4][4], those[][] = new int[4][4];   /* actually [3][4] */
-        int transpthese[][] = new int[4][4], transpthose[][] = new int[4][4];   /* actually [4][3] */
-
-        Vec_h._SET4(these[0], these0);
-        Vec_h._SET4(these[1], these1);
-        Vec_h._SET4(these[2], these2);
-        Vec_h._TRANSPOSE4(transpthese, these);
-        Vec_h._SET4(those[0], those0);
-        Vec_h._SET4(those[1], those1);
-        Vec_h._SET4(those[2], those2);
-        Vec_h._TRANSPOSE4(transpthose, those);
-
-        Vec_h._ZEROMAT4i(mat);
-        for (i = 0; i < 4; ++i) {
-            for (mat[0][i] = 1; mat[0][i] >= -1; mat[0][i] -= 2) {
-                if (!VEQVXS3(transpthese[0], transpthose[i], mat[0][i]))
-                    continue;
-                for (j = 0; j < 4; ++j) {
-                    if (j == i)
-                        continue;
-                    for (mat[1][j] = 1; mat[1][j] >= -1; mat[1][j] -= 2) {
-                        if (!VEQVXS3(transpthese[1], transpthose[j], mat[1][j]))
-                            continue;
-                        for (k = 0; k < 4; ++k) {
-                            if (k == i || k == j)
-                                continue;
-                            for (mat[2][k] = 1; mat[2][k] >= -1; mat[2][k] -= 2) {
-                                if (!VEQVXS3(transpthese[2],
-                                    transpthose[k], mat[2][k]))
-                                    continue;
-                                l = 6 - i - j - k;
-                                for (mat[3][l] = 1; mat[3][l] >= -1;
-                                     mat[3][l] -= 2) {
-                                    if (!VEQVXS3(transpthese[3],
-                                        transpthose[l], mat[3][l]))
-                                        continue;
-                                    /*
-                                     * Found a good matrix!!
-                                     * Assert that it works.
-                                     */
-                                    for (ii = 0; ii < 3; ++ii) {
-                                        Vec_h._VXM4(temp, these[ii], mat);
-                                        assert(Vec_h._EQVEC4(temp, those[ii]));
-                                    }
-                                    return true;
-                                }
-                                mat[3][l] = 0;
-                            }
-                            mat[2][k] = 0;
-                        }
-                    }
-                    mat[1][j] = 0;
-                }
-            }
-            mat[0][i] = 0;
-        }
-        return false;
+    	double mag1 = VecMath.norm( v1 );
+    	double mag2 = VecMath.norm( v2 );
+    	return Math.abs( mag2 - mag1 ) < .01;
     }
-
+    
+    public static boolean get4dMatThatRotatesThese4ToThose4( 
+    		double these0[], double these1[], double these2[], double these3[],
+    		double those0[], double those1[], double those2[], double those3[], 
+    		double mat[][] )
+    {
+    	// All the inputs should be isometric relative to each other,
+    	// so we do a bunch of distance checks at the beginning.
+    	// If any of these fail, we can't do the rotation.
+    	if( !magsClose( these0, those0 ) ||
+    		!magsClose( these1, those1 ) ||
+    		!magsClose( these2, those2 ) ||
+    		!magsClose( these3, those3 ) )
+    		return false;
+    	
+    	if( !magsClose( VecMath.vmv( these1, these0 ), VecMath.vmv( those1, those0 ) ) ||
+			!magsClose( VecMath.vmv( these2, these0 ), VecMath.vmv( those2, those0 ) ) ||
+			!magsClose( VecMath.vmv( these3, these0 ), VecMath.vmv( those3, those0 ) ) ||
+			!magsClose( VecMath.vmv( these2, these1 ), VecMath.vmv( those2, those1 ) ) ||
+    		!magsClose( VecMath.vmv( these3, these1 ), VecMath.vmv( those3, those1 ) ) ||
+    		!magsClose( VecMath.vmv( these3, these2 ), VecMath.vmv( those3, those2 ) ) )
+    		return false;	
+    	
+    	//
+    	// Now we are going to use VecMath.makeRowTiePointMat.
+    	// In general, this function does not return a rotation matrix, 
+    	// but given the checks above, we'll be good.
+    	//
+    	
+    	double inTiePoints[][] = new double[5][4];
+    	inTiePoints[0] = these0;
+    	inTiePoints[1] = these1;
+    	inTiePoints[2] = these2;
+    	inTiePoints[3] = these3;
+    	inTiePoints[4] = VecMath.zerovec( 4 );	// Since the origin does not move.
+    	
+    	double outTiePoints[][] = new double[5][4];
+    	outTiePoints[0] = those0;
+    	outTiePoints[1] = those1;
+    	outTiePoints[2] = those2;
+    	outTiePoints[3] = those3;
+    	outTiePoints[4] = VecMath.zerovec( 4 );
+    	
+    	double temp[][] = VecMath.makeRowTiePointMat( inTiePoints, outTiePoints );
+    	
+    	// Turn into a 4x4 matrix.
+    	VecMath.copymat( mat, temp ); 
+    	return true;
+    }
 }

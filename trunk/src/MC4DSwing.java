@@ -89,7 +89,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             Writer writer = new FileWriter(file);
             writer.write(
                 MagicCube.MAGIC_NUMBER + " " +
-                MagicCube.FILE_VERSION + " " +
+                MagicCube.LOG_FILE_VERSION + " " +
                 scrambleState + " " +
                 hist.countTwists() + " " +
                 genericGlue.genericPuzzleDescription.getSchlafliProduct() + " " +
@@ -762,12 +762,12 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 macroMgr.addTwist(twisted);
                 view.animate(twisted, true);
             } else {
-                macroMgr.addRef(twisted.grip);
+                macroMgr.addRef( genericGlue.genericPuzzleDescription, twisted.grip );
                 if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
                     if(applyingMacro != 0) {
                         view.setSkyOverride(null);
                         MagicCube.Stickerspec[] refs = macroMgr.close();
-                        MagicCube.TwistData[] moves = lastMacro.getTwists(refs);
+                        MagicCube.TwistData[] moves = lastMacro.getTwists(refs,genericGlue.genericPuzzleDescription);
                         if(moves == null)
                             statusLabel.setText("Reference sticker pattern doesn't match macro definition.");
                         else {
@@ -820,7 +820,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     if(firstline.length != 6 || !MagicCube.MAGIC_NUMBER.equals(firstline[0]))
                         throw new IOException();
                     int readversion = Integer.parseInt(firstline[1]);
-                    if(readversion != MagicCube.FILE_VERSION) {
+                    if(readversion != MagicCube.LOG_FILE_VERSION) {
                         statusLabel.setText("Incompatible log file version " + readversion);
                         return;
                     }
