@@ -1,7 +1,6 @@
 
 PUZZLES
 * Support from 2 to N-dimensional puzzles (yeah right!).
-* Implement GenericPuzzle.isSolved().
 * Eliminate sliver slices.
 * Port the solve and compress functions to the new puzzles. 
   - First just for the appropriately sized cubes and eventually for all puzzles.
@@ -9,6 +8,7 @@ PUZZLES
 * before shipping, comment out broken or redundant puzzles and change default to "{4,3,3} 3"
 * Make twist speed adjustable mid-twist.
 * Add an MC120-like piece finding functionality.
+* DONE - Implement GenericPuzzle.isSolved().
 * DONE - Figure out how to support rotations for generic puzzles & history.
 * DONE - Implement Jenn3D-style 4D rotates via Shift-left drag.
 
@@ -23,7 +23,12 @@ GUI
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
 * Make initial EyeW a function of puzzle size and maybe remove slider altogether?
 * Add cross-eyed stereo viewing mode.
-* DONE- Fix or remove contiguous cubies mode.
+* Bring back "Reset to Defaults" for settings?
+* It'd be nice if the last puzzle type that was open was automatically recalled.
+* Copyright 2005 (thanks for the shout-out in the about box Melinda!)
+* Nitpicky, "Write Macro File As..." dialog says "Open" instead of "Save"
+* Gray out or otherwise mark macros that don't apply to the current puzzle.
+* DONE - Fix or remove contiguous cubies mode.
 * DONE - Add a debugging FPS meter.
 * DONE - Replace the AWT class usages with Swing versions.
 * DONE - Move control panel to the west.
@@ -37,7 +42,6 @@ LOG FILES
 * DONE - Save transform matrix in the file.
 
 BUGS
-* Fix macro apply.
 * Canceled cheats don't finish properly when restarted.
 * Full scramble on simplex yields inconsistent numbers of history twists. (Watch twist counter in lower right.)
 * Fix the puzzles containing triangles.
@@ -48,6 +52,7 @@ BUGS
   Don't highlight or allow twist attempts on them in the first place.
 * Make Esc key cancel solve/cheat animations even when 3D window does not have focus.
 * Fix so that building new puzzle releases memory used by previous puzzle. (by removing listeners?)
+* DONE - Fix macro apply.
 * DONE - Fix Cheat after scramble.
 * DONE - Fix scramble for edge lengths > 4. (Different faces can have effectively different numbers of slices).
 * DONE - Fix Quick Moves.
@@ -56,9 +61,16 @@ BUGS
 * DONE - Fix slices masks.
 * DONE - Fix disconnected histories in reset, scramble, and other operations.
 
+CODE CLEANUP
+* move ctrl-click rotation code to the rotation handler.
+* Update MacroManager names/notes to reflect the fact that it is grip based instead of sticker based (assuming we keep it that way).
+* How much of Math4d is dead code?  Maybe get rid of this.
+* add VecMath.copymat calls where some matrices are being copied manually now.
+
 META
 * Get Eclipse to output executable jar files or modify my batch file and check it in.
 * Generally clean up the abstractions. Especially try to eliminate old PuzzleState and PolygonManager 
   classes and eliminate or prune and rename GenericGlue class. 
 * Get rid of Stickerspec.id_within_face if possible. I think it's not really needed.
 * Turn this list into tracked bugs & tasks
+* Start a wiki so solutions of the various puzzles can be tracked? Power to the people! (aka, we can then be lazy)
