@@ -1,15 +1,16 @@
 
 PUZZLES
 * Support from 2 to N-dimensional puzzles (yeah right!).
+* Implement GenericPuzzle.isSolved().
+* Eliminate sliver slices.
 * Port the solve and compress functions to the new puzzles. 
   - First just for the appropriately sized cubes and eventually for all puzzles.
   - Consider including and using Don's N-D solve rather than port MC4D version?
-* DONE - Figure out how to support rotations for generic puzzles & history.
-* DONE - Implement Jenn3D-style 4D rotates via Shift-left drag.
 * before shipping, comment out broken or redundant puzzles and change default to "{4,3,3} 3"
 * Make twist speed adjustable mid-twist.
-* Need isSolved method to determine when a true solve has been achieved.
 * Add an MC120-like piece finding functionality.
+* DONE - Figure out how to support rotations for generic puzzles & history.
+* DONE - Implement Jenn3D-style 4D rotates via Shift-left drag.
 
 HIGHLIGHTING
 * Disallow 360 degree twists.
@@ -18,11 +19,11 @@ HIGHLIGHTING
 
 GUI
 * Choose better slider ranges.
-* DONE- Fix or remove contigious cubies mode.
 * Reimplement ctrl-right-click to rotate "from" center.
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
 * Make initial EyeW a function of puzzle size and maybe remove slider altogether?
 * Add cross-eyed stereo viewing mode.
+* DONE- Fix or remove contiguous cubies mode.
 * DONE - Add a debugging FPS meter.
 * DONE - Replace the AWT class usages with Swing versions.
 * DONE - Move control panel to the west.
@@ -36,17 +37,10 @@ LOG FILES
 * DONE - Save transform matrix in the file.
 
 BUGS
-* Canceled cheats don't finish properly when restarted.
-* DONE - Fix Cheat after scramble.
-* DONE - Fix scramble for edge lengths > 4. (Different faces can have effectively different numbers of slices).
-* DONE - Fix Quick Moves.
-* Full scramble on simplex yields inconsistent numbers of history twists. (Watch twist counter in lower right.)
-* DONE - Fix color buttons and remove the 6 fixed color choices.
-* DONE - Fix macro cancel.
-* DONE - Fix slices masks.
-* Fix the puzzles containing triangles.
 * Fix macro apply.
-* DONE - Fix disconnected histories in reset, scramble, and other operations.
+* Canceled cheats don't finish properly when restarted.
+* Full scramble on simplex yields inconsistent numbers of history twists. (Watch twist counter in lower right.)
+* Fix the puzzles containing triangles.
 * Fix "whichax out of range" errors
 * Fix random Exception in thread "AWT-EventQueue-0" java.lang.ArrayIndexOutOfBoundsException: 4042
 	at GenericPipelineUtils.paintFrame(GenericPipelineUtils.java:683)
@@ -54,6 +48,13 @@ BUGS
   Don't highlight or allow twist attempts on them in the first place.
 * Make Esc key cancel solve/cheat animations even when 3D window does not have focus.
 * Fix so that building new puzzle releases memory used by previous puzzle. (by removing listeners?)
+* DONE - Fix Cheat after scramble.
+* DONE - Fix scramble for edge lengths > 4. (Different faces can have effectively different numbers of slices).
+* DONE - Fix Quick Moves.
+* DONE - Fix color buttons and remove the 6 fixed color choices.
+* DONE - Fix macro cancel.
+* DONE - Fix slices masks.
+* DONE - Fix disconnected histories in reset, scramble, and other operations.
 
 META
 * Get Eclipse to output executable jar files or modify my batch file and check it in.

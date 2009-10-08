@@ -263,6 +263,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                         statusLabel.setText("Defined \"" + lastMacro.getName() + "\" macro with " +
                             lastMacro.length() + " move" + (lastMacro.length()==1 ? "." : "s."));
                     }
+                    view.setSkyOverride(null);
                 } else { // begin macro definition
                     macroMgr.open();
                     statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
