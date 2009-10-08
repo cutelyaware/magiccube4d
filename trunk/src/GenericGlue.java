@@ -22,6 +22,7 @@ public class GenericGlue
 
     public GenericPuzzleDescription genericPuzzleDescription = null;
     public int genericPuzzleState[] = null;
+    public int pristineState[] = null;
 
     //
     // A rotation is currently in progress if iRotation < nRotation.
@@ -67,6 +68,7 @@ public class GenericGlue
             public Void doInBackground() {
             	genericPuzzleDescription = buildPuzzle(schlafli, lengthString, this);
                 genericPuzzleState = VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
+                pristineState = VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
             	return null;
     		}
 
@@ -105,8 +107,14 @@ public class GenericGlue
     }
     
     
-    public boolean isSolved() {
-    	// TODO: implement me.
+    public boolean isSolved() 
+    {	
+    	if( VecMath.equals( genericPuzzleState, pristineState ) )
+    	{
+    		System.out.println( "Pristine Puzzle" );
+    		return true;
+    	}
+    	
     	return false;
     }
 
