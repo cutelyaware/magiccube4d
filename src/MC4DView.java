@@ -135,16 +135,22 @@ public class MC4DView extends Component {
                         genericGlue.untwistedFrame,
                         genericGlue.genericPuzzleDescription);
                      
-                if(grip < 0) {
+                // The twist might be illegal.
+                int[] orders = genericGlue.genericPuzzleDescription.getGripSymmetryOrders();
+                if( grip<0 || grip >= orders.length || orders[grip] == 0 )
+                {
+                	System.out.println("can't twist that grip.");
+                }    
+                else if( grip < 0 ) 
+                {
                     System.out.println("missed");
                 }
                 else {
                 	MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_puzzle = grip; // slamming new id. do we need to set the other members?
                     clicked.face = genericGlue.genericPuzzleDescription.getGrip2Face()[grip];
-                    //clicked.coords = genericGlue.genericPuzzleDescription.getGripCoords( grip );
-                    System.out.println("face: " + clicked.face);
-
+                    //System.out.println("face: " + clicked.face);
+                    
                     // Tell listeners about the legal twist and let them call animate() if desired.
                     int dir = (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
                     //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
@@ -412,10 +418,15 @@ public class MC4DView extends Component {
                     int iTwistGrip = animating.twist.grip.id_within_puzzle;
                     int[] orders = genericGlue.genericPuzzleDescription.getGripSymmetryOrders();
                     if(0 > iTwistGrip || iTwistGrip >= orders.length) {
-                    	System.err.println("order inxexing error in MC4CView.AnimationQueue.getAnimating()");
+                    	System.err.println("order indexing error in MC4CView.AnimationQueue.getAnimating()");
                     	continue;
                     }
                     int order = orders[iTwistGrip];
+                    
+                    // Is this a legal twist?
+                    if( order == 0 )
+                    	continue;
+                    
                     double totalRotationAngle = 2*Math.PI/order;                    
                     
                     genericGlue.nTwist = PropertyManager.getBoolean("quickmoves", false) ? 1 : 
