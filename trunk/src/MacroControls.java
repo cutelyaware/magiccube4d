@@ -27,12 +27,14 @@ public class MacroControls extends JPanel {
         public void changed();
     }
     private MacroManager mgr;
+    private String schlafli;
     private Listener app;
     private Macro selected;
     private final static Font SYMBOL_FONT = new Font("Dialog", Font.PLAIN, 12);
 
-    public MacroControls(final MacroManager mgr, final Listener app) {
+    public MacroControls(final MacroManager mgr, String schlafli, final Listener app) {
         this.mgr = mgr;
+        this.schlafli = schlafli;
         this.app = app;
         init(false);
     }
@@ -45,6 +47,8 @@ public class MacroControls extends JPanel {
             moveDn = new JButton("\u25BC"),
             rename = new JButton("Rename"),
             delete = new JButton("Delete");
+        moveUp.setToolTipText("Move Up");
+        moveDn.setToolTipText("Move Down");
         moveUp.setFont(SYMBOL_FONT);
         moveDn.setFont(SYMBOL_FONT);
         final Macro macros[] = mgr.getMacros();
@@ -76,6 +80,10 @@ public class MacroControls extends JPanel {
                     app.apply(macro, false);
                 }
             });
+            String appropriatePuzzle =  macro.getPuzzleString();
+            appropriatePuzzle = appropriatePuzzle.substring(0, appropriatePuzzle.indexOf(' '));
+            forward.setEnabled(appropriatePuzzle.equals(schlafli));
+            forward.setToolTipText(appropriatePuzzle);
             grid.add(forward);
             JButton reverse = new JButton("Reversed");
             reverse.addActionListener(new ActionListener() {
@@ -84,6 +92,8 @@ public class MacroControls extends JPanel {
                     app.apply(macro, true);
                 }
             });
+            reverse.setEnabled(appropriatePuzzle.equals(schlafli));
+            reverse.setToolTipText(appropriatePuzzle);
             grid.add(reverse);
         }
         SpringUtilities.makeCompactGrid(grid, macros.length, 3, 0, 0, 0, 0);
@@ -148,7 +158,7 @@ public class MacroControls extends JPanel {
 
     public static void main(String[] args) {
         MacroManager mm = new MacroManager("C:\\Java\\MC4D\\MC4D.macros");
-        MacroControls mc = new MacroControls(mm, new MacroControls.Listener() {
+        MacroControls mc = new MacroControls(mm, "{4,3,3}", new MacroControls.Listener() {
             public void apply(Macro macro, boolean reverse) {
                 System.out.println("Applying " + macro.getName() + (reverse ? " reversed" : " forward"));
             }

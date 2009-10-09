@@ -11,14 +11,14 @@ import java.io.*;
  *     <li>record twists one at a time,
  *     <li>name and close the macro.
  * </ol>
- * Two public properties are exposed specifing these phases:
-  * <ol>
+ * Two public properties are exposed specifying these phases:
+ * <ol>
  *     <li>"isOpen" is true between calls to open and close, false otherwise.
  *     <li>"recording" is true while open but only after all reference stickers have been specified.
  * </ol>
  * <br>
  *
- * Created Jul 15, 2006
+ * Created July 15, 2006
  * @author Melinda Green
  */
 public class MacroManager {
