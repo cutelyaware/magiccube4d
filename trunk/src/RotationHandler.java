@@ -125,6 +125,7 @@ public class RotationHandler
 		
         double delta[][] = VecMath.identitymat(4);
         VecMath.mpm( delta, delta, spinDelta );
+        VecMath.gramschmidt( delta, delta );
         viewMat4d = VecMath.mxm( viewMat4d, delta );
         VecMath.gramschmidt( viewMat4d, viewMat4d );
 	}
