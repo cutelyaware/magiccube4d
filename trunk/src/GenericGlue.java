@@ -248,12 +248,13 @@ public class GenericGlue
                                 nicePointOnScreen,
                                 minusWAxis);
 
+            boolean rightClick = SwingUtilities.isRightMouseButton(e);
             genericGlue.nRotation = calculateNTwists( totalRotationAngle, twistFactor );
             // XXX ARGH! we'd like the speed to vary as the user changes the slider,
             // XXX but the above essentially locks in the speed for this rotation
             genericGlue.iRotation = 0; // we are iRotation frames into nRotation
-            genericGlue.rotationFrom = nicePointOnScreen;
-            genericGlue.rotationTo = minusWAxis;
+            genericGlue.rotationFrom = rightClick ? minusWAxis : nicePointOnScreen;
+            genericGlue.rotationTo = rightClick ? nicePointOnScreen : minusWAxis;
             view.repaint();
 
             if (genericGlue.iRotation == genericGlue.nRotation)

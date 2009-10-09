@@ -20,7 +20,6 @@ HIGHLIGHTING
 GUI
 * isSolved doesn't recognize solutions when scramble included those odd twists such as slicemask 2 on the {5}x{4} 3
 * Choose better slider ranges.
-* Reimplement ctrl-right-click to rotate "from" center.
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
 * Make initial EyeW a function of puzzle size and maybe make the slider adjust view scale to keep it constant?
 * Add subtle sound feedback effects!
@@ -28,6 +27,7 @@ GUI
 * Add cross-eyed stereo viewing mode.
 * It'd be nice if the last puzzle type that was open was automatically recalled.
 * Copyright 2005 (thanks for the shout-out in the about box Melinda!)
+* DONE - Reimplement ctrl-right-click to rotate "from" center.
 * DONE - Remember pre-maximized window size & position and restore to these when un-maximized.
 * DONE - Nitpicky, "Write Macro File As..." dialog says "Open" instead of "Save"
 * DONE - Gray out or otherwise mark macros that don't apply to the current puzzle.
