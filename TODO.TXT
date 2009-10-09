@@ -18,16 +18,17 @@ HIGHLIGHTING
   do something if clicked. For center-center stickers that would require the Ctrl key being held.
 
 GUI
-* Remember pre-maximized window size & position and restore to these when un-maximized.
+* isSolved doesn't recognize solutions when scramble included those odd twists such as slicemask 2 on the {5}x{4} 3
 * Choose better slider ranges.
 * Reimplement ctrl-right-click to rotate "from" center.
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
-* Make initial EyeW a function of puzzle size and maybe remove slider altogether?
+* Make initial EyeW a function of puzzle size and maybe make the slider adjust view scale to keep it constant?
 * Add subtle sound feedback effects!
 * Add a nice big visual reward for solving a full scramble.
 * Add cross-eyed stereo viewing mode.
 * It'd be nice if the last puzzle type that was open was automatically recalled.
 * Copyright 2005 (thanks for the shout-out in the about box Melinda!)
+* DONE - Remember pre-maximized window size & position and restore to these when un-maximized.
 * DONE - Nitpicky, "Write Macro File As..." dialog says "Open" instead of "Save"
 * DONE - Gray out or otherwise mark macros that don't apply to the current puzzle.
 * DONE - Fix or remove contiguous cubies mode.
@@ -50,10 +51,9 @@ BUGS
 * Fix "whichax out of range" errors
 * Fix random Exception in thread "AWT-EventQueue-0" java.lang.ArrayIndexOutOfBoundsException: 4042
 	at GenericPipelineUtils.paintFrame(GenericPipelineUtils.java:683)
-* Fix horrible behavior when attempting to twist center-center stickers, or better yet
-  Don't highlight or allow twist attempts on them in the first place.
 * Make Esc key cancel solve/cheat animations even when 3D window does not have focus.
 * Fix so that building new puzzle releases memory used by previous puzzle. (by removing listeners?)
+* DONE - Fix horrible behavior when attempting to twist center-center stickers.
 * DONE - Fix macro apply.
 * DONE - Fix Cheat after scramble.
 * DONE - Fix scramble for edge lengths > 4. (Different faces can have effectively different numbers of slices).
