@@ -22,7 +22,6 @@ public class GenericGlue
 
     public GenericPuzzleDescription genericPuzzleDescription = null;
     public int genericPuzzleState[] = null;
-    private int pristineState[] = null;
 
     //
     // A rotation is currently in progress if iRotation < nRotation.
@@ -68,7 +67,6 @@ public class GenericGlue
             public Void doInBackground() {
             	genericPuzzleDescription = buildPuzzle(schlafli, lengthString, this);
                 genericPuzzleState = VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
-                pristineState = VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
             	return null;
     		}
 
@@ -106,19 +104,35 @@ public class GenericGlue
             || iTwist < nTwist;
     }
     
-    
-    public boolean isSolved() 
-    {	
-    	if( VecMath.equals( genericPuzzleState, pristineState ) )
-    	{
-    		System.out.println( "Pristine Puzzle" );
-    		return true;
-    	}
-    	
-    	return false;
+    // XXX - Should we move this to an interface method on the generic puzzle,
+    //		 and implement inside there?
+    public boolean isSolved()
+    {
+		 int nFaces = genericPuzzleDescription.nFaces();
+		 int faceState[] = new int[nFaces];
+		 VecMath.fillvec( faceState, -1 );
+		
+		 // Cycle through all the stickers.
+		 for( int s=0; s<genericPuzzleState.length; s++ )
+		 {
+			 int faceIndex = genericPuzzleDescription.getSticker2Face()[s];
+			 if( faceState[faceIndex] == -1 )
+			 {
+				 faceState[faceIndex] = genericPuzzleState[s];
+				 continue;
+			 }
+
+			 // Check for multiple colors on a single face.
+			 if( genericPuzzleState[s] != faceState[faceIndex] )
+				 return false;
+		 }
+		
+		 // Our faceState vector should have no -1s in it.
+		 // Perhaps we should assert this.
+		 System.out.println( "Pristine Puzzle" );
+		 return true;
     }
 
-    
     private static GenericPuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
         double len;
         try { len = Double.parseDouble(lengthString); }
