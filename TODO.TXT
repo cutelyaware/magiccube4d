@@ -16,6 +16,7 @@ HIGHLIGHTING
 * Disallow 360 degree twists.
 * In highlight-stickers mode, only highlight hovered-over stickers that would 
   do something if clicked. For center-center stickers that would require the Ctrl key being held.
+  We may want to handle conditional highlighting of legal macro reference clicks at the same time. 
 
 GUI
 * isSolved doesn't recognize solutions when scramble included those odd twists such as slicemask 2 on the {5}x{4} 3
@@ -25,8 +26,8 @@ GUI
 * Add subtle sound feedback effects!
 * Add a nice big visual reward for solving a full scramble.
 * Add cross-eyed stereo viewing mode.
-* It'd be nice if the last puzzle type that was open was automatically recalled.
-* Copyright 2005 (thanks for the shout-out in the about box Melinda!)
+* Copyright 2005 - update to 2009 (thanks for the shout-out in the about box Melinda!)
+* Warn user of overwrite after switching puzzle type and saving (so we don't have the nightmare I had with that M120C user).
 * DONE - Reimplement ctrl-right-click to rotate "from" center.
 * DONE - Remember pre-maximized window size & position and restore to these when un-maximized.
 * DONE - Nitpicky, "Write Macro File As..." dialog says "Open" instead of "Save"
