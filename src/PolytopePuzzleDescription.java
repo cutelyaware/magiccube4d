@@ -427,6 +427,11 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 if (isPrismOfThisFace)
                     length = ceilLength;
 
+            	// XXX - Temporary hack for simplexes with an odd number per side.
+            	// 		 This is ugly, but gets them showing on the screen at least.
+            	if( schlafliProduct == "{3,3,3}" && length % 2 == 1 )
+            		length += .01;
+                
                 double sliceThickness = fullThickness / length;
 
                 // If even length and *not* a prism of this face,
