@@ -46,6 +46,8 @@ LOG FILES
 * DONE - Save transform matrix in the file.
 
 BUGS
+* Autorotations converge to spinning about major axies, and rather quickly when spun really fast.
+  May need to bring back quaternions which don't suffer from these sorts of problems.
 * Canceled cheats don't finish properly when restarted.
 * Full scramble on simplex yields inconsistent numbers of history twists. (Watch twist counter in lower right.)
 * Fix the puzzles containing triangles.
