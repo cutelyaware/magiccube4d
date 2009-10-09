@@ -137,14 +137,14 @@ public class MC4DView extends Component {
                      
                 // The twist might be illegal.
                 int[] orders = genericGlue.genericPuzzleDescription.getGripSymmetryOrders();
-                if( grip<0 || grip >= orders.length || orders[grip] == 0 )
-                {
-                	System.out.println("can't twist that grip.");
-                }    
-                else if( grip < 0 ) 
+                if( grip < 0 ) 
                 {
                     System.out.println("missed");
                 }
+                else if( grip >= orders.length || orders[grip] == 0 )
+                {
+                	System.out.println("can't twist that grip.");
+                }    
                 else {
                 	MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_puzzle = grip; // slamming new id. do we need to set the other members?
