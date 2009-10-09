@@ -1208,18 +1208,17 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 try { UIManager.setLookAndFeel(new SyntheticaStandardLookAndFeel()); } 
                 catch (Exception e) { e.printStackTrace(); }
                 final JFrame frame = new MC4DSwing();
-                frame.setSize(
-                    PropertyManager.getInt("window.width",  900),
-                    PropertyManager.getInt("window.height", 700));
-                frame.setLocation(
-                    PropertyManager.getInt("window.x", frame.getX()),
-                    PropertyManager.getInt("window.y", frame.getY()));
+                configureNormal(frame);
                 frame.addComponentListener(new ComponentAdapter() {
                     public void componentResized(ComponentEvent ce) {
+                    	if(frame.getExtendedState() != Frame.NORMAL)
+                    		return;
                         PropertyManager.userprefs.setProperty("window.width",  ""+frame.getWidth());
                         PropertyManager.userprefs.setProperty("window.height", ""+frame.getHeight());
                     }
                     public void componentMoved(ComponentEvent ce) {
+                    	if(frame.getExtendedState() != Frame.NORMAL)
+                    		return;
                         PropertyManager.userprefs.setProperty("window.x", ""+frame.getX());
                         PropertyManager.userprefs.setProperty("window.y", ""+frame.getY());
                     }
@@ -1230,10 +1229,22 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                         int state = frame.getExtendedState();
                         state &= ~Frame.ICONIFIED; // disallows saving in iconified state
                         PropertyManager.userprefs.setProperty("window.state",  ""+state);
+                        if(state == Frame.NORMAL){
+                        	configureNormal(frame);
+                        }
                     }
                 });
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setVisible(true);
+            }
+            
+            void configureNormal(Frame frame) {
+                frame.setSize(
+                    PropertyManager.getInt("window.width",  900),
+                    PropertyManager.getInt("window.height", 700));
+                frame.setLocation(
+                    PropertyManager.getInt("window.x", frame.getX()),
+                    PropertyManager.getInt("window.y", frame.getY()));
             }
         });
     }
