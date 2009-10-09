@@ -22,7 +22,7 @@ public class GenericGlue
 
     public GenericPuzzleDescription genericPuzzleDescription = null;
     public int genericPuzzleState[] = null;
-    public int pristineState[] = null;
+    private int pristineState[] = null;
 
     //
     // A rotation is currently in progress if iRotation < nRotation.
