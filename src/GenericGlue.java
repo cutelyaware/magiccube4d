@@ -227,7 +227,7 @@ public class GenericGlue
                          e.getX(), e.getY(),
                          genericGlue.untwistedFrame,
                          genericGlue.genericPuzzleDescription, 
-                         rotationHandler.getSnapSetting() );
+                         RotationHandler.getSnapSetting() );
 
         if (nicePoint != null)
         {

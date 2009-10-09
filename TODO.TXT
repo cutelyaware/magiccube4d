@@ -18,16 +18,18 @@ HIGHLIGHTING
   do something if clicked. For center-center stickers that would require the Ctrl key being held.
 
 GUI
+* Remember pre-maximized window size & position and restore to these when un-maximized.
 * Choose better slider ranges.
 * Reimplement ctrl-right-click to rotate "from" center.
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
 * Make initial EyeW a function of puzzle size and maybe remove slider altogether?
+* Add subtle sound feedback effects!
+* Add a nice big visual reward for solving a full scramble.
 * Add cross-eyed stereo viewing mode.
-* Bring back "Reset to Defaults" for settings?
 * It'd be nice if the last puzzle type that was open was automatically recalled.
 * Copyright 2005 (thanks for the shout-out in the about box Melinda!)
-* Nitpicky, "Write Macro File As..." dialog says "Open" instead of "Save"
-* Gray out or otherwise mark macros that don't apply to the current puzzle.
+* DONE - Nitpicky, "Write Macro File As..." dialog says "Open" instead of "Save"
+* DONE - Gray out or otherwise mark macros that don't apply to the current puzzle.
 * DONE - Fix or remove contiguous cubies mode.
 * DONE - Add a debugging FPS meter.
 * DONE - Replace the AWT class usages with Swing versions.

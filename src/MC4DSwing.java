@@ -258,7 +258,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     }
                     else {
                         lastMacro = macroMgr.close(name);
-                        initMacroList(); // to show new macro.
+                        initMacroMenu(); // to show new macro.
                         initMacroControls(); // to show new control
                         statusLabel.setText("Defined \"" + lastMacro.getName() + "\" macro with " +
                             lastMacro.length() + " move" + (lastMacro.length()==1 ? "." : "s."));
@@ -307,6 +307,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         
     private GenericGlue.Callback viewRepainter = new GenericGlue.Callback() {
     	public void call() {
+    		initMacroControls(); // to properly enable/disable the buttons
     		progressBar.setVisible(false);
     		view.repaint();
     	}
@@ -358,7 +359,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 }
                 PropertyManager.userprefs.setProperty("macrofile", filepath);
                 macroMgr = new MacroManager(filepath);
-                initMacroList(); // update controls with macro definitions just read.
+                initMacroMenu(); // update controls with macro definitions just read.
                 initMacroControls(); // to show new controls
                 int nread = apply.getItemCount();
                 statusLabel.setText("Read " + nread + " macro" + (nread==1?"":"s") + " from " + filepath);
@@ -377,7 +378,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         },
         writeas = new AbstractAction("Write As") {
             public void actionPerformed(ActionEvent ae) {
-                if(macroFileChooser.showOpenDialog(MC4DSwing.this) != JFileChooser.APPROVE_OPTION)
+                if(macroFileChooser.showSaveDialog(MC4DSwing.this) != JFileChooser.APPROVE_OPTION)
                     return;
                 String filepath = macroFileChooser.getSelectedFile().getAbsolutePath();
                 macroMgr.setFilePath(filepath);
@@ -553,8 +554,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         macromenu.add(new JMenuItem("Read Macro File...")).addActionListener(read);
         macromenu.add(new JMenuItem("Write Macro File")).addActionListener(write);
         macromenu.add(new JMenuItem("Write Macro File As...")).addActionListener(writeas);
-        initMacroList(); // create controls for any macro definitions.
-        initMacroControls(); // to show controls
+        initMacroMenu(); // create controls for any macro definitions.
 
         // Help
         //
@@ -604,6 +604,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         contents.add(statusBar, "South");
 
         genericGlue = new GenericGlue(initialPuzzle, 3, progressBar);
+        initMacroControls(); // to show controls
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));
     } // end MC4DSwing
@@ -712,7 +713,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     /**
      * Called whenever macro list in manager changes to keep "Apply" submenu up-to-date.
      */
-    private void initMacroList() {
+    private void initMacroMenu() {
         apply.removeAll();
         Macro macros[] = macroMgr.getMacros();
         for (int i = 0; i < macros.length; ++i)
@@ -730,7 +731,9 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 
     private void initMacroControls() {
         final JTabbedPane tabs = new JTabbedPane();
-        tabs.add("Macros", new MacroControls(macroMgr, new MacroControls.Listener() {
+        String schlafli = genericGlue != null && genericGlue.genericPuzzleDescription != null ? genericGlue.genericPuzzleDescription.getSchlafliProduct() : null;
+        tabs.add("Preferences", new PreferencesEditor());
+        tabs.add("Macros", new MacroControls(macroMgr, schlafli, new MacroControls.Listener() {
             public void apply(Macro macro, boolean reverse) {
                 lastMacro = macro;
                 final int mask = reverse ? ActionEvent.CTRL_MASK : 0;
@@ -740,7 +743,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 last.doit(ae);
             }
             public void changed() {
-                initMacroList();
+                initMacroMenu();
             }
         }));
         tabs.addChangeListener(new ChangeListener() {
@@ -749,7 +752,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 				PropertyManager.userprefs.setProperty("lasttab", ""+tabs.getSelectedIndex());
 			}
         });
-        tabs.add("Preferences", new PreferencesEditor());
         tabs.setSelectedIndex(PropertyManager.getInt("lasttab", 0));
         macroControlsContainer.removeAll();
         macroControlsContainer.add(tabs);
@@ -949,7 +951,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 scaleSlider = makeSlider(PropertyManager.getFloat("scale", 1), .1f, 5),
                 fshrinkSlider = makeSlider(PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK), .1f, 1.5f),
                 sshrinkSlider = makeSlider(PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK), .1f, 1.5f),
-                eyewScaleSlider = makeSlider(PropertyManager.getFloat("eyew", MagicCube.EYEW)/MagicCube.EYEW, .25f, 4);
+                eyewScaleSlider = makeSlider(PropertyManager.getFloat("eyew", MagicCube.EYEW), 1, 10);
             final JCheckBox contigiousCubies = new JCheckBox("Contigious Cubies", PropertyManager.getBoolean("contigiouscubies", false));
             twistSpeedSlider.addAdjustmentListener(new AdjustmentListener() {
                 public void adjustmentValueChanged(AdjustmentEvent ae) {
@@ -1018,8 +1020,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             });
             eyewScaleSlider.addAdjustmentListener(new AdjustmentListener() {
                 public void adjustmentValueChanged(AdjustmentEvent ae) {
-                    float newscale = (float)eyewScaleSlider.getFloatValue();
-                    float neweyew = MagicCube.EYEW * newscale;
+                    float neweyew = (float)eyewScaleSlider.getFloatValue();
                     PropertyManager.userprefs.setProperty("eyew", ""+neweyew);
                     view.repaint();
                 }
