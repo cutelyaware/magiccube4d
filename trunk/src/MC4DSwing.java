@@ -764,8 +764,9 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 macroMgr.addTwist(twisted);
                 view.animate(twisted, true);
             } else {
-                macroMgr.addRef( genericGlue.genericPuzzleDescription, twisted.grip );
-                if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
+                if( !macroMgr.addRef( genericGlue.genericPuzzleDescription, twisted.grip ) )
+                	statusLabel.setText( "Picked reference won't determine unique orientation, please try another." );
+                else if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
                     if(applyingMacro != 0) {
                         view.setSkyOverride(null);
                         MagicCube.Stickerspec[] refs = macroMgr.close();

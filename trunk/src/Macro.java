@@ -14,6 +14,13 @@ public class Macro {
     private String puzzleString;	// Macros are really relative to specific puzzles, so we save this out.
     private String name;
     private MagicCube.Stickerspec defRefs[] = new MagicCube.Stickerspec[MAXREFS];
+    
+    // We aren't actually doing anything with this yet,
+    // other than saving it to the file.  The reason I 
+    // went ahead and put it there is so we don't have
+    // to rev the file format if we start supporting 
+    // sticker defined macros.
+    private boolean gripBased = true;
 
     private Macro() {}
 
@@ -72,9 +79,17 @@ public class Macro {
         return out;
     }
     
-    private double[] getGripCoords( MagicCube.Stickerspec grip, GenericPuzzleDescription puzzle )
+    public static double[] getMacroRefCoords( MagicCube.Stickerspec grip, GenericPuzzleDescription puzzle )
     {
+    	// When/if we have sticker based macros, this method will need to be extended.
     	return floatToDouble( puzzle.getGripCoords( grip.id_within_puzzle ) );
+    }
+    
+    public static double[] getMacroRefFaceCoords( MagicCube.Stickerspec grip, GenericPuzzleDescription puzzle )
+    {
+    	// When/if we have sticker based macros, this method will need to be extended.
+    	int faceIndex = puzzle.getGrip2Face()[grip.id_within_puzzle];
+    	return floatToDouble( puzzle.getFaceCenter( faceIndex ) );
     }
     
     /**
@@ -88,18 +103,16 @@ public class Macro {
     {
     	// Default Coordinates.
     	// We also use one of the faces.
-    	double ref0[] = getGripCoords( defRefs[0], puzzle );
-    	double ref1[] = getGripCoords( defRefs[1], puzzle );
-    	double ref2[] = getGripCoords( defRefs[2], puzzle );
-    	int faceIndex = puzzle.getGrip2Face()[defRefs[0].id_within_puzzle];
-    	double ref3[] = floatToDouble( puzzle.getFaceCenter( faceIndex ) );
+    	double ref0[] = getMacroRefCoords( defRefs[0], puzzle );
+    	double ref1[] = getMacroRefCoords( defRefs[1], puzzle );
+    	double ref2[] = getMacroRefCoords( defRefs[2], puzzle );
+    	double ref3[] = getMacroRefFaceCoords( defRefs[0], puzzle );
     	
     	// Clicked Coordinates.
-    	double s0[] = getGripCoords( appGrips[0], puzzle );
-    	double s1[] = getGripCoords( appGrips[1], puzzle );
-    	double s2[] = getGripCoords( appGrips[2], puzzle );
-    	faceIndex = puzzle.getGrip2Face()[appGrips[0].id_within_puzzle];
-    	double s3[] = floatToDouble( puzzle.getFaceCenter( faceIndex ) );
+    	double s0[] = getMacroRefCoords( appGrips[0], puzzle );
+    	double s1[] = getMacroRefCoords( appGrips[1], puzzle );
+    	double s2[] = getMacroRefCoords( appGrips[2], puzzle );
+    	double s3[] = getMacroRefFaceCoords( appGrips[0], puzzle );
     	
         double transform[][] = new double[4][4];
         if( !Math4d.get4dMatThatRotatesThese4ToThose4( ref0, ref1, ref2, ref3, s0, s1, s2, s3, transform ) )
@@ -125,6 +138,11 @@ public class Macro {
         }
         assert( moves.redo() == null );
         
+        // We could disallow these, since they don't represent a true rotation of the defaults.
+        // Don did this in the old puzzle though, and it's a nice shortcut.
+        // Note however, this won't work for all reference sets due to the 
+        // checks in get4dMatThatRotatesThese4ToThose4.
+        // XXX - make this work for all macro reference sets?
         double det = VecMath.det( transform );      
         if( det < 0 )
             reverse( twists );
@@ -152,6 +170,10 @@ public class Macro {
     {
         MagicCube.Stickerspec sticker = new MagicCube.Stickerspec();
         writer.write("@" + name + "@@" + puzzleString + "@(");
+        if( this.gripBased )
+        	writer.write( "g " );
+        else
+        	writer.write( "s " );
         for( int i=0; i<defRefs.length; ++i ) 
         {
         	sticker = defRefs[i];
@@ -199,6 +221,18 @@ public class Macro {
         
         ch = pr.read();
         if(ch != '(') return null;
+        
+        // Read whether this is a grip or sticker based macro.
+        ch = pr.read();
+        if( ch == 'g' )
+        	restored.gripBased = true;
+        else if( ch == 's' )
+        	restored.gripBased = false;
+        else
+        	return null;
+        ch = pr.read();
+        
+        // Read the references.
         for(int r=0; r<MAXREFS; r++) {
         	MagicCube.Stickerspec sticker = new MagicCube.Stickerspec();
             sticker.id_within_puzzle = History.readInt(pr);
