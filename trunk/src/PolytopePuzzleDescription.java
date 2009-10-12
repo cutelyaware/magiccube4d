@@ -414,6 +414,11 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 }
                 Assert(fullThickness != 0.); // XXX actually this fails if puzzle dimension <= 1, maybe should disallow
 
+            	// XXX - Temporary hack for simplexes with an odd number per side.
+            	// 		 This is ugly, but gets them showing on the screen at least.
+            	if( schlafliProduct.equals( "{3,3,3}" ) && length % 2 == 1.0 )
+            		length += .01;
+                
                 //System.out.println("    slice thickness "+iFace+" = "+sliceThickness+"");
 
                 boolean isPrismOfThisFace = Math.abs(-1. - faceOffsets[iFace]) < 1e-6;
@@ -426,11 +431,6 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 // to squares though
                 if (isPrismOfThisFace)
                     length = ceilLength;
-
-            	// XXX - Temporary hack for simplexes with an odd number per side.
-            	// 		 This is ugly, but gets them showing on the screen at least.
-            	if( schlafliProduct == "{3,3,3}" && length % 2 == 1 )
-            		length += .01;
                 
                 double sliceThickness = fullThickness / length;
 
