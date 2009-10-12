@@ -366,7 +366,7 @@ public class MC4DView extends Component {
         }   
         
         // paint the puzzle
-        if (genericGlue != null)
+        if (genericGlue != null && genericGlue.genericPuzzleDescription != null)
         {
             genericGlue.computeAndPaintFrame(
               // used by compute part...
