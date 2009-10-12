@@ -12,7 +12,6 @@ import com.donhatchsw.util.VecMath;
 
 import java.awt.*;
 import java.awt.event.*;
-
 import javax.swing.*;
 
 
@@ -210,6 +209,9 @@ public class GenericGlue
         //System.out.println("    hover sticker "+genericGlue.iStickerUnderMouse+" -> "+pickedSticker+"");
         if (pickedSticker != genericGlue.iStickerUnderMouse)
             view.repaint(); // highlight changed (or turned on or off)
+        if(pickedSticker != -1 && genericGlue.iStickerUnderMouse != pickedSticker) {
+        	Audio.play(Audio.Sound.HIGHLIGHT);
+        }
         genericGlue.iStickerUnderMouse = pickedSticker;
     } // mouseMovedAction
 
@@ -277,6 +279,8 @@ public class GenericGlue
                 // Already in the center
                 System.err.println("Can't rotate that.\n");
             }
+
+        	Audio.loop(Audio.Sound.TWISTING);
         }
         else
             System.out.println("missed");
@@ -350,6 +354,10 @@ public class GenericGlue
             
             //System.out.println("    "+genericGlue.iRotation+"/"+genericGlue.nRotation+" -> "+(genericGlue.iRotation+1)+"/"+genericGlue.nRotation+"");
             genericGlue.iRotation++;
+            if(genericGlue.iRotation == genericGlue.nRotation) {
+            	Audio.stop(Audio.Sound.TWISTING);
+            	Audio.play(Audio.Sound.SNAP);
+            }
             view.repaint(); // make sure we keep drawing while there's more to do
         }
 
@@ -434,6 +442,9 @@ public class GenericGlue
 
         if (genericGlue.iTwist < genericGlue.nTwist)
         {
+        	if(genericGlue.iTwist == 0) {
+        		Audio.play(Audio.Sound.TWISTING);
+        	}
             genericGlue.iTwist++;
             if (genericGlue.iTwist == genericGlue.nTwist)
             {
@@ -443,6 +454,8 @@ public class GenericGlue
                             genericGlue.iTwistGrip,
                             genericGlue.twistDir,
                             genericGlue.twistSliceMask);
+            	Audio.stop(Audio.Sound.TWISTING);
+        		Audio.play(Audio.Sound.SNAP);
                 // XXX need to update the hovered-over sticker! I think.
                 // XXX it would suffice to just call the mouseMoved callback.
             }

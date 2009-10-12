@@ -1066,6 +1066,14 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     view.repaint();
                 }
             });
+            final JCheckBox mute = new JCheckBox("Mute Sounds", PropertyManager.getBoolean("muted", false));
+            mute.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    boolean muted = mute.isSelected();
+                    PropertyManager.userprefs.setProperty("muted", ""+muted);
+                    Audio.setMuted(muted);
+                }
+            });
             final JCheckBox highlightByCubie = new JCheckBox("Highlight by Cubie", PropertyManager.getBoolean("highlightbycubie", false));
             highlightByCubie.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
@@ -1127,6 +1135,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             general.add(highlightByCubie);
             general.add(quickMoves);
             general.add(allowAntiAliasing);
+            general.add(mute);
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
             general.add(rotateMode);
             general.add(ctrlRotateByFace);

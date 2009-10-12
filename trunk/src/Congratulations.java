@@ -31,9 +31,6 @@ public class Congratulations extends JFrame {
 			if(n < FPS*DUR) { // still flashing
 				contentpane.setBackground(n++ %2 == 0 ? Color.yellow : Color.white);
 				body.repaint();
-				// ASCII bell?
-			    //System.out.print("\u0007");
-			    //System.out.flush();
 			}
 			else {
 				timer.stop(); // This is important to allow garbage collection of this JFrame.
@@ -73,6 +70,7 @@ public class Congratulations extends JFrame {
 	}
 	
 	public void start() {
+		Audio.play(Audio.Sound.FANFARE);
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
