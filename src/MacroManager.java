@@ -2,6 +2,8 @@
 import java.util.Vector;
 import java.io.*;
 
+import com.donhatchsw.util.VecMath;
+
 /**
  * Contains a list of macros and manages their construction, saving, storing, and serving.
  * Construction proceeds in phases.
@@ -147,30 +149,67 @@ public class MacroManager {
         refStickers = null;
         nrefs = 0;
     }
-
-    /**
-     * Adds a reference sticker to the currently open macro.
-     */
-    public void addRef( GenericPuzzleDescription puzzle, MagicCube.Stickerspec sticker ) {
-        assert(nrefs<Macro.MAXREFS);
-        
+    
+    private boolean colinear( double p1[], double p2[], double p3[] )
+    {
+    	double v1[] = VecMath.normalize( VecMath.vmv( p2, p1 ) );
+    	double v2[] = VecMath.normalize( VecMath.vmv( p3, p1 ) );
+    	double a = VecMath.angleBetweenUnitVectors( v1, v2 );
+    	double eps = 1e-6;
+    	return Math.abs( a ) < eps || Math.abs( Math.PI - a ) < eps;
+    }
+    
+    private boolean refDeterminesUniqueOrientation( GenericPuzzleDescription puzzle, MagicCube.Stickerspec ref )
+    {
+        // We need to make sure the refs will determine a unique orientation.
+        // There are a number of click patterns which will fail to do so.
+    	
         // Make sure the same ref isn't used twice.
-        // We can't allow this because the behavior would not be uniquely determined.
-        // XXX - need better UI feedback for what is happening here.
         for( int i=0; i<nrefs; i++ )
         {
-        	if( refStickers[i].id_within_puzzle == sticker.id_within_puzzle )
-        		return;
+        	if( refStickers[i].id_within_puzzle == ref.id_within_puzzle )
+        		return false;
         }
         
-        // XXX - We should also disallow 3 refs that are colinear with each other,
-        //		 or are colinear with the face center.  Any of these cases
-        //		 don't give us enough orientation information for the macro.
+        // Disallow 3 refs that are colinear with each other.
+        if( nrefs == 2 )
+        {
+        	if( colinear(
+        		Macro.getMacroRefCoords( refStickers[0], puzzle ),
+        		Macro.getMacroRefCoords( refStickers[1], puzzle ),
+        		Macro.getMacroRefCoords( ref, puzzle ) ) )
+        			return false;
+        }
         
+        // Disallow refs that are colinear with the face center.
+        for( int i=0; i<nrefs; i++ )
+        {
+        	if( colinear(
+        		Macro.getMacroRefFaceCoords( refStickers[0], puzzle ),
+        		Macro.getMacroRefCoords( refStickers[i], puzzle ),
+        		Macro.getMacroRefCoords( ref, puzzle ) ) )
+        			return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Adds a reference sticker to the currently open macro.
+     * Returns false if the ref won't determine a unique orientation.
+     */
+    public boolean addRef( GenericPuzzleDescription puzzle, MagicCube.Stickerspec sticker ) {
+        assert(nrefs<Macro.MAXREFS);
+        
+        if( !refDeterminesUniqueOrientation( puzzle, sticker ) )
+        	return false;
+
         refStickers[nrefs++] = sticker;
         if(nrefs == Macro.MAXREFS) {
             curMacro = new Macro( puzzle.getFullPuzzleString(), refStickers );
         }
+        
+        return true;
     }
 
     /**

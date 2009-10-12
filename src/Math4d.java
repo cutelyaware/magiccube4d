@@ -142,7 +142,7 @@ public class Math4d
     	//
     	// Now we are going to use VecMath.makeRowTiePointMat.
     	// In general, this function does not return a rotation matrix, 
-    	// but given the checks above, we'll be good.
+    	// but given the checks above and those in the MacroManager, we'll be good.
     	//
     	
     	double inTiePoints[][] = new double[5][4];
@@ -150,7 +150,7 @@ public class Math4d
     	inTiePoints[1] = these1;
     	inTiePoints[2] = these2;
     	inTiePoints[3] = these3;
-    	inTiePoints[4] = VecMath.zerovec( 4 );	// Since the origin does not move.
+    	inTiePoints[4] = VecMath.zerovec( 4 );	// Since the origin does not move during a rotation.
     	
     	double outTiePoints[][] = new double[5][4];
     	outTiePoints[0] = those0;
@@ -162,7 +162,7 @@ public class Math4d
     	double temp[][] = VecMath.makeRowTiePointMat( inTiePoints, outTiePoints );
     	
     	// Turn into a 4x4 matrix.
-    	VecMath.copymat( mat, temp ); 
+    	VecMath.copymat( mat, temp );
     	return true;
     }
 }
