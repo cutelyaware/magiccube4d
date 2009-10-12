@@ -43,26 +43,13 @@ public class MC4DView extends Component {
     private RotationHandler rotationHandler;
     
     public RotationHandler getRotations() { return rotationHandler; } // const
-
-    // For stereo viewing.
-    private MC4DView other = null;
-    private float eyeOffset = 0;
-    public void setOther(MC4DView other, float eyeOffset) {
-    	this.other = other;
-    	this.eyeOffset = eyeOffset;
-    }
-    public void repaintView(Object source) {
-    	repaint();
-    	if(other != null && other != source)
-    		other.repaint();
-    }
     
     /**
      * Overrides the user's preference when not null. Set to null to revert.
      */
     public void setSkyOverride(Color so) {
         this.skyOverride = so;
-        repaintView(this);
+        repaint();
     }
 
     /**
@@ -70,7 +57,7 @@ public class MC4DView extends Component {
      */
     public void animate(MagicCube.TwistData move, boolean applyToHist) {
         animationQueue.append(move, applyToHist);
-        repaintView(this);
+        repaint();
     }
 
     /**
@@ -98,8 +85,7 @@ public class MC4DView extends Component {
     	this.animationQueue = new AnimationQueue(h);
     }
 
-    public MC4DView(GenericGlue gg, RotationHandler rotations, History hist) {
-    	int nfaces = gg.genericPuzzleDescription.nFaces();
+    public MC4DView(GenericGlue gg, RotationHandler rotations, History hist, int nfaces) {
     	this.genericGlue = gg;
         this.rotationHandler = rotations;
         this.setHistory(hist);
@@ -170,7 +156,7 @@ public class MC4DView extends Component {
                     //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
                     //    dir *= 2;
                     fireTwistEvent( new MagicCube.TwistData( clicked, dir, slicemask ) );
-                    repaintView(this);
+                    repaint();
                 }
             }
             // watch for dragging starts and stops
@@ -187,7 +173,7 @@ public class MC4DView extends Component {
                 lastDrag = null;
                 if(timedelta > 0) {
                 	rotationHandler.stopSpinning(); // stop any spin if last point wasn't in motion
-                    repaintView(this);
+                    repaint();
                 }
             }
         });
@@ -211,7 +197,7 @@ public class MC4DView extends Component {
                 
                 lastDrag = e.getPoint();
                 lastDragTime = e.getWhen();
-                repaintView(this);
+                repaint();
             }
             @Override
 			public void mouseMoved(MouseEvent arg0) {
@@ -342,10 +328,10 @@ public class MC4DView extends Component {
 			animationQueue.getAnimating();
 			// time to stop the animation
 			animationQueue.finishedTwist(); // end animation
-			repaintView(this);
+			repaint();
 		}
         if( rotationHandler.continueSpin() && lastDrag == null) { // keep spinning
-            repaintView(this);
+            repaint();
         }
         
         // antialiasing makes for a beautiful image but can also be expensive to draw therefore
@@ -391,8 +377,7 @@ public class MC4DView extends Component {
                 PropertyManager.getBoolean("outlines", false) ? PropertyManager.getColor("outlines.color") : null,
                 g,
                 PropertyManager.getFloat("twistfactor", 1),
-                this,
-                eyeOffset);
+                this);
             
             if(FPSTimer.isRunning() && rotationHandler.continueSpin() && lastDrag == null) {
             	StringBuffer sb = new StringBuffer();
@@ -502,7 +487,7 @@ public class MC4DView extends Component {
 //            System.out.println("couldn't read history file");
 //        else
 //            hist.read(new java.io.StringReader(Util.readFileFromURL(histurl)));
-        final MC4DView view = new MC4DView(new GenericGlue("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist);
+        final MC4DView view = new MC4DView(new GenericGlue("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist, 6);
         view.addTwistListener(new MC4DView.TwistListener() {
             public void twisted(MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
