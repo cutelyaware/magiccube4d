@@ -21,7 +21,6 @@ import de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel;
  */
 @SuppressWarnings("serial")
 public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
-	private final String initialPuzzle = "{5}x{4}"; // "{4,3,3}"
 
     private final static int
         SCRAMBLE_NONE = 0, 
@@ -49,7 +48,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         statusLabel = new JLabel();
     private JProgressBar progressBar = new JProgressBar();
     
-    private GenericGlue genericGlue = null; //new GenericGlue(initialPuzzle, 3, progressBar);
+    private GenericGlue genericGlue = null;
 
     private JMenu apply = new JMenu("Apply");
     private JMenuItem
@@ -603,7 +602,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         contents.add(viewcontainer, "Center");
         contents.add(statusBar, "South");
 
-        genericGlue = new GenericGlue(initialPuzzle, 3, progressBar);
+        genericGlue = new GenericGlue(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
         initMacroControls(); // to show controls
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));

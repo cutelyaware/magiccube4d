@@ -14,7 +14,8 @@ public class MagicCube {
 	 */
 	public final static int 
 		NDIMS          = 4,
-        DEFAULT_LENGTH = 3;;
+        DEFAULT_LENGTH = 3;
+	public final static String DEFAULT_PUZZLE = "{4,3,3}";
     
 	/**
 	 * Axes
