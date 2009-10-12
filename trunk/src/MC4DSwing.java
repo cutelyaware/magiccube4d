@@ -39,7 +39,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     private History hist;
     private MC4DView view;
     
-    private JPanel viewcontainer = new JPanel(new GridLayout(1, 2)); // JComponent container so we can use addHotKey
+    private JPanel viewcontainer = new JPanel(new BorderLayout()); // JComponent container so we can use addHotKey
     private JPanel macroControlsContainer = new JPanel(new BorderLayout());
     private JFileChooser
         logFileChooser = new JFileChooser(),
@@ -309,7 +309,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     	public void call() {
     		initMacroControls(); // to properly enable/disable the buttons
     		progressBar.setVisible(false);
-    		view.repaintView(this);
+    		view.repaint();
     	}
     };
 
@@ -336,7 +336,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                             hist.clear((int)length);
                             scrambleState = SCRAMBLE_NONE;
                             updateTwistsLabel();
-                            view.repaintView(this);
+                            view.repaint();
                             if(ae.getSource() instanceof GenericGlue.Callback)
                             {
                             	((GenericGlue.Callback)ae.getSource()).call();
@@ -510,7 +510,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 							@Override
 							public void done() {
 				                hist.mark(History.MARK_SCRAMBLE_BOUNDARY);
-				                view.repaintView(this);
+				                view.repaint();
 				                boolean fully = scramblechenfrengensen == -1;
 				                scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL;
 				                statusLabel.setText(fully ? "Fully Scrambled" : scramblechenfrengensen + " Random Twist" + (scramblechenfrengensen==1?"":"s"));
@@ -702,7 +702,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     	hist.clear((int)Double.parseDouble(newLengthString));
                     	updateTwistsLabel();
                     	scrambleState = SCRAMBLE_NONE;
-                    	view.repaintView(this);
+                    	view.repaint();
                     }
                 });
             }
@@ -874,16 +874,10 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         	view.removeTwistListener(this);
         	view.setHistory(null);
         }
-        view = new MC4DView(genericGlue, rotations, hist);
+        view = new MC4DView(genericGlue, rotations, hist, genericGlue.genericPuzzleDescription.nFaces());
 
-        viewcontainer.removeAll();
-        viewcontainer.add(view);
-        if(PropertyManager.getBoolean("stereo", true)) {
-	        MC4DView rightEye = new MC4DView(genericGlue, rotations, hist);
-	        view.setOther(rightEye, -.1f);
-	        rightEye.setOther(view, .1f);
-	        viewcontainer.add(rightEye);
-        }
+        viewcontainer.removeAll(); 
+        viewcontainer.add(view, "Center");
         
         hist.addHistoryListener(new History.HistoryListener() {
             public void currentChanged() {
@@ -964,21 +958,21 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 public void adjustmentValueChanged(AdjustmentEvent ae) {
                     float twistfactor = (float)twistSpeedSlider.getFloatValue();
                     PropertyManager.userprefs.setProperty("twistfactor", ""+twistfactor);
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             dragSpeedSlider.addAdjustmentListener(new AdjustmentListener() {
                 public void adjustmentValueChanged(AdjustmentEvent ae) {
                     float dragfactor = (float)dragSpeedSlider.getFloatValue();
                     PropertyManager.userprefs.setProperty("dragfactor", ""+dragfactor);
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             scaleSlider.addAdjustmentListener(new AdjustmentListener() {
                     public void adjustmentValueChanged(AdjustmentEvent ae) {
                         float scale = (float)scaleSlider.getFloatValue();
                         PropertyManager.userprefs.setProperty("scale", ""+scale);
-                        view.repaintView(this);
+                        view.repaint();
                     }
                 });
             sshrinkSlider.addAdjustmentListener(new AdjustmentListener() {
@@ -997,7 +991,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     }
                     PropertyManager.userprefs.setProperty("faceshrink", ""+faceshrink);
                     PropertyManager.userprefs.setProperty("stickershrink", ""+newsshrink);
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             fshrinkSlider.addAdjustmentListener(new AdjustmentListener() {
@@ -1016,20 +1010,20 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     }
                     PropertyManager.userprefs.setProperty("stickershrink", ""+stickershrink);
                     PropertyManager.userprefs.setProperty("faceshrink", ""+newfaceshrink);
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             contigiousCubies.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     PropertyManager.userprefs.setProperty("contigiouscubies", ""+contigiousCubies.isSelected());
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             eyewScaleSlider.addAdjustmentListener(new AdjustmentListener() {
                 public void adjustmentValueChanged(AdjustmentEvent ae) {
                     float neweyew = (float)eyewScaleSlider.getFloatValue();
                     PropertyManager.userprefs.setProperty("eyew", ""+neweyew);
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             final JCheckBox showShadows = new JCheckBox("Show Shadows", PropertyManager.getBoolean("shadows", true));
@@ -1037,7 +1031,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 public void actionPerformed(ActionEvent ae) {
                     boolean shadows = showShadows.isSelected();
                     PropertyManager.userprefs.setProperty("shadows", ""+shadows);
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             final JCheckBox quickMoves = new JCheckBox("Quick Moves", PropertyManager.getBoolean("quickmoves", false));
@@ -1059,7 +1053,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 public void actionPerformed(ActionEvent ae) {
                     boolean antialiasing = allowAntiAliasing.isSelected();
                     PropertyManager.userprefs.setProperty("antialiasing", ""+antialiasing);
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             final JCheckBox highlightByCubie = new JCheckBox("Highlight by Cubie", PropertyManager.getBoolean("highlightbycubie", false));
@@ -1137,7 +1131,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 public void actionPerformed(ActionEvent ae) {
                     boolean drawground = drawGround.isSelected();
                     PropertyManager.userprefs.setProperty("ground", ""+drawground);
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             
@@ -1148,7 +1142,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 public void actionPerformed(ActionEvent ae) {
                     boolean drawoutlines = drawOutlines.isSelected();
                     PropertyManager.userprefs.setProperty("outlines", ""+drawoutlines);
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
             
@@ -1177,7 +1171,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     scrambleState = SCRAMBLE_NONE;
                     init(); // to sync the controls with the default prefs.
                     viewcontainer.validate();
-                    view.repaintView(this);
+                    view.repaint();
                 }
             });
 

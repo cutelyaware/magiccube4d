@@ -105,8 +105,7 @@ public class GenericPipelineUtils
                                     
                                     float unitTowardsSunVec[/*3*/],
                                     float groundNormal[/*3*/], // null if no shadows
-                                    float groundOffset,
-                                    float eyeOffset)
+                                    float groundOffset)
     {
         if (verboseLevel >= 2) System.out.println("    in GenericPipelineUtils.computeFrame");
 
@@ -192,7 +191,6 @@ public class GenericPipelineUtils
             // XXX the 3^4 hypercube match what the puzzle usually does
             float scale4d = 6.f/puzzleDescription.circumRadius();
             float rotScale4d[][] = VecMath.mxs(rot4d, scale4d); // XXX MEMORY ALLOCATION
-            //rotScale4d[3][0] += eyeOffset;
             float temp[] = new float[4]; // XXX MEMORY ALLOCATION
             for (int iVert = 0; iVert < verts.length; ++iVert)
             {
@@ -221,7 +219,6 @@ public class GenericPipelineUtils
                 for (int j = 0; j < 3; ++j)
                     verts[i][j] *= invW;
                 verts[i][3] = w; // keep this for future reference
-                verts[i][0] += eyeOffset;
             }
         }
         if (verboseLevel >= 3) System.out.println("        after 4d->3d project: verts = "+com.donhatchsw.util.Arrays.toStringCompact(verts));

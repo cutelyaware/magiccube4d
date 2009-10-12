@@ -310,8 +310,7 @@ public class GenericGlue
         Color outlineColor,
         Graphics g,
         float twistFactor,
-        MC4DView view,
-        float eyeOffset)
+        Component view)
     {
         GenericGlue genericGlue = this;
 
@@ -351,7 +350,7 @@ public class GenericGlue
             
             //System.out.println("    "+genericGlue.iRotation+"/"+genericGlue.nRotation+" -> "+(genericGlue.iRotation+1)+"/"+genericGlue.nRotation+"");
             genericGlue.iRotation++;
-            view.repaintView(this); // make sure we keep drawing while there's more to do
+            view.repaint(); // make sure we keep drawing while there's more to do
         }
 
         int iGripOfTwist = -1;
@@ -374,7 +373,7 @@ public class GenericGlue
             fracIntoTwist = interp.func((genericGlue.iTwist+1)/(float)genericGlue.nTwist);
             //System.out.println("    "+genericGlue.iTwist+"/"+genericGlue.nTwist+" -> "+(genericGlue.iTwist+1)+"/"+genericGlue.nTwist+"");
 
-            view.repaintView(this); // make sure we keep drawing while there's more to do
+            view.repaint(); // make sure we keep drawing while there's more to do
         }
 
         // old params... but I don't think it was doing it right
@@ -404,9 +403,9 @@ public class GenericGlue
             stickerShrink,
 
             iGripOfTwist,
-            twistDir,
-            slicemask,
-            fracIntoTwist,
+              twistDir,
+              slicemask,
+              fracIntoTwist,
 
             VecMath.mxs(viewMat4df, scaleFudge4d),
             eyeW,
@@ -416,8 +415,7 @@ public class GenericGlue
                           {xOff, yOff}},
             VecMath.normalize(towardsSunVec),
             groundNormal,
-            groundOffset,
-            eyeOffset);
+            groundOffset);
 
         // THE COMPUTE PART ENDS HERE
         // THE PAINT PART STARTS HERE (maybe should be a separate function)
