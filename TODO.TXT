@@ -23,10 +23,10 @@ GUI
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
 * Make initial EyeW a function of puzzle size and maybe make the slider adjust view scale to keep it constant?
 * Add subtle sound feedback effects!
-* Add a nice big visual reward for solving a full scramble.
 * Add cross-eyed stereo viewing mode.
 * Copyright 2005 - update to 2009 (thanks for the shout-out in the about box Melinda!)
 * Warn user of overwrite after switching puzzle type and saving (so we don't have the nightmare I had with that M120C user).
+* DONE - Add a nice big visual reward for solving a full scramble.
 * DONE - isSolved doesn't recognize solutions when scramble included those odd twists such as slicemask 2 on the {5}x{4} 3
 * DONE - Reimplement ctrl-right-click to rotate "from" center.
 * DONE - Remember pre-maximized window size & position and restore to these when un-maximized.

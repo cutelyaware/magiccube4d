@@ -893,8 +893,19 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                             statusLabel.setText("Solved!");
                             break;
                         case SCRAMBLE_FULL:
-                            // this should really be a BIG reward with sound & animation.
-                            statusLabel.setText("You have solved the full 4D cube!!!");
+                            statusLabel.setText("Solved!");
+                            Congratulations congrats = new Congratulations(
+        						"<html>" + 
+        			            	"<center><H1>You have solved the " +
+        							genericGlue.genericPuzzleDescription.getSchlafliProduct() + " " + (int)genericGlue.genericPuzzleDescription.getEdgeLength() + 
+        							"!</H1></center>" + 
+        			                "<br>You may want to use File > Save As to archive your solution." +
+        			                "<br>If this is a first for you or it is a record, consider submitting it to" +
+        			                "<br>http://superliminal.com/cube/halloffame.htm" +
+        			                "<br><br><p><center>Click this window to close.</center></p>" +
+        		                "</html>");
+        					congrats.setVisible(true);
+        					congrats.start();
                             break;
                     }
                     scrambleState = SCRAMBLE_NONE;
