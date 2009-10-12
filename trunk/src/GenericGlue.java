@@ -66,7 +66,8 @@ public class GenericGlue
             @Override
             public Void doInBackground() {
             	genericPuzzleDescription = buildPuzzle(schlafli, lengthString, this);
-                genericPuzzleState = VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
+            	if( genericPuzzleDescription != null )
+            		genericPuzzleState = VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
             	return null;
     		}
 
