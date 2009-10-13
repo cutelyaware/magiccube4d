@@ -72,9 +72,10 @@ CODE CLEANUP
 * add VecMath.copymat calls where some matrices are being copied manually now.
 
 META
-* Get Eclipse to output executable jar files or modify my batch file and check it in.
+* Generate release notes.
 * Generally clean up the abstractions. Especially try to eliminate old PuzzleState and PolygonManager 
   classes and eliminate or prune and rename GenericGlue class. 
 * Get rid of Stickerspec.id_within_face if possible. I think it's not really needed.
 * Turn this list into tracked bugs & tasks
 * Start a wiki so solutions of the various puzzles can be tracked? Power to the people! (aka, we can then be lazy)
+* DONE - Get Eclipse to output executable jar files or modify my batch file and check it in.
