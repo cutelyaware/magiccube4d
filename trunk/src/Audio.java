@@ -27,7 +27,7 @@ public class Audio {
 		highlight = get("click.wav", .0f);
 		snap = get("close.wav", .7f);
 		correct = get("correct.wav", .8f);
-		fanfare = get("tada.wav", 1);
+		fanfare = get("fanfare.wav", 1);
 	}
 	
 	public static void play(Sound sound) {
