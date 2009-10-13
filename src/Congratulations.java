@@ -91,10 +91,10 @@ public class Congratulations extends JFrame {
 			@Override
 			public void run() {				
 				Congratulations congrats = new Congratulations(
-					"<html>" + 
-		            	"<center><H1>You may already be a wiener!" +
-		                "<br><br><p><center>Click this window to close.</center></p>" +
-	                "</html>");
+					"<html><center>" + 
+		            	"<H1>You may already be a wiener!</H1>" +
+		                "<br><br><p>Click this window to close.</p>" +
+	                "</center></html>");
 				congrats.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				congrats.addMouseListener(new MouseAdapter() {
 					@Override
