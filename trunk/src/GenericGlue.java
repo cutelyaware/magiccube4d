@@ -21,6 +21,7 @@ public class GenericGlue
 
     public GenericPuzzleDescription genericPuzzleDescription = null;
     public int genericPuzzleState[] = null;
+    public float faceRGB[][];
 
     //
     // A rotation is currently in progress if iRotation < nRotation.
@@ -67,6 +68,7 @@ public class GenericGlue
             	genericPuzzleDescription = buildPuzzle(schlafli, lengthString, this);
             	if( genericPuzzleDescription != null )
             		genericPuzzleState = VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
+                faceRGB = ColorUtils.generateVisuallyDistinctRGBs(genericPuzzleDescription.nFaces(), .7f, .1f);
             	return null;
     		}
 
@@ -309,7 +311,6 @@ public class GenericGlue
 
         // All the rest are for paint the paint part only
         Color ground,
-        float faceRGB[][],
         boolean highlightByCubie,
         Color outlineColor,
         Graphics g,
