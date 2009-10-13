@@ -34,7 +34,6 @@ public class MC4DView extends Component {
     private AnimationQueue animationQueue;
     public boolean isAnimating() { return animationQueue.isAnimating(); }
     private int slicemask; // bitmap representing which number keys are down
-    private float faceRGB[][];
     private Color skyOverride = null; // null means use the user's preference from the PropertyManager.
     private int xOff, yOff;
     private float pixels2polySF = .01f; // screen transform data
@@ -89,7 +88,6 @@ public class MC4DView extends Component {
     	this.genericGlue = gg;
         this.rotationHandler = rotations;
         this.setHistory(hist);
-        faceRGB = ColorUtils.generateVisuallyDistinctRGBs(nfaces, .7f, .1f); //generateHSVColors(12, 10, .5f);
         this.setFocusable(true);
         
         // manage slicemask as user holds and releases number keys
@@ -372,7 +370,6 @@ public class MC4DView extends Component {
 
               // used by paint part only...
                 PropertyManager.getBoolean("ground", false) ? PropertyManager.getColor("ground.color") : null,
-                faceRGB,
                 PropertyManager.getBoolean("highlightbycubie", false),
                 PropertyManager.getBoolean("outlines", false) ? PropertyManager.getColor("outlines.color") : null,
                 g,
