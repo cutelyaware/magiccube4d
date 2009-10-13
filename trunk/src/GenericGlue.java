@@ -129,7 +129,7 @@ public class GenericGlue
 		
 		 // Our faceState vector should have no -1s in it.
 		 // Perhaps we should assert this.
-		 System.out.println( "Pristine Puzzle" );
+		 //System.out.println( "Pristine Puzzle" );
 		 return true;
     }
 
@@ -443,7 +443,7 @@ public class GenericGlue
         if (genericGlue.iTwist < genericGlue.nTwist)
         {
         	if(genericGlue.iTwist == 0) {
-        		Audio.play(Audio.Sound.TWISTING);
+        		Audio.loop(Audio.Sound.TWISTING);
         	}
             genericGlue.iTwist++;
             if (genericGlue.iTwist == genericGlue.nTwist)

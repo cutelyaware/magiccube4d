@@ -890,9 +890,11 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     switch (scrambleState) {
                         case SCRAMBLE_PARTIAL:
                             statusLabel.setText("Solved!");
+                            Audio.play(Audio.Sound.CORRECT); // Just a little "attaboy" sound.
                             break;
                         case SCRAMBLE_FULL:
                             statusLabel.setText("Solved!");
+                            // A really flashy reward.
                             Congratulations congrats = new Congratulations(
         						"<html>" + 
         			            	"<center><H1>You have solved the " +
@@ -1066,7 +1068,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     view.repaint();
                 }
             });
-            final JCheckBox mute = new JCheckBox("Mute Sounds", PropertyManager.getBoolean("muted", false));
+            final JCheckBox mute = new JCheckBox("Mute Sound Effects", PropertyManager.getBoolean("muted", false));
             mute.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     boolean muted = mute.isSelected();

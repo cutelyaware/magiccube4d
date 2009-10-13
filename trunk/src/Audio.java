@@ -13,11 +13,12 @@ import javax.sound.sampled.FloatControl;
  */
 public class Audio {
 	public final static Audio instance = new Audio();
-	public enum Sound { HIGHLIGHT, TWISTING, SNAP, FANFARE };
+	public enum Sound { HIGHLIGHT, TWISTING, SNAP, CORRECT, FANFARE };
 	private static Clip 
 		highlight,
 		twisting,
 		snap,
+		correct,
 		fanfare;
 	private static boolean muted = false;
 	
@@ -25,6 +26,7 @@ public class Audio {
 		twisting = get("white1000.wav", .4f);
 		highlight = get("click.wav", .0f);
 		snap = get("close.wav", .7f);
+		correct = get("correct.wav", .8f);
 		fanfare = get("tada.wav", 1);
 	}
 	
@@ -44,6 +46,7 @@ public class Audio {
 			twisting.stop();
 			highlight.stop();
 			snap.stop();
+			correct.stop();
 			fanfare.stop();
 		}
 	}
@@ -53,6 +56,7 @@ public class Audio {
 			case HIGHLIGHT: return highlight;
 			case TWISTING: return twisting;
 			case SNAP: return snap;
+			case CORRECT: return correct;
 			case FANFARE: return fanfare;
 			default: return highlight;
 		}
