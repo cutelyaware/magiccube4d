@@ -536,6 +536,40 @@ public class GenericPipelineUtils
         return iStickerAndPoly != null ? iStickerAndPoly[0] : -1;
     }
 
+    public static boolean gripHasValidTwist( int grip, GenericPuzzleDescription puzzle )
+    {
+    	int[] orders = puzzle.getGripSymmetryOrders();
+        if( grip < 0 || grip >= orders.length )
+        	return false;
+
+        // These can't be rotated.
+        if( orders[grip] == 0 )
+        	return false;
+        
+        // These are the 360 degree rotations.
+        if( orders[grip] == 1 )
+        	return false;
+        
+        return true;
+    }
+    
+    public static int pickStickerValidForHighlighting( float x, float y, Frame frame,
+    	GenericPuzzleDescription puzzle, boolean ctrlDown )
+    {
+    	PickInfo pickInfo = pickGripHelper( x, y, frame, puzzle );
+    	if( pickInfo == null )
+    		return -1;
+    	
+    	// If control is down, we can show any sticker.
+    	// Otherwise, we need to make sure the twist makes sense.
+    	if( ctrlDown )
+    		return pickInfo.stickerIndex;
+    	if( !gripHasValidTwist( pickInfo.gripIndex, puzzle ) )
+    		return -1;
+
+        return pickInfo.stickerIndex;
+    }
+    
     private static boolean is2x2x2Cell( float polyCenter[], float stickerCenter[], float faceCenter[] )
     {
         // Do fuzzy compares so that we can catch other puzzles with 2x2x2 cells besides the 2^4.
@@ -558,6 +592,8 @@ public class GenericPipelineUtils
     private static class PickInfo
     {
     	public int faceIndex;
+    	public int stickerIndex;
+    	public int gripIndex;
     	public float polyCenter[];
     	public float stickerCenter[];
     	public boolean is2x2x2Cell;
@@ -590,22 +626,31 @@ public class GenericPipelineUtils
         
         PickInfo ret = new PickInfo();
         ret.faceIndex = faceIndex;
+        ret.stickerIndex = hit[0];
         ret.polyCenter = polyCenter;
         ret.stickerCenter = stickerCenter;
         ret.is2x2x2Cell = is2x2x2Cell( polyCenter, stickerCenter, faceCenter );
         return ret;
     }
 
+    private static PickInfo pickGripHelper( float x, float y,
+                               Frame frame,
+                               GenericPuzzleDescription puzzleDescription )
+    {
+    	PickInfo pickInfo = pickPolyAndStickerCenters( x, y, frame, puzzleDescription );
+        if( pickInfo == null )
+            return null;
+        float center[] = pickInfo.is2x2x2Cell ? pickInfo.polyCenter : pickInfo.stickerCenter;
+        pickInfo.gripIndex = puzzleDescription.getClosestGrip( center, pickInfo.faceIndex, pickInfo.is2x2x2Cell );
+        return pickInfo;
+    }
+    
     public static int pickGrip(float x, float y,
                                Frame frame,
                                GenericPuzzleDescription puzzleDescription)
     {
-    	PickInfo pickInfo = pickPolyAndStickerCenters( x, y, frame, puzzleDescription );
-        if( pickInfo == null )
-            return -1;
-        float center[] = pickInfo.is2x2x2Cell ? pickInfo.polyCenter : pickInfo.stickerCenter;
-        int iGrip = puzzleDescription.getClosestGrip( center, pickInfo.faceIndex, pickInfo.is2x2x2Cell );
-        return iGrip;
+    	PickInfo pickInfo = pickGripHelper( x, y, frame, puzzleDescription );
+    	return pickInfo == null ? -1 : pickInfo.gripIndex;
     }
 
     public static float[] pickPointToRotateToCenter(float x, float y,
@@ -724,7 +769,6 @@ public class GenericPipelineUtils
 
         if (verboseLevel >= 2) System.out.println("    out GenericPipelineUtils.paintFrame");
     } // paintFrame
-
 
     private static float tmpTWAf1[] = new float[2], tmpTWAf2[] = new float[2]; // scratch vars
     private static float twice_triangle_area(float v0[], float v1[], float v2[])

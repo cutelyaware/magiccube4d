@@ -97,12 +97,18 @@ public class MC4DView extends Component {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
                 if(1 <= numkey && numkey <= 9)
                     slicemask |= 1<<numkey-1; // turn on the specified bit
+
+                if( arg0.getKeyCode() == KeyEvent.VK_CONTROL )
+                	genericGlue.updateStickerHighlighting( true, MC4DView.this );
             }
             @Override
 			public void keyReleased(KeyEvent arg0) {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
                 if(1 <= numkey && numkey <= 9)
                     slicemask &= ~(1<<numkey-1); // turn off the specified bit
+                
+                if( arg0.getKeyCode() == KeyEvent.VK_CONTROL )
+                	genericGlue.updateStickerHighlighting( false, MC4DView.this );
             }
         });
         this.addMouseListener(new MouseAdapter() {
@@ -134,12 +140,11 @@ public class MC4DView extends Component {
                         genericGlue.genericPuzzleDescription);
                      
                 // The twist might be illegal.
-                int[] orders = genericGlue.genericPuzzleDescription.getGripSymmetryOrders();
                 if( grip < 0 ) 
                 {
                     System.out.println("missed");
                 }
-                else if( grip >= orders.length || orders[grip] == 0 )
+                else if( !GenericPipelineUtils.gripHasValidTwist( grip, genericGlue.genericPuzzleDescription ) )
                 {
                 	System.out.println("can't twist that grip.");
                 }    
@@ -420,8 +425,7 @@ public class MC4DView extends Component {
                     }
                     int order = orders[iTwistGrip];
                     
-                    // Is this a legal twist?
-                    if( order == 0 )
+                    if( !GenericPipelineUtils.gripHasValidTwist( iTwistGrip, genericGlue.genericPuzzleDescription ) )
                     	continue;
                     
                     double totalRotationAngle = 2*Math.PI/order;                    

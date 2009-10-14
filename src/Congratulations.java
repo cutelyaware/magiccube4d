@@ -92,7 +92,7 @@ public class Congratulations extends JFrame {
 			public void run() {				
 				Congratulations congrats = new Congratulations(
 					"<html><center>" + 
-		            	"<H1>You may already be a wiener!</H1>" +
+		            	"<H1>You may already be a winner!</H1>" +
 		                "<br><br><p>Click this window to close.</p>" +
 	                "</center></html>");
 				congrats.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
