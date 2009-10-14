@@ -23,6 +23,10 @@ GUI
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
 * Make initial EyeW a function of puzzle size and maybe make the slider adjust view scale to keep it constant?
 * Add cross-eyed stereo viewing mode.
+* Figure out a UI that allows for twists with "directions" that are multiples of 1 and -1.
+* See if it's reasonable to get the views to run in IE and/or Firefox as an applet. If so,
+  - try embedding the full app too (hey, we can dream!), and
+  - extend the PropertyManager to access applet parameters or add them via the applet init.
 * Copyright 2005 - update to 2009 (thanks for the shout-out in the about box Melinda!)
 * Warn user of overwrite after switching puzzle type and saving (so we don't have the nightmare I had with that M120C user).
 * DONE - Add subtle sound feedback effects.
@@ -42,6 +46,7 @@ GUI
 
 LOG FILES
 * Maybe keep printing puzzle state data but skip over reading it and initialize from history data instead.
+* Add ability to read version 2 log files.
 * DONE - Force file names to end with ".log".
 * DONE - Save transform matrix in the file.
 
@@ -52,8 +57,8 @@ BUGS
 * Fix "whichax out of range" errors
 * Fix random Exception in thread "AWT-EventQueue-0" java.lang.ArrayIndexOutOfBoundsException: 4042
 	at GenericPipelineUtils.paintFrame(GenericPipelineUtils.java:683)
-* Make Esc key cancel solve/cheat animations even when 3D window does not have focus.
 * Fix so that building new puzzle releases memory used by previous puzzle. (by removing listeners?)
+* DONE - Make Esc key cancel solve/cheat animations even when 3D window does not have focus.
 * DONE - Autorotations converge to spinning about major axes, and rather quickly when spun really fast.
 * DONE - Fix horrible behavior when attempting to twist center-center stickers.
 * DONE - Fix macro apply.

@@ -40,9 +40,8 @@ public class MagicCube {
      * Indexing data for a sticker or a grip.
      */
     public final static class Stickerspec {
-        public int coords[] = new int[NDIMS];	// XXX - only applies to old puzzles now, try to remove.
         public int
-            face, dim, id_within_puzzle, id_within_face;
+            face, dim, id_within_puzzle;
     }
     
     
@@ -75,7 +74,7 @@ public class MagicCube {
 
     
 	/*
-	 * default 4d viewing parameters
+	 * 4d viewing defaults
 	 */
 	public final static float 
 		FACESHRINK    = .4f,
@@ -83,19 +82,19 @@ public class MagicCube {
 		EYEW          = 5.2f;
 
 	/*
-	 * 3d viewing parameters
+	 * 3d viewing defaults
 	 */
 	public final static float
 		TILT  =  30, // degrees
 		TWIRL = -42, // degrees
 		EYEZ  =  10; // should really be function of LENGTH and EYEW
 
-    public final static float SUNVEC[] = { .82f, 1.55f, 3.3f }; // points *towards* sun. default for shading & shadows
+    public final static float SUNVEC[] = { .82f, 1.55f, 3.3f }; // Default for shading & shadows points *towards* sun. 
 
 	public final static String 
         TITLE = "Magic Cube 4D", 
-        LOGFILE = "MagicCube4D.log", // in user's home dir
-        MAGIC_NUMBER = "MagicCube4D"; // 1st string in log file for sanity checking
+        LOGFILE = "MagicCube4D.log", // in user's home directory
+        MAGIC_NUMBER = "MagicCube4D"; // 1st string in log and macro files for sanity checking
     
     public final static String PUZZLE_VERSION = "4.0.0";
     public final static int LOG_FILE_VERSION = 3;
