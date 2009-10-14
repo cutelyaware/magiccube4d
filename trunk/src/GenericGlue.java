@@ -203,11 +203,20 @@ public class GenericGlue
     public void mouseMovedAction(MouseEvent e,
                                  Component view)
     {
+    	mouseMovedX = e.getX();
+    	mouseMovedY = e.getY();
+    	updateStickerHighlighting( e.isControlDown(), view );
+    } // mouseMovedAction
+    private int mouseMovedX, mouseMovedY;
+    
+    public void updateStickerHighlighting( boolean isControlDown, Component view )
+    {
         GenericGlue genericGlue = this;
-        int pickedSticker = GenericPipelineUtils.pickSticker(
-                                    e.getX(), e.getY(),
+        int pickedSticker = GenericPipelineUtils.pickStickerValidForHighlighting(
+                                    genericGlue.mouseMovedX, genericGlue.mouseMovedY,
                                     genericGlue.untwistedFrame,
-                                    genericGlue.genericPuzzleDescription);
+                                    genericGlue.genericPuzzleDescription, 
+                                    isControlDown );
         //System.out.println("    hover sticker "+genericGlue.iStickerUnderMouse+" -> "+pickedSticker+"");
         if (pickedSticker != genericGlue.iStickerUnderMouse)
             view.repaint(); // highlight changed (or turned on or off)
@@ -215,8 +224,7 @@ public class GenericGlue
         	Audio.play(Audio.Sound.HIGHLIGHT);
         }
         genericGlue.iStickerUnderMouse = pickedSticker;
-    } // mouseMovedAction
-
+    }
 
     public void mouseClickedAction( MouseEvent e,
     		RotationHandler rotationHandler,
