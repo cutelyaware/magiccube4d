@@ -179,6 +179,11 @@ public class MC4DView extends Component {
                     repaint();
                 }
             }
+            @Override
+			public void mouseEntered(MouseEvent e) {
+            	requestFocusInWindow(); // So we can get ctrl and other key events before the user clicks.
+				super.mouseEntered(e);
+			}
         });
         // watch for dragging gestures to rotate the 3D view
         this.addMouseMotionListener(new MouseMotionAdapter() {

@@ -23,7 +23,7 @@ public class Audio {
 	private static boolean muted = false;
 	
 	public Audio() {
-		twisting = get("white1000.wav", .4f);
+		twisting = get("white1000.wav", .3f);
 		highlight = get("click.wav", .0f);
 		snap = get("close.wav", .7f);
 		correct = get("correct.wav", .8f);
