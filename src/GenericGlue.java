@@ -200,16 +200,15 @@ public class GenericGlue
     }
     
 
-    public void mouseMovedAction(MouseEvent e,
-                                 Component view)
+    public void mouseMovedAction( MouseEvent e, Component view, RotationHandler rotationHandler )
     {
     	mouseMovedX = e.getX();
     	mouseMovedY = e.getY();
-    	updateStickerHighlighting( e.isControlDown(), view );
+    	updateStickerHighlighting( e.isControlDown(), view, rotationHandler );
     } // mouseMovedAction
     private int mouseMovedX, mouseMovedY;
     
-    public void updateStickerHighlighting( boolean isControlDown, Component view )
+    public void updateStickerHighlighting( boolean isControlDown, Component view, RotationHandler rotationHandler )
     {
         GenericGlue genericGlue = this;
         int pickedSticker = GenericPipelineUtils.pickStickerValidForHighlighting(
@@ -217,6 +216,15 @@ public class GenericGlue
                                     genericGlue.untwistedFrame,
                                     genericGlue.genericPuzzleDescription, 
                                     isControlDown );
+        
+        // If this is a view rotation, we need to do further checks to see if the result is really valid.
+        if( -1 != pickedSticker && isControlDown )
+        {
+        	ViewRotationInfo dummy = new ViewRotationInfo();
+        	if( !getViewRotationInfo( genericGlue.mouseMovedX, genericGlue.mouseMovedY, rotationHandler, dummy ) )
+        		pickedSticker = -1;
+        }
+        
         //System.out.println("    hover sticker "+genericGlue.iStickerUnderMouse+" -> "+pickedSticker+"");
         if (pickedSticker != genericGlue.iStickerUnderMouse)
             view.repaint(); // highlight changed (or turned on or off)
@@ -226,6 +234,46 @@ public class GenericGlue
         genericGlue.iStickerUnderMouse = pickedSticker;
     }
 
+    private class ViewRotationInfo
+    {
+    	public double totalRotationAngle;
+    	public double[] nicePointOnScreen;
+    	public double[] minusWAxis;
+    }
+    
+    private boolean getViewRotationInfo( int x, int y, RotationHandler rotationHandler, ViewRotationInfo info )
+    {
+        float nicePoint[] = GenericPipelineUtils.pickPointToRotateToCenter(
+        	x, y, this.untwistedFrame, this.genericPuzzleDescription, RotationHandler.getSnapSetting() );
+        
+        if( nicePoint == null )
+        	return false;
+    	
+        //
+        // Initiate a rotation
+        // that takes the nice point to the center
+        // (i.e. to the -W axis)
+        // 
+
+        double nicePointD[] = new double[4];
+        for (int i = 0; i < 4; ++i)
+            nicePointD[i] = nicePoint[i];
+
+        double nicePointOnScreen[] = VecMath.vxm( nicePointD, rotationHandler.current4dView() );
+        VecMath.normalize(nicePointOnScreen, nicePointOnScreen); // if it's not already
+        double minusWAxis[] = {0,0,0,-1};
+        double totalRotationAngle = VecMath.angleBetweenUnitVectors(
+                            nicePointOnScreen,
+                            minusWAxis);
+        
+        info.nicePointOnScreen = nicePointOnScreen;
+        info.minusWAxis = minusWAxis;
+        info.totalRotationAngle = totalRotationAngle;
+        
+        // Does this do anything?
+        return totalRotationAngle > 1e-6;
+    }
+    
     public void mouseClickedAction( MouseEvent e,
     		RotationHandler rotationHandler,
     		float twistFactor,
@@ -250,53 +298,30 @@ public class GenericGlue
             }
         } */
 
-        float nicePoint[] = GenericPipelineUtils.pickPointToRotateToCenter(
-                         e.getX(), e.getY(),
-                         genericGlue.untwistedFrame,
-                         genericGlue.genericPuzzleDescription, 
-                         RotationHandler.getSnapSetting() );
-
-        if (nicePoint != null)
+        ViewRotationInfo rotInfo = new ViewRotationInfo();
+        if( !getViewRotationInfo( e.getX(), e.getY(), rotationHandler, rotInfo ) )
         {
-            //
-            // Initiate a rotation
-            // that takes the nice point to the center
-            // (i.e. to the -W axis)
-            // 
-
-            double nicePointD[] = new double[4];
-            for (int i = 0; i < 4; ++i)
-                nicePointD[i] = nicePoint[i];
-
-            double nicePointOnScreen[] = VecMath.vxm( nicePointD, rotationHandler.current4dView() );
-            VecMath.normalize(nicePointOnScreen, nicePointOnScreen); // if it's not already
-            double minusWAxis[] = {0,0,0,-1};
-            double totalRotationAngle = VecMath.angleBetweenUnitVectors(
-                                nicePointOnScreen,
-                                minusWAxis);
-
-            boolean rightClick = SwingUtilities.isRightMouseButton(e);
-            genericGlue.nRotation = calculateNTwists( totalRotationAngle, twistFactor );
-            // XXX ARGH! we'd like the speed to vary as the user changes the slider,
-            // XXX but the above essentially locks in the speed for this rotation
-            genericGlue.iRotation = 0; // we are iRotation frames into nRotation
-            genericGlue.rotationFrom = rightClick ? minusWAxis : nicePointOnScreen;
-            genericGlue.rotationTo = rightClick ? nicePointOnScreen : minusWAxis;
-            view.repaint();
-
-            if (genericGlue.iRotation == genericGlue.nRotation)
-            {
-                // Already in the center
-                System.err.println("Can't rotate that.\n");
-            }
-
-        	Audio.loop(Audio.Sound.TWISTING);
+        	 System.out.println( "missed or invalid" );
+        	 return;
         }
-        else
-            System.out.println("missed");
-            
-    } // mouseClickedAction
 
+        boolean rightClick = SwingUtilities.isRightMouseButton(e);
+        genericGlue.nRotation = calculateNTwists( rotInfo.totalRotationAngle, twistFactor );
+        // XXX ARGH! we'd like the speed to vary as the user changes the slider,
+        // XXX but the above essentially locks in the speed for this rotation
+        genericGlue.iRotation = 0; // we are iRotation frames into nRotation
+        genericGlue.rotationFrom = rightClick ? rotInfo.minusWAxis : rotInfo.nicePointOnScreen;
+        genericGlue.rotationTo = rightClick ? rotInfo.nicePointOnScreen : rotInfo.minusWAxis;
+        view.repaint();
+
+        if (genericGlue.iRotation == genericGlue.nRotation)
+        {
+            // Already in the center
+            System.err.println("Can't rotate that.\n");
+        }
+
+    	Audio.loop(Audio.Sound.TWISTING);            
+    }
 
     // XXX Could maybe separate this out
     // XXX into a compute part and a paint part,
