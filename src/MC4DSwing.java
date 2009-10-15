@@ -612,28 +612,28 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     public void initPuzzleMenu(JMenu puzzlemenu, final JLabel statusLabel, final JProgressBar progressView)
     {
         String table[][] = {
-            {"{3,3,3}",  "1,1.9,2,3,4,5,6,7", "Simplex"},
-            {"{3}x{4}",  "1,2,3,4,5,6,7",     "Triangular Duoprism"},
-            {"{4,3,3}",  "1,2,3,4,5,6,7,8,9", "Hypercube"},
-            {"{5}x{4}",  "1,2,2.5,3,4,5,6,7", "Pentagonal Duoprism"},
-            {"{4}x{5}",  "1,2,2.5,3,4,5,6,7", "Pentagonal Duoprism (alt)"},
-            {"{6}x{4}",  "1,2,2.5,3,4,5,6,7", "Hexagonal Duoprism"},
-            {"{7}x{4}",  "1,2,2.5,3,4,5,6,7", "Heptagonal Duoprism"},
-            {"{8}x{4}",  "1,2,2.5,3,4,5,6,7", "Octagonal Duoprism"},
-            {"{9}x{4}",  "1,2,2.5,3,4,5,6,7", "Nonagonal Duoprism"},
-            {"{10}x{4}", "1,2,2.5,3,4,5,6,7", "Decagonal Duoprism"},
-            {"{100}x{4}","1,3",               "Onehundredagonal Duoprism"},
-            {"{3}x{3}",  "1,2,3,4,5,6,7",     ""},
-            {"{3}x{5}",  "1,2,2.5,3,4,5,6,7", ""},
-            {"{5}x{5}",  "1,2,2.5,3,4,5,6,7", ""}, // XXX 2 is ugly, has slivers
-            {"{5}x{10}",  "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
-            {"{10}x{5}",  "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
-            {"{10}x{10}", "1,2.5,3",          ""}, // XXX 2 is ugly, has slivers
-            {"{3,3}x{}", "1,2,3,4,5,6,7",     "Tetrahedral Prism"},
-            {"{5,3}x{}", "1,2,2.5,3,4,5,6,7", "Dodecahedral Prism"},
-            {"{}x{5,3}", "1,2,2.5,3,4,5,6,7", "Dodecahedral Prism (alt)"},
-            {"{5,3,3}",  "1,2,2.5,3",         "Hypermegaminx (BIG!)"},
-            {null,       "",                  "Invent my own!"},
+            {"{3,3,3}",  "1,1.9,2,3,4,5,6,7",	"Simplex"},
+            {"{3}x{4}",  "1,2,3,4,5,6,7",		"Triangular Duoprism"},
+            {"{4,3,3}",  "1,2,3,4,5,6,7,8,9",	"Hypercube"},
+            {"{5}x{4}",  "1,2,3,4,5,6,7",		"Pentagonal Duoprism"},
+            {"{4}x{5}",  "1,2,3,4,5,6,7", 		"Pentagonal Duoprism (alt)"},
+            {"{6}x{4}",  "1,2,3,4,5,6,7", 		"Hexagonal Duoprism"},
+            {"{7}x{4}",  "1,2,3,4,5,6,7", 		"Heptagonal Duoprism"},
+            {"{8}x{4}",  "1,2,3,4,5,6,7", 		"Octagonal Duoprism"},
+            {"{9}x{4}",  "1,2,3,4,5,6,7",		"Nonagonal Duoprism"},
+            {"{10}x{4}", "1,2,3,4,5,6,7",		"Decagonal Duoprism"},
+            {"{100}x{4}","1,3",					"Onehundredagonal Duoprism"},
+            {"{3}x{3}",  "1,2,3,4,5,6,7",		""},
+            {"{3}x{5}",  "1,2,3,4,5,6,7",		""},
+            {"{5}x{5}",  "1,2,3,4,5,6,7",		""}, // XXX look at twisting on 2
+            {"{5}x{10}", "1,2,3",				""}, // XXX look at twisting on 2
+            {"{10}x{5}", "1,2,3",				""}, // XXX look at twisting on 2
+            {"{10}x{10}","1,2,3",				""}, // XXX look at twisting on 2
+            {"{3,3}x{}", "1,2,3,4,5,6,7",		"Tetrahedral Prism"},
+            {"{5,3}x{}", "1,2,3,4,5,6,7",		"Dodecahedral Prism"},
+            {"{}x{5,3}", "1,2,3,4,5,6,7",		"Dodecahedral Prism (alt)"},
+            {"{5,3,3}",  "1,2,3",				"Hypermegaminx (BIG!)"},
+            {null,       "",					"Invent my own!"},
         };
         for (int i = 0; i < table.length; ++i)
         {
@@ -645,8 +645,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 
             // Puzzles with triangles kind of suck so far,
             // so we might want to leave them out of the menu...
-            boolean allowPuzzlesWithTriangles = true;
-            //boolean allowPuzzlesWithTriangles = false;
+            boolean allowPuzzlesWithTriangles = false;
             if (!allowPuzzlesWithTriangles)
             {
                 if (schlafli != null && schlafli.indexOf("{3") != -1)
