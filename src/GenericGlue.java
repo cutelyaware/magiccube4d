@@ -89,7 +89,7 @@ public class GenericGlue
     		builder.run();
     }
 
-    public GenericGlue(String initialSchlafli, double initialLength, JProgressBar progressView)
+    public GenericGlue(String initialSchlafli, double initialLength, JProgressBar progressView, HighlightingCallback hCallback )
     {
         super();
         if (verboseLevel >= 1) System.out.println("in GenericGlue ctor");
@@ -98,6 +98,8 @@ public class GenericGlue
             initPuzzle(initialSchlafli, ""+initialLength, progressView, new JLabel(), false, null);
         }
         if (verboseLevel >= 1) System.out.println("out GenericGlue ctor");
+        
+        highlightingCallback = hCallback;
     }
 
     public boolean isAnimating()
@@ -208,25 +210,56 @@ public class GenericGlue
     } // mouseMovedAction
     private int mouseMovedX, mouseMovedY;
     
-    public void updateStickerHighlighting( boolean isControlDown, Component view, RotationHandler rotationHandler )
+    public interface HighlightingCallback
+    {
+    	public boolean active();
+    	public boolean shouldHighlightSticker( GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex );
+    }
+    private HighlightingCallback highlightingCallback;
+    
+    public void updateStickerHighlighting( boolean isControlDown, Component view, 
+    	RotationHandler rotationHandler )
     {
         GenericGlue genericGlue = this;
-        int pickedSticker = GenericPipelineUtils.pickStickerValidForHighlighting(
-                                    genericGlue.mouseMovedX, genericGlue.mouseMovedY,
-                                    genericGlue.untwistedFrame,
-                                    genericGlue.genericPuzzleDescription, 
-                                    isControlDown );
-        
-        // If this is a view rotation, we need to do further checks to see if the result is really valid.
-        if( -1 != pickedSticker && isControlDown )
+    	int pickedSticker = -1;
+    	
+        if( highlightingCallback != null && highlightingCallback.active() )
         {
-        	ViewRotationInfo dummy = new ViewRotationInfo();
-        	if( !getViewRotationInfo( genericGlue.mouseMovedX, genericGlue.mouseMovedY, rotationHandler, dummy ) )
+        	GenericPipelineUtils.PickInfo pickInfo = GenericPipelineUtils.getAllPickInfo(
+        		genericGlue.mouseMovedX, genericGlue.mouseMovedY,
+        		genericGlue.untwistedFrame,
+        		genericGlue.genericPuzzleDescription );
+        	
+        	if( pickInfo != null )
+        	{
+            	if( highlightingCallback.shouldHighlightSticker( genericGlue.genericPuzzleDescription, 
+            		pickInfo.stickerIndex, pickInfo.gripIndex ) )
+            	{
+            		pickedSticker = pickInfo.stickerIndex;
+            	}
+        	}
+        	else
         		pickedSticker = -1;
+        }
+        else
+        {  
+            pickedSticker = GenericPipelineUtils.pickStickerValidForHighlighting(
+            		genericGlue.mouseMovedX, genericGlue.mouseMovedY,
+            		genericGlue.untwistedFrame,
+            		genericGlue.genericPuzzleDescription, 
+            		isControlDown );
+        	
+	        // If this is a view rotation, we need to do further checks to see if the result is really valid.
+	        if( -1 != pickedSticker && isControlDown )
+	        {
+	        	ViewRotationInfo dummy = new ViewRotationInfo();
+	        	if( !getViewRotationInfo( genericGlue.mouseMovedX, genericGlue.mouseMovedY, rotationHandler, dummy ) )
+	        		pickedSticker = -1;
+	        }
         }
         
         //System.out.println("    hover sticker "+genericGlue.iStickerUnderMouse+" -> "+pickedSticker+"");
-        if (pickedSticker != genericGlue.iStickerUnderMouse)
+        if(pickedSticker != genericGlue.iStickerUnderMouse)
             view.repaint(); // highlight changed (or turned on or off)
         if(pickedSticker != -1 && genericGlue.iStickerUnderMouse != pickedSticker) {
         	Audio.play(Audio.Sound.HIGHLIGHT);

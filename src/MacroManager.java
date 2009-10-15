@@ -23,7 +23,7 @@ import com.donhatchsw.util.VecMath;
  * Created July 15, 2006
  * @author Melinda Green
  */
-public class MacroManager {
+public class MacroManager implements GenericGlue.HighlightingCallback {
     private String filePath;
     private Vector<Macro> macros = new Vector<Macro>();
     private Macro curMacro;
@@ -150,6 +150,23 @@ public class MacroManager {
         nrefs = 0;
     }
     
+    // HighlightingCallback impl.
+	public boolean active()
+	{
+		return isOpen();
+	}
+	public boolean shouldHighlightSticker( GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex )
+	{	
+		// Macros are currently grip based, though that may change in the future.
+		MagicCube.Stickerspec grip = new MagicCube.Stickerspec();
+		grip.id_within_puzzle = gripIndex;
+		
+		if( !refDeterminesUniqueOrientation( puzzle, grip ) )
+			return false;
+		
+		return true;
+	}
+    
     private boolean colinear( double p1[], double p2[], double p3[] )
     {
     	double v1[] = VecMath.normalize( VecMath.vmv( p2, p1 ) );
@@ -181,7 +198,16 @@ public class MacroManager {
         			return false;
         }
         
-        // Disallow refs that are colinear with the face center.
+		// Disallow refs coincident with the implicit face center.
+		if( nrefs > 0 )
+		{
+			if( VecMath.equals( 
+					Macro.getMacroRefFaceCoords( refStickers[0], puzzle ), 
+					Macro.getMacroRefCoords( ref, puzzle ), 1e-6 ) )
+				return false;
+		}
+        
+        // Disallow refs that are colinear with the implicit face center.
         for( int i=0; i<nrefs; i++ )
         {
         	if( colinear(
