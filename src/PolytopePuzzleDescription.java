@@ -442,7 +442,11 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 if (length == ceilLength
                  && ceilLength % 2 == 0
                  && !isPrismOfThisFace)
-                    sliceThickness *= .99;
+                {
+                	//System.out.println( "going to have slivers" );
+                	// Warning! edit with caution (sliver removal heuristic is tuned to this).
+                	sliceThickness *= .9999;
+                }
 
                 //sliceThickness = fullThickness/4;
 
@@ -515,9 +519,46 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         }
         
         progressWorker.init("Fixing orientations");
-
         CSG.orientDeep(slicedPolytope); // XXX shouldn't be necessary!!!!
 
+        //
+        // Remove slivers
+        // XXX - This is a hack for a hack.
+        // A better long term approach would be to improve the slice function.
+        //
+        progressWorker.init( "Cleaning up sliced polytope." );
+        
+        CSG.SPolytope facets[] = slicedPolytope.p.facets;
+        CSG.SPolytope validFacets[] = new CSG.SPolytope[facets.length];
+        
+        // Calculate a volume cutoff for slivers.
+        // Note: we needed to make this depend on the full volume of the puzzle.
+        // We'll make our cutoff 20% of the average volume of a sticker.
+        double fullVolume = Math.abs( slicedPolytope.volume() );
+        double cutoff = ( fullVolume / facets.length ) * .15;
+        //System.out.println( "sliver cutoff = " + cutoff );
+
+        int nValidFacets = 0;
+        for( int i=0; i<facets.length; i++ )
+        {
+        	double volume = Math.abs( facets[i].volume() );
+        	if( volume > cutoff )
+        		validFacets[nValidFacets++] = facets[i];
+        	
+        	// Warn if close to the cutoff.
+        	double fraction = volume / cutoff;
+        	if( 0.5 < fraction && fraction < 2 )
+        	{
+        		System.out.println( "Warning! Sliver removal heuristic is cutting it too close (pun intended). v = " + volume + " c = " + cutoff );
+        	}
+        }
+        validFacets = (CSG.SPolytope[])com.donhatchsw.util.Arrays.subarray( 
+        		validFacets, 0, nValidFacets ); // resize
+        
+        // Setup the polytope with the valid facets.
+        slicedPolytope.p.facets = validFacets;
+        slicedPolytope.p.resetAllElements();
+        
         CSG.Polytope stickers[] = slicedPolytope.p.getAllElements()[nDims-1];
         int nStickers = stickers.length;
 
@@ -555,10 +596,17 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 {
                     // Find the two stickers that meet at this ridge...
                     int indsOfStickersContainingThisRidge[] = allSlicedIncidences[nDims-2][iSlicedRidge][nDims-1];
-                    Assert(indsOfStickersContainingThisRidge.length == 2);
-                    int iSticker0 = indsOfStickersContainingThisRidge[0];
-                    int iSticker1 = indsOfStickersContainingThisRidge[1];
-                    mf.merge(iSticker0, iSticker1);
+                    
+                    // NOTE: This assert was a check until we started filtering out slivers.
+                    // 		 Slivers will just make cubies with other slivers though, 
+                    //		 so this should be ok.
+                    //Assert(indsOfStickersContainingThisRidge.length == 2);
+                    if( indsOfStickersContainingThisRidge.length == 2 )
+                    {
+	                    int iSticker0 = indsOfStickersContainingThisRidge[0];
+	                    int iSticker1 = indsOfStickersContainingThisRidge[1];
+	                    mf.merge(iSticker0, iSticker1);
+                    }
                 }
             }
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)

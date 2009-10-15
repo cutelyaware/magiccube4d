@@ -198,7 +198,8 @@ public final class CSG
             private double _bbox[/*2*/][]; // bounding box of all vertices, so it can be finite even if the polytope is infinite (co-finite).  calculated Lazily via getBBox().
             private Polytope[/*dim+1*/][] _allElements; // sorted lists of vertices, edges, ..., ridges, facets, calculated lazily via getAllElements()
             private int[/*dim+1*/][][/*dim+1*/][] _allIncidences; // calculated lazily via getAllElements
-
+            public void resetAllElements() { _allElements = null; _allIncidences = null; }
+            
             public Polytope(int dim,
                             int fullDim,
                             SPolytope facets[],
@@ -921,13 +922,18 @@ public final class CSG
             {
                 SPolytope answer = new SPolytope(0,1,Polytope.fromStringInPcalcFormat(s));
                 //PRINT(volume(answer));
-                double vol = volume(answer);
+                double vol = CSG.volume(answer);
                 if (vol < 0)
                     answer.sign *= -1; // XXX should do the push-down-sign thing?
                 //PRINT(volume(answer));
                 return answer;
             }
 
+            public double volume()
+            {
+            	return CSG.volume( this );
+            }
+            
         } // class SPolytope
 
 
