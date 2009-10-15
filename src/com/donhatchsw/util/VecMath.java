@@ -2106,13 +2106,9 @@ PRINTVEC(vxmxm(new double[]{0,1,2,3,4,5},M,pva));
         int i, n = M0.length;
         for (i = 0; (i) < (n); ++i)
         {
-            if (M0[i].length != M1[i].length)
-                return false;
-            int j, m = M0[i].length;
-            for (j = 0; (j) < (m); ++j)
-                if (M0[i][j] != M1[i][j] // avoid function call in common case
-                 && Math.abs(M0[i][j]-M1[i][j]) > eps)
-                    return false;
+        	// Call the fuzzy vector test.
+        	if( !equals( M0[i], M1[i], eps ) )
+        		return false;
         }
         return true;
     } // equals
