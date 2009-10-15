@@ -2080,6 +2080,22 @@ PRINTVEC(vxmxm(new double[]{0,1,2,3,4,5},M,pva));
         return true;
     } // equalsUsingEqualsSymbol(Object[],Object[])
 
+    /** Fuzzy vector equality test; works even if eps==0. */
+    public static boolean equals(double v0[], double v1[], double eps)
+    {
+        if (v0 == null && v1 == null)
+            return true;
+        if (v0 == null || v1 == null || v0.length != v1.length)
+            return false;
+        for( int i=0; i<v0.length; ++i )
+        {
+        	if (v0[i] != v1[i] // avoid function call in common case
+        	 && Math.abs(v0[i]-v1[i]) > eps)
+                return false;
+        }
+        return true;
+    }
+    
     /** Fuzzy matrix equality test; works even if eps==0. */
     public static boolean equals(double M0[][], double M1[][], double eps)
     {
