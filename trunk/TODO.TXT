@@ -1,22 +1,22 @@
 
 PUZZLES
 * Support from 2 to N-dimensional puzzles (yeah right!).
-* Eliminate sliver slices.
 * Port the solve and compress functions to the new puzzles. 
   - First just for the appropriately sized cubes and eventually for all puzzles.
   - Consider including and using Don's N-D solve rather than port MC4D version?
 * before shipping, comment out broken or redundant puzzles and change default to "{4,3,3} 3"
 * Make twist speed adjustable mid-twist.
 * Add an MC120-like piece finding functionality.
+* DONE - Eliminate sliver slices.
 * DONE - Implement GenericPuzzle.isSolved().
 * DONE - Figure out how to support rotations for generic puzzles & history.
 * DONE - Implement Jenn3D-style 4D rotates via Shift-left drag.
 
 HIGHLIGHTING
-* Disallow 360 degree twists.
-* In highlight-stickers mode, only highlight hovered-over stickers that would 
-  do something if clicked. For center-center stickers that would require the Ctrl key being held.
-  We may want to handle conditional highlighting of legal macro reference clicks at the same time. 
+* DONE - Disallow 360 degree twists.
+* DONE - In highlight-stickers mode, only highlight hovered-over stickers that would 
+  		 do something if clicked. For center-center stickers that would require the Ctrl key being held.
+* DONE - We may want to handle conditional highlighting of legal macro reference clicks as well.
 
 GUI
 * Choose better slider ranges.
