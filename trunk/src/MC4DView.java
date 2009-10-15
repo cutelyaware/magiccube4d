@@ -99,7 +99,7 @@ public class MC4DView extends Component {
                     slicemask |= 1<<numkey-1; // turn on the specified bit
 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL )
-                	genericGlue.updateStickerHighlighting( true, MC4DView.this );
+                	genericGlue.updateStickerHighlighting( true, MC4DView.this, rotationHandler );
             }
             @Override
 			public void keyReleased(KeyEvent arg0) {
@@ -108,7 +108,7 @@ public class MC4DView extends Component {
                     slicemask &= ~(1<<numkey-1); // turn off the specified bit
                 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL )
-                	genericGlue.updateStickerHighlighting( false, MC4DView.this );
+                	genericGlue.updateStickerHighlighting( false, MC4DView.this, rotationHandler );
             }
         });
         this.addMouseListener(new MouseAdapter() {
@@ -120,8 +120,7 @@ public class MC4DView extends Component {
             	boolean isViewRotation = e.isControlDown() || SwingUtilities.isMiddleMouseButton(e);
                 if( isViewRotation )
             	{
-                	// Pass it off to the generic glue (for now,
-                	// a view rotation helper will be created soon)
+                	// Pass it off to the generic glue.
                 	if( genericGlue != null )
 		            {
 		                genericGlue.mouseClickedAction(e,
@@ -212,7 +211,7 @@ public class MC4DView extends Component {
                 super.mouseMoved(arg0);
                 if (genericGlue != null )
                 {
-                    genericGlue.mouseMovedAction(arg0, MC4DView.this);
+                    genericGlue.mouseMovedAction(arg0, MC4DView.this, rotationHandler);
                     return;
                 }
             }
