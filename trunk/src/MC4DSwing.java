@@ -602,7 +602,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         contents.add(viewcontainer, "Center");
         contents.add(statusBar, "South");
 
-        genericGlue = new GenericGlue(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
+        genericGlue = new GenericGlue(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar, macroMgr);
         initMacroControls(); // to show controls
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));

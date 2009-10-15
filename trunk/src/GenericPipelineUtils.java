@@ -556,7 +556,7 @@ public class GenericPipelineUtils
     public static int pickStickerValidForHighlighting( float x, float y, Frame frame,
     	GenericPuzzleDescription puzzle, boolean ctrlDown )
     {
-    	PickInfo pickInfo = pickGripHelper( x, y, frame, puzzle );
+    	PickInfo pickInfo = getAllPickInfo( x, y, frame, puzzle );
     	if( pickInfo == null )
     		return -1;
     	
@@ -589,7 +589,7 @@ public class GenericPipelineUtils
         return itsProbablyThe2;
     }
     
-    private static class PickInfo
+    public static class PickInfo
     {
     	public int faceIndex;
     	public int stickerIndex;
@@ -633,7 +633,7 @@ public class GenericPipelineUtils
         return ret;
     }
 
-    private static PickInfo pickGripHelper( float x, float y,
+    public static PickInfo getAllPickInfo( float x, float y,
                                Frame frame,
                                GenericPuzzleDescription puzzleDescription )
     {
@@ -649,7 +649,7 @@ public class GenericPipelineUtils
                                Frame frame,
                                GenericPuzzleDescription puzzleDescription)
     {
-    	PickInfo pickInfo = pickGripHelper( x, y, frame, puzzleDescription );
+    	PickInfo pickInfo = getAllPickInfo( x, y, frame, puzzleDescription );
     	return pickInfo == null ? -1 : pickInfo.gripIndex;
     }
 
