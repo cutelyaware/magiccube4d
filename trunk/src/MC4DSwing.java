@@ -68,18 +68,16 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     	int twists = hist.countTwists();
         twistLabel.setText("Total Twists: " + twists);
     }
-    
-    
-    private class NormalHighlighter implements GenericGlue.Highlighter {
+     
+    GenericGlue.Highlighter normalHighlighter = new GenericGlue.Highlighter() {
 		@Override
 		public boolean shouldHighlightSticker(GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y) {
 			if(view.isCtrlKeyDown())
-				return stickerIndex >= 0 && genericGlue.canRotateToCenter(x, y, rotations);
+				return genericGlue.canRotateToCenter(x, y, rotations);
 			else
 				return GenericPipelineUtils.gripHasValidTwist( gripIndex, genericGlue.genericPuzzleDescription );
 		}
     };
-    NormalHighlighter normalHighlighter = new NormalHighlighter();
 
 
     /*
@@ -956,152 +954,56 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         });
     } // end initPuzzle
+    
+    
+    public static class PropSlider extends FloatSlider {
+		public PropSlider(final String propname, final Component dependent, double dflt, double min, double max) {
+			super(JSlider.HORIZONTAL, PropertyManager.getFloat(propname, (float)dflt), min, max);
+			setPreferredSize(new Dimension(200, 20));
+			addAdjustmentListener(new AdjustmentListener() {
+                public void adjustmentValueChanged(AdjustmentEvent ae) {
+                    PropertyManager.userprefs.setProperty(propname, ""+(float)getFloatValue());
+                    dependent.repaint();
+                }
+            });
+		}
+    }
+    
+    public static class PropCheckBox extends JCheckBox {
+    	public PropCheckBox(String title, final String propname, boolean dflt, final Component dependent) {
+    		super(title, PropertyManager.getBoolean(propname, dflt));
+    		addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					PropertyManager.userprefs.setProperty(propname, ""+isSelected());
+					dependent.repaint();
+				}
+    		});
+    	}
+    }
 
     
     /**
      * Editor for user preferences.
      */
 	private class PreferencesEditor extends JPanel {
-        private FloatSlider makeSlider(float cur, float min, float max) {
-            FloatSlider slider = new FloatSlider(JSlider.HORIZONTAL, cur, min, max);
-            try {
-                slider.setPreferredSize(new Dimension(200, 20));
-            } catch (NoSuchMethodError e) {System.err.println("FloatSlider: no such method setPreferredSize, whatever");}
-            return slider;
-        }
-        private boolean synchingsliders = false;
+		
         
         public PreferencesEditor() {
         	init();
         }
         
         private void init() {
+        	// a component that simply forwards all repaint calls to the current view object.
+        	Component repainter = new Component() {
+				@Override
+				public void repaint() {
+					if(view != null)
+						view.repaint();
+				}
+        	};
+        	
         	removeAll();
-            final FloatSlider
-	            twistSpeedSlider = makeSlider(PropertyManager.getFloat("twistfactor", 1), .05f, 5),
-	            dragSpeedSlider = makeSlider(PropertyManager.getFloat("dragfactor", 1), .05f, 5),
-                scaleSlider = makeSlider(PropertyManager.getFloat("scale", 1), .1f, 5),
-                fshrinkSlider = makeSlider(PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK), .1f, 1.5f),
-                sshrinkSlider = makeSlider(PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK), .1f, 1.5f),
-                eyewScaleSlider = makeSlider(PropertyManager.getFloat("eyew", MagicCube.EYEW), 1, 10);
-            final JCheckBox contigiousCubies = new JCheckBox("Contigious Cubies", PropertyManager.getBoolean("contigiouscubies", false));
-            twistSpeedSlider.addAdjustmentListener(new AdjustmentListener() {
-                public void adjustmentValueChanged(AdjustmentEvent ae) {
-                    float twistfactor = (float)twistSpeedSlider.getFloatValue();
-                    PropertyManager.userprefs.setProperty("twistfactor", ""+twistfactor);
-                    view.repaint();
-                }
-            });
-            dragSpeedSlider.addAdjustmentListener(new AdjustmentListener() {
-                public void adjustmentValueChanged(AdjustmentEvent ae) {
-                    float dragfactor = (float)dragSpeedSlider.getFloatValue();
-                    PropertyManager.userprefs.setProperty("dragfactor", ""+dragfactor);
-                    view.repaint();
-                }
-            });
-            scaleSlider.addAdjustmentListener(new AdjustmentListener() {
-                    public void adjustmentValueChanged(AdjustmentEvent ae) {
-                        float scale = (float)scaleSlider.getFloatValue();
-                        PropertyManager.userprefs.setProperty("scale", ""+scale);
-                        view.repaint();
-                    }
-                });
-            sshrinkSlider.addAdjustmentListener(new AdjustmentListener() {
-                public void adjustmentValueChanged(AdjustmentEvent ae) {
-                    int len = (int)genericGlue.genericPuzzleDescription.getEdgeLength();
-                    float newsshrink = (float)sshrinkSlider.getFloatValue();
-                    float faceshrink = PropertyManager.getFloat("faceschrink", 1);
-                    if(contigiousCubies.isSelected()) {
-                        faceshrink = len / (len-1 + newsshrink); // s = n / (n-1 + s)
-                        if( ! synchingsliders) {
-                            synchingsliders = true;
-                            fshrinkSlider.setFloatValue(faceshrink);
-                            synchingsliders = false;
-                            PropertyManager.userprefs.setProperty("faceshrink", ""+faceshrink);
-                        }
-                    }
-                    PropertyManager.userprefs.setProperty("faceshrink", ""+faceshrink);
-                    PropertyManager.userprefs.setProperty("stickershrink", ""+newsshrink);
-                    view.repaint();
-                }
-            });
-            fshrinkSlider.addAdjustmentListener(new AdjustmentListener() {
-                public void adjustmentValueChanged(AdjustmentEvent ae) {
-                    int len = (int)genericGlue.genericPuzzleDescription.getEdgeLength();
-                    float newfaceshrink = (float)fshrinkSlider.getFloatValue();
-                    float stickershrink = PropertyManager.getFloat("stickershrink", 1);
-                    if(contigiousCubies.isSelected()) {
-                        stickershrink = len * (1/newfaceshrink - 1) + 1; // s = n(1/f - 1) + 1
-                        if( ! synchingsliders) {
-                            synchingsliders = true;
-                            sshrinkSlider.setFloatValue(stickershrink);
-                            synchingsliders = false;
-                            PropertyManager.userprefs.setProperty("stickershrink", ""+stickershrink);
-                        }
-                    }
-                    PropertyManager.userprefs.setProperty("stickershrink", ""+stickershrink);
-                    PropertyManager.userprefs.setProperty("faceshrink", ""+newfaceshrink);
-                    view.repaint();
-                }
-            });
-            contigiousCubies.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    PropertyManager.userprefs.setProperty("contigiouscubies", ""+contigiousCubies.isSelected());
-                    view.repaint();
-                }
-            });
-            eyewScaleSlider.addAdjustmentListener(new AdjustmentListener() {
-                public void adjustmentValueChanged(AdjustmentEvent ae) {
-                    float neweyew = (float)eyewScaleSlider.getFloatValue();
-                    PropertyManager.userprefs.setProperty("eyew", ""+neweyew);
-                    view.repaint();
-                }
-            });
-            final JCheckBox showShadows = new JCheckBox("Show Shadows", PropertyManager.getBoolean("shadows", true));
-            showShadows.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    boolean shadows = showShadows.isSelected();
-                    PropertyManager.userprefs.setProperty("shadows", ""+shadows);
-                    view.repaint();
-                }
-            });
-            final JCheckBox quickMoves = new JCheckBox("Quick Moves", PropertyManager.getBoolean("quickmoves", false));
-            quickMoves.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    boolean quickmoves = quickMoves.isSelected();
-                    PropertyManager.userprefs.setProperty("quickmoves", ""+quickmoves);
-                }
-            });
-            final JCheckBox allowAutoRotate = new JCheckBox("Allow Auto-Rotation", PropertyManager.getBoolean("autorotate", true));
-            allowAutoRotate.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    boolean autorotate = allowAutoRotate.isSelected();
-                    PropertyManager.userprefs.setProperty("autorotate", ""+autorotate);
-                }
-            });
-            final JCheckBox allowAntiAliasing = new JCheckBox("Allow Antialiasing", PropertyManager.getBoolean("antialiasing", true));
-            allowAntiAliasing.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    boolean antialiasing = allowAntiAliasing.isSelected();
-                    PropertyManager.userprefs.setProperty("antialiasing", ""+antialiasing);
-                    view.repaint();
-                }
-            });
-            final JCheckBox mute = new JCheckBox("Mute Sound Effects", PropertyManager.getBoolean("muted", false));
-            mute.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    boolean muted = mute.isSelected();
-                    PropertyManager.userprefs.setProperty("muted", ""+muted);
-                    Audio.setMuted(muted);
-                }
-            });
-            final JCheckBox highlightByCubie = new JCheckBox("Highlight by Cubie", PropertyManager.getBoolean("highlightbycubie", false));
-            highlightByCubie.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    boolean highlightbycubie = highlightByCubie.isSelected();
-                    PropertyManager.userprefs.setProperty("highlightbycubie", ""+highlightbycubie);
-                }
-            });
             
             final JRadioButton 
 	        	ctrlRotateByFace  = new JRadioButton("by Face"),
@@ -1134,28 +1036,37 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             rotateMode.add(Box.createHorizontalGlue());
             ctrlClickLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             
+            final JCheckBox mute = new JCheckBox("Mute Sound Effects", PropertyManager.getBoolean("muted", false));
+            mute.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    boolean muted = mute.isSelected();
+                    PropertyManager.userprefs.setProperty("muted", ""+muted);
+                    Audio.setMuted(muted);
+                }
+            });
+            
             JPanel sliders = new JPanel(new GridLayout(6, 2));
             sliders.add(new JLabel("Twist Speed"));
-            sliders.add(twistSpeedSlider);
+            sliders.add(new PropSlider("twistfactor", repainter, 1, .05f, 5));
             sliders.add(new JLabel("Drag Speed"));
-            sliders.add(dragSpeedSlider);
+            sliders.add(new PropSlider("dragfactor", repainter, 1, .05f, 5));
             sliders.add(new JLabel("View Scale"));
-            sliders.add(scaleSlider);
+            sliders.add(new PropSlider("scale", repainter, 1, .1f, 5));
             sliders.add(new JLabel("Face Shrink"));
-            sliders.add(fshrinkSlider);
+            sliders.add(new PropSlider("faceshrink", repainter, MagicCube.FACESHRINK, .1f, 1.5f));
             sliders.add(new JLabel("Sticker Shrink"));
-            sliders.add(sshrinkSlider);
+            sliders.add(new PropSlider("stickershrink", repainter, MagicCube.STICKERSHRINK, .1f, 1.5f));
             sliders.add(new JLabel("Eye W Scale"));
-            sliders.add(eyewScaleSlider);
+            sliders.add(new PropSlider("eyew", repainter, MagicCube.EYEW, 1, 10));
             sliders.setMaximumSize(new Dimension(400, 20));
             JPanel general = new JPanel();
             general.setLayout(new BoxLayout(general, BoxLayout.Y_AXIS));
             general.add(sliders);
-            general.add(showShadows);
-            general.add(allowAutoRotate);
-            general.add(highlightByCubie);
-            general.add(quickMoves);
-            general.add(allowAntiAliasing);
+            general.add(new PropCheckBox("Show Shadows", "shadows", true, repainter));
+            general.add(new PropCheckBox("Allow Auto-Rotation", "autorotate", true, repainter));
+            general.add(new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter));
+            general.add(new PropCheckBox("Quick Moves", "quickmoves", false, repainter));
+            general.add(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter));
             general.add(mute);
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
             general.add(rotateMode);
