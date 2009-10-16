@@ -23,7 +23,7 @@ import com.donhatchsw.util.VecMath;
  * Created July 15, 2006
  * @author Melinda Green
  */
-public class MacroManager implements GenericGlue.Highlighter {
+public class MacroManager implements PuzzleManager.Highlighter {
     private String filePath;
     private Vector<Macro> macros = new Vector<Macro>();
     private Macro curMacro;
@@ -151,7 +151,7 @@ public class MacroManager implements GenericGlue.Highlighter {
     }
     
     @Override
-	public boolean shouldHighlightSticker( GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y )
+	public boolean shouldHighlightSticker( PuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y )
 	{	
 		// Macros are currently grip based, though that may change in the future.
 		MagicCube.Stickerspec grip = new MagicCube.Stickerspec();
@@ -172,7 +172,7 @@ public class MacroManager implements GenericGlue.Highlighter {
     	return Math.abs( a ) < eps || Math.abs( Math.PI - a ) < eps;
     }
     
-    private boolean refDeterminesUniqueOrientation( GenericPuzzleDescription puzzle, MagicCube.Stickerspec ref )
+    private boolean refDeterminesUniqueOrientation( PuzzleDescription puzzle, MagicCube.Stickerspec ref )
     {
         // We need to make sure the refs will determine a unique orientation.
         // There are a number of click patterns which will fail to do so.
@@ -220,7 +220,7 @@ public class MacroManager implements GenericGlue.Highlighter {
      * Adds a reference sticker to the currently open macro.
      * Returns false if the ref won't determine a unique orientation.
      */
-    public boolean addRef( GenericPuzzleDescription puzzle, MagicCube.Stickerspec sticker ) {
+    public boolean addRef( PuzzleDescription puzzle, MagicCube.Stickerspec sticker ) {
         assert(nrefs<Macro.MAXREFS);
         
         if( !refDeterminesUniqueOrientation( puzzle, sticker ) )

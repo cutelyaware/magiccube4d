@@ -183,7 +183,7 @@
 
 import com.donhatchsw.util.*; // XXX get rid
 
-class PolytopePuzzleDescription implements GenericPuzzleDescription {
+class PolytopePuzzleDescription implements PuzzleDescription {
     private CSG.SPolytope originalPolytope;
     private CSG.SPolytope slicedPolytope;
     
@@ -1265,7 +1265,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 
         String schlafliProduct = args[0];
         int length = Integer.parseInt(args[1]);
-        GenericPuzzleDescription descr = new PolytopePuzzleDescription(schlafliProduct, length, 
+        PuzzleDescription descr = new PolytopePuzzleDescription(schlafliProduct, length, 
     		new ProgressManager(new javax.swing.JProgressBar()){
 				@Override
 				protected Void doInBackground() throws Exception {

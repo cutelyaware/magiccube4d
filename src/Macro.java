@@ -79,13 +79,13 @@ public class Macro {
         return out;
     }
     
-    public static double[] getMacroRefCoords( MagicCube.Stickerspec grip, GenericPuzzleDescription puzzle )
+    public static double[] getMacroRefCoords( MagicCube.Stickerspec grip, PuzzleDescription puzzle )
     {
     	// When/if we have sticker based macros, this method will need to be extended.
     	return floatToDouble( puzzle.getGripCoords( grip.id_within_puzzle ) );
     }
     
-    public static double[] getMacroRefFaceCoords( MagicCube.Stickerspec grip, GenericPuzzleDescription puzzle )
+    public static double[] getMacroRefFaceCoords( MagicCube.Stickerspec grip, PuzzleDescription puzzle )
     {
     	// When/if we have sticker based macros, this method will need to be extended.
     	int faceIndex = puzzle.getGrip2Face()[grip.id_within_puzzle];
@@ -99,7 +99,7 @@ public class Macro {
      * @return array of twists in application space or null if pattern doesn't match.
      */
     public MagicCube.TwistData[] getTwists( MagicCube.Stickerspec appGrips[],
-    	GenericPuzzleDescription puzzle ) 
+    	PuzzleDescription puzzle ) 
     {
     	// Default Coordinates.
     	// We also use one of the faces.
