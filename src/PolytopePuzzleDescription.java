@@ -263,7 +263,7 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 
     public PolytopePuzzleDescription(String schlafliProduct,
                                      double length, // usually int but can experiment with different cut depths
-                                     ProgressManager progressWorker)
+                                     ProgressManager progress)
     {
     	this.schlafliProduct = schlafliProduct;
     	this.edgeLength = length;
@@ -271,7 +271,8 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         if (length < 1)
             throw new IllegalArgumentException("PolytopePuzzleDescription called with length="+length+", min legal length is 1");
 
-        progressWorker.init("Constructing polytope");
+        if( progress != null ) 
+        	progress.init("Constructing polytope");
 
         originalPolytope = CSG.makeRegularStarPolytopeCrossProductFromString(schlafliProduct);
         CSG.orientDeep(originalPolytope); // XXX shouldn't be necessary!!!!
@@ -494,7 +495,9 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 	                   continue; // already saw opposite face
 	                totalCuts += faceCutOffsets[iFace].length;
 	            }
-	            progressWorker.init("Slicing", totalCuts);
+	            
+	            if( progress != null ) 
+	            	progress.init("Slicing", totalCuts);
             }
             // Now do the actual work, updating the progress worker as we go.
             {
@@ -511,14 +514,17 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
 	                        faceCutOffsets[iFace][iCut]);
 	                    Object auxOfCut = null; // we don't set any aux on the cut for now
 	                    slicedPolytope = CSG.sliceFacets(slicedPolytope, cutHyperplane, auxOfCut);
-	                    progressWorker.updateProgress(cut);
+	                    
+	                    if( progress != null )
+	                    	progress.updateProgress(cut);
 	                    cut++;
 	                }
 	            }
             }
         }
         
-        progressWorker.init("Fixing orientations");
+        if( progress != null )
+        	progress.init("Fixing orientations");
         CSG.orientDeep(slicedPolytope); // XXX shouldn't be necessary!!!!
 
         //
@@ -526,7 +532,8 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
         // XXX - This is a hack for a hack.
         // A better long term approach would be to improve the slice function.
         //
-        progressWorker.init( "Cleaning up sliced polytope." );
+        if( progress != null )
+        	progress.init( "Cleaning up sliced polytope." );
         
         CSG.SPolytope facets[] = slicedPolytope.p.facets;
         CSG.SPolytope validFacets[] = new CSG.SPolytope[facets.length];
@@ -808,7 +815,8 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                 for (int iDim = 0; iDim <= 3; ++iDim) // yes, even for cell center, which doesn't do anything
                 	nGrips += allElementsOfCell[iDim].length;
             }
-            progressWorker.init("Calculating possible twists", nGrips);
+            if( progress != null )
+            	progress.init("Calculating possible twists", nGrips);
 
             // Now do the actual work, updating the progress manager as we go.
             gripSymmetryOrders = new int[nGrips];
@@ -842,7 +850,9 @@ class PolytopePuzzleDescription implements GenericPuzzleDescription {
                         gripCentersF[iGrip] = doubleToFloat(gripCenterD);
                         gripDims[iGrip] = iDim;
                         grip2face[iGrip] = iFace;
-                        progressWorker.updateProgress(iGrip);
+                        
+                        if( progress != null )
+                        	progress.updateProgress(iGrip);
                         //System.out.println("("+iDim+":"+gripSymmetryOrders[iGrip]+")");
 
                         iGrip++;

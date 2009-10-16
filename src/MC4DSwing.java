@@ -634,7 +634,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             {"{3}x{4}",  "1,2,3,4,5,6,7",		"Triangular Duoprism"},
             {"{4,3,3}",  "1,2,3,4,5,6,7,8,9",	"Hypercube"},
             {"{5}x{4}",  "1,2,3,4,5,6,7",		"Pentagonal Duoprism"},
-            {"{4}x{5}",  "1,2,3,4,5,6,7", 		"Pentagonal Duoprism (alt)"},
             {"{6}x{4}",  "1,2,3,4,5,6,7", 		"Hexagonal Duoprism"},
             {"{7}x{4}",  "1,2,3,4,5,6,7", 		"Heptagonal Duoprism"},
             {"{8}x{4}",  "1,2,3,4,5,6,7", 		"Octagonal Duoprism"},
@@ -649,10 +648,14 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             {"{10}x{10}","1,2,3",				""}, // XXX look at twisting on 2
             {"{3,3}x{}", "1,2,3,4,5,6,7",		"Tetrahedral Prism"},
             {"{5,3}x{}", "1,2,3,4,5,6,7",		"Dodecahedral Prism"},
-            {"{}x{5,3}", "1,2,3,4,5,6,7",		"Dodecahedral Prism (alt)"},
             {"{5,3,3}",  "1,2,3",				"Hypermegaminx (BIG!)"},
             {null,       "",					"Invent my own!"},
         };
+        
+        boolean test = false;
+        if( test )
+        	ModuleTest.test( table );
+        
         for (int i = 0; i < table.length; ++i)
         {
 
