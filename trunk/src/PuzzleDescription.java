@@ -8,7 +8,7 @@
  * NOTE: All returned arrays are immutable!!!!!
  * (They would be const if java had a way to express that.)
  */
-interface GenericPuzzleDescription {
+interface PuzzleDescription {
 	
     public String getSchlafliProduct();
     public double getEdgeLength();
@@ -149,4 +149,4 @@ interface GenericPuzzleDescription {
                                                 int gripIndex,
                                                 int dir,
                                                 int slicemask);
-} // interface GenericPuzzleDescription
+} // interface PuzzleDescription

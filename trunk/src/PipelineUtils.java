@@ -33,9 +33,9 @@ import java.awt.*;
 
 import com.donhatchsw.util.VecMath;
 
-public class GenericPipelineUtils
+public class PipelineUtils
 {
-    private GenericPipelineUtils() {} // non-instantiatable
+    private PipelineUtils() {} // non-instantiatable
 
     public static int verboseLevel = 0; // set to something else to debug
         // 0: nothing
@@ -88,7 +88,7 @@ public class GenericPipelineUtils
     */
     public static void computeFrame(AnimFrame frame, // return into here
 
-                                    GenericPuzzleDescription puzzleDescription,
+                                    PuzzleDescription puzzleDescription,
 
                                     float faceShrink,
                                     float stickerShrink,
@@ -107,7 +107,7 @@ public class GenericPipelineUtils
                                     float groundNormal[/*3*/], // null if no shadows
                                     float groundOffset)
     {
-        if (verboseLevel >= 2) System.out.println("    in GenericPipelineUtils.computeFrame");
+        if (verboseLevel >= 2) System.out.println("    in PipelineUtils.computeFrame");
 
         int nDims = puzzleDescription.nDims();
         Assert(nDims == 4);
@@ -484,7 +484,7 @@ public class GenericPipelineUtils
         frame.drawListSize = drawListSize;
         frame.shadowDrawListSize = groundNormal!=null ? shadowDrawListSize : 0;
 
-        if (verboseLevel >= 2) System.out.println("    out GenericPipelineUtils.computeFrame");
+        if (verboseLevel >= 2) System.out.println("    out PipelineUtils.computeFrame");
     } // computeFrame
 
     /**
@@ -495,9 +495,9 @@ public class GenericPipelineUtils
     */
     public static int[] pick(float x, float y,
                              AnimFrame frame,
-                             GenericPuzzleDescription puzzleDescription)
+                             PuzzleDescription puzzleDescription)
     {
-        if (verboseLevel >= 1) System.out.println("    in GenericPipelineUtils.pick");
+        if (verboseLevel >= 1) System.out.println("    in PipelineUtils.pick");
         float thispoint[] = {x, y};
         // From front to back, returning the first hit
         float verts[][] = frame.verts;
@@ -510,7 +510,7 @@ public class GenericPipelineUtils
             int iSticker = item[0];
             int iPolyWithinSticker = item[1];
             if(0 > iSticker || iSticker >= stickerInds.length || 0 > iPolyWithinSticker || iPolyWithinSticker >= stickerInds[iSticker].length) {
-            	System.err.println("GenericPipelineUtil.pick: array indexing error");
+            	System.err.println("PipelineUtil.pick: array indexing error");
             	return null;
             }
             int poly[] = stickerInds[iSticker][iPolyWithinSticker];
@@ -524,19 +524,19 @@ public class GenericPipelineUtils
                 break;
             }
         }
-        if (verboseLevel >= 1) System.out.println("    out GenericPipelineUtils.pick, returning "+(pickedItem==null?"null":("{iSticker="+pickedItem[0]+",iPolyWithinSticker="+pickedItem[1]+"}")));
+        if (verboseLevel >= 1) System.out.println("    out PipelineUtils.pick, returning "+(pickedItem==null?"null":("{iSticker="+pickedItem[0]+",iPolyWithinSticker="+pickedItem[1]+"}")));
         return pickedItem;
     }
 
     public static int pickSticker(float x, float y,
                                   AnimFrame frame,
-                                  GenericPuzzleDescription puzzleDescription)
+                                  PuzzleDescription puzzleDescription)
     {
         int iStickerAndPoly[] = pick(x, y, frame, puzzleDescription);
         return iStickerAndPoly != null ? iStickerAndPoly[0] : -1;
     }
 
-    public static boolean gripHasValidTwist( int grip, GenericPuzzleDescription puzzle )
+    public static boolean gripHasValidTwist( int grip, PuzzleDescription puzzle )
     {
     	int[] orders = puzzle.getGripSymmetryOrders();
         if( grip < 0 || grip >= orders.length )
@@ -584,7 +584,7 @@ public class GenericPipelineUtils
     
     private static PickInfo pickPolyAndStickerCenters(float x, float y,
                                                   AnimFrame frame,
-                                                  GenericPuzzleDescription puzzleDescription)
+                                                  PuzzleDescription puzzleDescription)
     {
         int hit[] = pick(x, y, frame, puzzleDescription);
         if (hit == null)
@@ -618,7 +618,7 @@ public class GenericPipelineUtils
 
     public static PickInfo getAllPickInfo( float x, float y,
                                AnimFrame frame,
-                               GenericPuzzleDescription puzzleDescription )
+                               PuzzleDescription puzzleDescription )
     {
     	PickInfo pickInfo = pickPolyAndStickerCenters( x, y, frame, puzzleDescription );
         if( pickInfo == null )
@@ -630,7 +630,7 @@ public class GenericPipelineUtils
     
     public static int pickGrip(float x, float y,
                                AnimFrame frame,
-                               GenericPuzzleDescription puzzleDescription)
+                               PuzzleDescription puzzleDescription)
     {
     	PickInfo pickInfo = getAllPickInfo( x, y, frame, puzzleDescription );
     	return pickInfo == null ? -1 : pickInfo.gripIndex;
@@ -638,7 +638,7 @@ public class GenericPipelineUtils
 
     public static float[] pickPointToRotateToCenter(float x, float y,
                                                         AnimFrame frame,
-                                                        GenericPuzzleDescription puzzleDescription,
+                                                        PuzzleDescription puzzleDescription,
                                                         RotationHandler.Snap snapOption )
     {
         switch( snapOption )
@@ -670,7 +670,7 @@ public class GenericPipelineUtils
     private static int jitterRadius = 0; // haha, for debugging, but cool effect, should publicize it
 
     public static void paintFrame(AnimFrame frame,
-                                  GenericPuzzleDescription puzzleDescription,
+                                  PuzzleDescription puzzleDescription,
                                   int puzzleState[],
 
                                   boolean showShadows, // XXX or isShadows? haven't decided whether this should get called again for shadows or if we should do both here
@@ -681,7 +681,7 @@ public class GenericPipelineUtils
                                   Color outlineColor,
                                   Graphics g)
     {
-        if (verboseLevel >= 2) System.out.println("    in GenericPipelineUtils.paintFrame");
+        if (verboseLevel >= 2) System.out.println("    in PipelineUtils.paintFrame");
         if (verboseLevel >= 2) System.out.println("        iStickerUnderMouse = "+iStickerUnderMouse);
 
         int drawList[][/*2*/] = frame.drawList;
@@ -750,7 +750,7 @@ public class GenericPipelineUtils
             }
         }
 
-        if (verboseLevel >= 2) System.out.println("    out GenericPipelineUtils.paintFrame");
+        if (verboseLevel >= 2) System.out.println("    out PipelineUtils.paintFrame");
     } // paintFrame
 
     private static float tmpTWAf1[] = new float[2], tmpTWAf2[] = new float[2]; // scratch vars
@@ -762,4 +762,4 @@ public class GenericPipelineUtils
         return Vec_h._VXV2(tmpTWAf1, tmpTWAf2);
     }
 
-} // class GenericPipelineUtils
+} // class PipelineUtils

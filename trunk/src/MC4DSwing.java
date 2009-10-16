@@ -50,7 +50,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         statusLabel = new JLabel();
     private JProgressBar progressBar = new JProgressBar();
     
-    private GenericGlue genericGlue = null;
+    private PuzzleManager puzzleManager = null;
 
     private JMenu apply = new JMenu("Apply");
     private JMenuItem
@@ -69,13 +69,13 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         twistLabel.setText("Total Twists: " + twists);
     }
      
-    GenericGlue.Highlighter normalHighlighter = new GenericGlue.Highlighter() {
+    PuzzleManager.Highlighter normalHighlighter = new PuzzleManager.Highlighter() {
 		@Override
-		public boolean shouldHighlightSticker(GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y) {
+		public boolean shouldHighlightSticker(PuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y) {
 			if(view.isCtrlKeyDown())
-				return genericGlue.canRotateToCenter(x, y, rotations);
+				return puzzleManager.canRotateToCenter(x, y, rotations);
 			else
-				return GenericPipelineUtils.gripHasValidTwist( gripIndex, genericGlue.genericPuzzleDescription );
+				return PipelineUtils.gripHasValidTwist( gripIndex, puzzleManager.puzzleDescription );
 		}
     };
 
@@ -103,8 +103,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 MagicCube.LOG_FILE_VERSION + " " +
                 scrambleState + " " +
                 hist.countTwists() + " " +
-                genericGlue.genericPuzzleDescription.getSchlafliProduct() + " " +
-                genericGlue.genericPuzzleDescription.getEdgeLength());
+                puzzleManager.puzzleDescription.getSchlafliProduct() + " " +
+                puzzleManager.puzzleDescription.getEdgeLength());
             writer.write(sep);
             view.getRotations().write(writer);
             //writer.write(sep + puzzle.toString());
@@ -252,7 +252,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 //                    statusLabel.setText("no solution");
 //                    return;
 //                }
-//                solution = History.compress(solution, (int)genericGlue.genericPuzzleDescription.getEdgeLength(), true);
+//                solution = History.compress(solution, (int)puzzleManager.puzzleDescription.getEdgeLength(), true);
 //                view.animate(solution, true);
 //                scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
 //                statusLabel.setText("twists to solve = " + solution.length);
@@ -275,12 +275,12 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                             lastMacro.length() + " move" + (lastMacro.length()==1 ? "." : "s."));
                     }
                     view.setSkyOverride(null);
-                    genericGlue.setHighlighter(normalHighlighter); // Return to normal highlighting mode.
+                    puzzleManager.setHighlighter(normalHighlighter); // Return to normal highlighting mode.
                 } else { // begin macro definition
                     macroMgr.open();
                     statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
                     view.setSkyOverride(Color.white);
-                    genericGlue.setHighlighter(macroMgr); // Start highlighting in macro mode.
+                    puzzleManager.setHighlighter(macroMgr); // Start highlighting in macro mode.
                 }
             }
         },
@@ -293,7 +293,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 macroMgr.cancel();
                 statusLabel.setText("Cancelled");
                 view.setSkyOverride(null);
-                genericGlue.setHighlighter(normalHighlighter); // Make sure we're in normal highlighting mode.
+                puzzleManager.setHighlighter(normalHighlighter); // Make sure we're in normal highlighting mode.
                 applyingMacro = 0;
             }
         },
@@ -319,7 +319,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         };
         
-    private GenericGlue.Callback viewRepainter = new GenericGlue.Callback() {
+    private PuzzleManager.Callback viewRepainter = new PuzzleManager.Callback() {
     	public void call() {
     		initMacroControls(); // to properly enable/disable the buttons
     		progressBar.setVisible(false);
@@ -341,19 +341,19 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             public void actionPerformed(final ActionEvent ae) {
                 cancel.doit(ae);
                 progressBar.setVisible(true);
-                final double length = genericGlue.genericPuzzleDescription.getEdgeLength();
-                genericGlue.initPuzzle(
-            		genericGlue.genericPuzzleDescription.getSchlafliProduct(),
+                final double length = puzzleManager.puzzleDescription.getEdgeLength();
+                puzzleManager.initPuzzle(
+            		puzzleManager.puzzleDescription.getSchlafliProduct(),
             		""+length, progressBar, statusLabel, true, 
-            		new GenericGlue.Callback() {
+            		new PuzzleManager.Callback() {
             	    	public void call() {
                             hist.clear((int)length);
                             scrambleState = SCRAMBLE_NONE;
                             updateTwistsLabel();
                             view.repaint();
-                            if(ae.getSource() instanceof GenericGlue.Callback)
+                            if(ae.getSource() instanceof PuzzleManager.Callback)
                             {
-                            	((GenericGlue.Callback)ae.getSource()).call();
+                            	((PuzzleManager.Callback)ae.getSource()).call();
                             }
             	    	}
             	    }
@@ -471,7 +471,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             // flag) then unpackage the call method to perform it's work directly after the reset finishes.
             public void doit(ActionEvent e) {
                 progressBar.setVisible(true);
-                reset.actionPerformed(new ActionEvent(new GenericGlue.Callback(){
+                reset.actionPerformed(new ActionEvent(new PuzzleManager.Callback(){
 					@Override
 					public void call() { // will be called by the reset action when it completes.
 		                progressBar.setVisible(true);
@@ -480,8 +480,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 							protected Void doInBackground() throws Exception {
 				                int previous_face = -1;
 				                int totalTwistsNeededToFullyScramble = 
-				                		genericGlue.genericPuzzleDescription.nFaces() // needed twists is proportional to nFaces
-				                		* (int)genericGlue.genericPuzzleDescription.getEdgeLength() // and to number of slices
+				                		puzzleManager.puzzleDescription.nFaces() // needed twists is proportional to nFaces
+				                		* (int)puzzleManager.puzzleDescription.getEdgeLength() // and to number of slices
 				                		* 2; // and to a fudge factor that brings the 3^4 close to the original 40 twists.
 				                int scrambleTwists = scramblechenfrengensen == -1 ? totalTwistsNeededToFullyScramble : scramblechenfrengensen;
 								Random rand = new Random();
@@ -490,28 +490,28 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 				                    // select a random grip that is unrelated to the last one (if any)
 				                    int iGrip, iFace, order;
 				                    do {
-				                        iGrip = rand.nextInt(genericGlue.genericPuzzleDescription.nGrips());
-				                        iFace = genericGlue.genericPuzzleDescription.getGrip2Face()[iGrip];
-				                        order = genericGlue.genericPuzzleDescription.getGripSymmetryOrders()[iGrip];
+				                        iGrip = rand.nextInt(puzzleManager.puzzleDescription.nGrips());
+				                        iFace = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
+				                        order = puzzleManager.puzzleDescription.getGripSymmetryOrders()[iGrip];
 				                    }
 				                    while (
 				                        order < 2 || // don't use 360 degree twists
 				                        iFace == previous_face || // mixing it up
-				                        (previous_face!=-1 && genericGlue.genericPuzzleDescription.getFace2OppositeFace()[previous_face] == iFace));
+				                        (previous_face!=-1 && puzzleManager.puzzleDescription.getFace2OppositeFace()[previous_face] == iFace));
 				                    previous_face = iFace;
-				                    int gripSlices = genericGlue.genericPuzzleDescription.getNumSlicesForGrip(iGrip);
+				                    int gripSlices = puzzleManager.puzzleDescription.getNumSlicesForGrip(iGrip);
 				                    int slicemask = 1<<rand.nextInt(gripSlices);
 				                    int dir = rand.nextBoolean() ? -1 : 1;
 				                    // apply the twist to the puzzle state.
-				                    genericGlue.genericPuzzleDescription.applyTwistToState(
-				                    		genericGlue.genericPuzzleState,
+				                    puzzleManager.puzzleDescription.applyTwistToState(
+				                    		puzzleManager.puzzleState,
 				                            iGrip,
 				                            dir,
 				                            slicemask);
 				                    // and save it in the history.
 				                    MagicCube.Stickerspec ss = new MagicCube.Stickerspec();
 				                    ss.id_within_puzzle = iGrip; // slamming new id. do we need to set the other members?
-				                    ss.face = genericGlue.genericPuzzleDescription.getGrip2Face()[iGrip];
+				                    ss.face = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
 				                    hist.apply(ss, dir, slicemask);
 				                    updateProgress(s);
 				                	//System.out.println("Adding scramble twist grip: " + iGrip + " dir: " + dir + " slicemask: " + slicemask);
@@ -617,8 +617,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         contents.add(viewcontainer, "Center");
         contents.add(statusBar, "South");
 
-        genericGlue = new GenericGlue(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
-        genericGlue.setHighlighter(normalHighlighter);
+        puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
+        puzzleManager.setHighlighter(normalHighlighter);
         initMacroControls(); // to show controls
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));
@@ -691,8 +691,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                         {
                             String prompt = "Enter your invention:";
                             String initialInput = 
-                            	genericGlue.genericPuzzleDescription.getSchlafliProduct() + " " +
-                                genericGlue.genericPuzzleDescription.getEdgeLength();
+                            	puzzleManager.puzzleDescription.getSchlafliProduct() + " " +
+                                puzzleManager.puzzleDescription.getEdgeLength();
 
                             while (true)
                             {
@@ -715,7 +715,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                         }
                 		progressView.setVisible(true);
                 		System.out.println(newSchlafli + " " + newLengthString);
-                    	genericGlue.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true, viewRepainter);
+                    	puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true, viewRepainter);
                     	hist.clear((int)Double.parseDouble(newLengthString));
                     	updateTwistsLabel();
                     	scrambleState = SCRAMBLE_NONE;
@@ -748,7 +748,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 
     private void initMacroControls() {
         final JTabbedPane tabs = new JTabbedPane();
-        String schlafli = genericGlue != null && genericGlue.genericPuzzleDescription != null ? genericGlue.genericPuzzleDescription.getSchlafliProduct() : null;
+        String schlafli = puzzleManager != null && puzzleManager.puzzleDescription != null ? puzzleManager.puzzleDescription.getSchlafliProduct() : null;
         tabs.add("Preferences", new PreferencesEditor());
         tabs.add("Macros", new MacroControls(macroMgr, schlafli, new MacroControls.Listener() {
             public void apply(Macro macro, boolean reverse) {
@@ -781,13 +781,13 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 macroMgr.addTwist(twisted);
                 view.animate(twisted, true);
             } else {
-                if( !macroMgr.addRef( genericGlue.genericPuzzleDescription, twisted.grip ) )
+                if( !macroMgr.addRef( puzzleManager.puzzleDescription, twisted.grip ) )
                 	statusLabel.setText( "Picked reference won't determine unique orientation, please try another." );
                 else if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
                     if(applyingMacro != 0) {
                         view.setSkyOverride(null);
                         MagicCube.Stickerspec[] refs = macroMgr.close();
-                        MagicCube.TwistData[] moves = lastMacro.getTwists(refs,genericGlue.genericPuzzleDescription);
+                        MagicCube.TwistData[] moves = lastMacro.getTwists(refs,puzzleManager.puzzleDescription);
                         if(moves == null)
                             statusLabel.setText("Reference sticker pattern doesn't match macro definition.");
                         else {
@@ -847,7 +847,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     // int numTwists = Integer.parseInt(firstline[3]);
                     String schlafli = firstline[4];
                     initialLength = Double.parseDouble(firstline[5]);
-                    genericGlue.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false, viewRepainter);
+                    puzzleManager.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false, viewRepainter);
                     iLength = (int)Math.round(initialLength);
                     hist = new History(iLength);
                     String title = MagicCube.TITLE;
@@ -875,8 +875,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 	        		System.err.println("Bad move in MC4DSwing.initPuzzle: " + move.grip.id_within_puzzle);
 	        		return;
 	        	}
-		        genericGlue.genericPuzzleDescription.applyTwistToState(
-	        		genericGlue.genericPuzzleState,
+		        puzzleManager.puzzleDescription.applyTwistToState(
+	        		puzzleManager.puzzleState,
 	                move.grip.id_within_puzzle,
 	                move.direction,
 	                move.slicemask);
@@ -890,7 +890,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         	view.removeTwistListener(this);
         	view.setHistory(null);
         }
-        view = new MC4DView(genericGlue, rotations, hist, genericGlue.genericPuzzleDescription.nFaces());
+        view = new MC4DView(puzzleManager, rotations, hist, puzzleManager.puzzleDescription.nFaces());
 
         viewcontainer.removeAll(); 
         viewcontainer.add(view, "Center");
@@ -901,9 +901,9 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 undoitem.setEnabled(hist.countMoves(false) > 0);
                 redoitem.setEnabled(hist.hasNextMove());
                 cheatitem.setEnabled(hist.hasPreviousMove());
-                solveitem.setEnabled(!genericGlue.isSolved() && genericGlue.genericPuzzleDescription.getEdgeLength()<4);
+                solveitem.setEnabled(!puzzleManager.isSolved() && puzzleManager.puzzleDescription.getEdgeLength()<4);
                 updateTwistsLabel();
-                if(genericGlue.isSolved()) {
+                if(puzzleManager.isSolved()) {
                     switch (scrambleState) {
                         case SCRAMBLE_PARTIAL:
                             statusLabel.setText("Solved!");
@@ -915,7 +915,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                             Congratulations congrats = new Congratulations(
         						"<html>" + 
         			            	"<center><H1>You have solved the " +
-        							genericGlue.genericPuzzleDescription.getSchlafliProduct() + " " + (int)genericGlue.genericPuzzleDescription.getEdgeLength() + 
+        							puzzleManager.puzzleDescription.getSchlafliProduct() + " " + (int)puzzleManager.puzzleDescription.getEdgeLength() + 
         							"!</H1></center>" + 
         			                "<br>You may want to use File > Save As to archive your solution." +
         			                "<br>If this is a first for you or it is a record, consider submitting it to" +

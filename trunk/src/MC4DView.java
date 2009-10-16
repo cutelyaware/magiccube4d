@@ -20,7 +20,7 @@ import javax.swing.Timer;
 @SuppressWarnings("serial")
 public class MC4DView extends Component {
 
-    private GenericGlue genericGlue = null;
+    private PuzzleManager puzzleManager = null;
 
     public static interface TwistListener { public void twisted(MagicCube.TwistData twisted); }
     private Vector<TwistListener> twistListeners = new Vector<TwistListener>();
@@ -86,8 +86,8 @@ public class MC4DView extends Component {
     	this.animationQueue = new AnimationQueue(h);
     }
 
-    public MC4DView(GenericGlue gg, RotationHandler rotations, History hist, int nfaces) {
-    	this.genericGlue = gg;
+    public MC4DView(PuzzleManager gg, RotationHandler rotations, History hist, int nfaces) {
+    	this.puzzleManager = gg;
         this.rotationHandler = rotations;
         this.setHistory(hist);
         this.setFocusable(true);
@@ -102,7 +102,7 @@ public class MC4DView extends Component {
 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = true;
-                	if(genericGlue.updateStickerHighlighting())
+                	if(puzzleManager.updateStickerHighlighting())
                 		repaint();
                 }
             }
@@ -114,7 +114,7 @@ public class MC4DView extends Component {
                 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = false;
-                	if(genericGlue.updateStickerHighlighting())
+                	if(puzzleManager.updateStickerHighlighting())
                 		repaint();
                 }
             }
@@ -128,10 +128,10 @@ public class MC4DView extends Component {
             	boolean isViewRotation = e.isControlDown() || SwingUtilities.isMiddleMouseButton(e);
                 if( isViewRotation )
             	{
-                	// Pass it off to the generic glue.
-                	if( genericGlue != null )
+                	// Pass it off to the puzzle manager.
+                	if( puzzleManager != null )
 		            {
-		                genericGlue.mouseClickedAction(e,
+		                puzzleManager.mouseClickedAction(e,
 		                                               rotationHandler,
 		                                               PropertyManager.getFloat("twistfactor", 1),
 		                                               slicemask,
@@ -141,10 +141,10 @@ public class MC4DView extends Component {
             	}
 
                 // Pick our grip.
-                int grip = GenericPipelineUtils.pickGrip(
+                int grip = PipelineUtils.pickGrip(
                         e.getX(), e.getY(),
-                        genericGlue.untwistedFrame,
-                        genericGlue.genericPuzzleDescription);
+                        puzzleManager.untwistedFrame,
+                        puzzleManager.puzzleDescription);
                      
                 // The twist might be illegal.
                 if( grip < 0 ) 
@@ -154,7 +154,7 @@ public class MC4DView extends Component {
                 else {
                 	MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_puzzle = grip; // slamming new id. do we need to set the other members?
-                    clicked.face = genericGlue.genericPuzzleDescription.getGrip2Face()[grip];
+                    clicked.face = puzzleManager.puzzleDescription.getGrip2Face()[grip];
                     //System.out.println("face: " + clicked.face);
                     
                     // Tell listeners about the legal twist and let them call animate() if desired.
@@ -213,9 +213,9 @@ public class MC4DView extends Component {
             @Override
 			public void mouseMoved(MouseEvent arg0) {
                 super.mouseMoved(arg0);
-                if (genericGlue != null )
+                if (puzzleManager != null )
                 {
-                    if(genericGlue.mouseMovedAction(arg0))
+                    if(puzzleManager.mouseMovedAction(arg0))
                     	repaint();
                     return;
                 }
@@ -336,7 +336,7 @@ public class MC4DView extends Component {
     	frames++;
         updateViewFactors();
 
-		if(animationQueue.isAnimating() && genericGlue.iTwist == genericGlue.nTwist) {
+		if(animationQueue.isAnimating() && puzzleManager.iTwist == puzzleManager.nTwist) {
 			animationQueue.getAnimating();
 			// time to stop the animation
 			animationQueue.finishedTwist(); // end animation
@@ -350,7 +350,7 @@ public class MC4DView extends Component {
         // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
         if(g instanceof Graphics2D) {
             boolean okToAntialias = PropertyManager.getBoolean("antialiasing", true) && lastDrag==null && rotationHandler.isSpinning()
-                                 && !(genericGlue!=null ? genericGlue.isAnimating() : isAnimating());
+                                 && !(puzzleManager!=null ? puzzleManager.isAnimating() : isAnimating());
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
         }
@@ -364,9 +364,9 @@ public class MC4DView extends Component {
         }   
         
         // paint the puzzle
-        if (genericGlue != null && genericGlue.genericPuzzleDescription != null)
+        if (puzzleManager != null && puzzleManager.puzzleDescription != null)
         {
-            genericGlue.computeAndPaintFrame(
+            puzzleManager.computeAndPaintFrame(
               // used by compute part...
             	PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),
             	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
@@ -427,24 +427,24 @@ public class MC4DView extends Component {
                     animating = (QueueItem)item;
 
                     int iTwistGrip = animating.twist.grip.id_within_puzzle;
-                    int[] orders = genericGlue.genericPuzzleDescription.getGripSymmetryOrders();
+                    int[] orders = puzzleManager.puzzleDescription.getGripSymmetryOrders();
                     if(0 > iTwistGrip || iTwistGrip >= orders.length) {
                     	System.err.println("order indexing error in MC4CView.AnimationQueue.getAnimating()");
                     	continue;
                     }
                     int order = orders[iTwistGrip];
                     
-                    if( !GenericPipelineUtils.gripHasValidTwist( iTwistGrip, genericGlue.genericPuzzleDescription ) )
+                    if( !PipelineUtils.gripHasValidTwist( iTwistGrip, puzzleManager.puzzleDescription ) )
                     	continue;
                     
                     double totalRotationAngle = 2*Math.PI/order;                    
                     
-                    genericGlue.nTwist = PropertyManager.getBoolean("quickmoves", false) ? 1 : 
-                    	genericGlue.calculateNTwists( totalRotationAngle, PropertyManager.getFloat("twistfactor", 1) );
-                    genericGlue.iTwist = 0;
-                    genericGlue.iTwistGrip = iTwistGrip;
-                    genericGlue.twistDir = animating.twist.direction;
-                    genericGlue.twistSliceMask = animating.twist.slicemask;
+                    puzzleManager.nTwist = PropertyManager.getBoolean("quickmoves", false) ? 1 : 
+                    	puzzleManager.calculateNTwists( totalRotationAngle, PropertyManager.getFloat("twistfactor", 1) );
+                    puzzleManager.iTwist = 0;
+                    puzzleManager.iTwistGrip = iTwistGrip;
+                    puzzleManager.twistDir = animating.twist.direction;
+                    puzzleManager.twistSliceMask = animating.twist.slicemask;
                     break; // successfully dequeued a twist which is now animating.
                 }
                 if(item instanceof Character) // apply the queued mark and continue dequeuing.
@@ -497,7 +497,7 @@ public class MC4DView extends Component {
 //            System.out.println("couldn't read history file");
 //        else
 //            hist.read(new java.io.StringReader(Util.readFileFromURL(histurl)));
-        final MC4DView view = new MC4DView(new GenericGlue("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist, 6);
+        final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist, 6);
         view.addTwistListener(new MC4DView.TwistListener() {
             public void twisted(MagicCube.TwistData twisted) {
                 view.animate(twisted, true);

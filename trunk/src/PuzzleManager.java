@@ -1,9 +1,9 @@
 //
 // This file is mostly throwaway--
 // it is an attempt to quickly glue the good new classes:
-//      GenericPuzzleDescription (interface)
-//      PolytopePuzzleDescription (implements GenericPuzzleDescription)
-//      GenericPipelineUtils
+//      PuzzleDescription (interface)
+//      PolytopePuzzleDescription (implements PuzzleDescription)
+//      PipelineUtils
 // onto MC4DSwing/MC4DView with as minimal impact on the existing code
 // as possible, prior to Melinda getting a look at it
 // and figuring out where it should really go.
@@ -15,12 +15,12 @@ import java.awt.event.*;
 import javax.swing.*;
 
 
-public class GenericGlue
+public class PuzzleManager
 {
 	public static int verboseLevel = 0; // set to something else to debug
 
-    public GenericPuzzleDescription genericPuzzleDescription = null;
-    public int genericPuzzleState[] = null;
+    public PuzzleDescription puzzleDescription = null;
+    public int puzzleState[] = null;
     public float faceRGB[][];
 
     //
@@ -46,8 +46,8 @@ public class GenericGlue
     //
     // Two scratch Frames to use for computing and painting.
     //
-    GenericPipelineUtils.AnimFrame untwistedFrame = new GenericPipelineUtils.AnimFrame();
-    GenericPipelineUtils.AnimFrame twistingFrame = new GenericPipelineUtils.AnimFrame();
+    PipelineUtils.AnimFrame untwistedFrame = new PipelineUtils.AnimFrame();
+    PipelineUtils.AnimFrame twistingFrame = new PipelineUtils.AnimFrame();
         { twistingFrame = untwistedFrame; } // XXX HACK for now, avoid any issue about clicking in the wrong one or something
 
 
@@ -63,10 +63,10 @@ public class GenericGlue
              */
             @Override
             public Void doInBackground() {
-            	genericPuzzleDescription = buildPuzzle(schlafli, lengthString, this);
-            	if( genericPuzzleDescription != null )
-            		genericPuzzleState = VecMath.copyvec(genericPuzzleDescription.getSticker2Face());
-                faceRGB = ColorUtils.generateVisuallyDistinctRGBs(genericPuzzleDescription.nFaces(), .7f, .1f);
+            	puzzleDescription = buildPuzzle(schlafli, lengthString, this);
+            	if( puzzleDescription != null )
+            		puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());
+                faceRGB = ColorUtils.generateVisuallyDistinctRGBs(puzzleDescription.nFaces(), .7f, .1f);
             	return null;
     		}
 
@@ -87,15 +87,15 @@ public class GenericGlue
     		builder.run();
     }
 
-    public GenericGlue(String initialSchlafli, double initialLength, JProgressBar progressView )
+    public PuzzleManager(String initialSchlafli, double initialLength, JProgressBar progressView )
     {
         super();
-        if (verboseLevel >= 1) System.out.println("in GenericGlue ctor");
+        if (verboseLevel >= 1) System.out.println("in PuzzleManager ctor");
         if (initialSchlafli != null)
         {
             initPuzzle(initialSchlafli, ""+initialLength, progressView, new JLabel(), false, null);
         }
-        if (verboseLevel >= 1) System.out.println("out GenericGlue ctor");
+        if (verboseLevel >= 1) System.out.println("out PuzzleManager ctor");
     }
 
     public boolean isAnimating()
@@ -108,22 +108,22 @@ public class GenericGlue
     //		 and implement inside there?
     public boolean isSolved()
     {
-		 int nFaces = genericPuzzleDescription.nFaces();
+		 int nFaces = puzzleDescription.nFaces();
 		 int faceState[] = new int[nFaces];
 		 VecMath.fillvec( faceState, -1 );
 		
 		 // Cycle through all the stickers.
-		 for( int s=0; s<genericPuzzleState.length; s++ )
+		 for( int s=0; s<puzzleState.length; s++ )
 		 {
-			 int faceIndex = genericPuzzleDescription.getSticker2Face()[s];
+			 int faceIndex = puzzleDescription.getSticker2Face()[s];
 			 if( faceState[faceIndex] == -1 )
 			 {
-				 faceState[faceIndex] = genericPuzzleState[s];
+				 faceState[faceIndex] = puzzleState[s];
 				 continue;
 			 }
 
 			 // Check for multiple colors on a single face.
-			 if( genericPuzzleState[s] != faceState[faceIndex] )
+			 if( puzzleState[s] != faceState[faceIndex] )
 				 return false;
 		 }
 		
@@ -133,7 +133,7 @@ public class GenericGlue
 		 return true;
     }
 
-    private static GenericPuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
+    private static PuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
         double len;
         try { len = Double.parseDouble(lengthString); }
         catch (java.lang.NumberFormatException e)
@@ -142,7 +142,7 @@ public class GenericGlue
             return null;
         }
 
-        GenericPuzzleDescription newPuzzle = null;
+        PuzzleDescription newPuzzle = null;
         try
         {
             newPuzzle = new PolytopePuzzleDescription(schlafli, len, progressView);
@@ -208,7 +208,7 @@ public class GenericGlue
     
     public interface Highlighter
     {
-    	public boolean shouldHighlightSticker( GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y );
+    	public boolean shouldHighlightSticker( PuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y );
     }
     private Highlighter highlighter;
     public void setHighlighter(Highlighter highlighter) {
@@ -217,16 +217,16 @@ public class GenericGlue
     
     public boolean updateStickerHighlighting()
     {
-    	GenericPipelineUtils.PickInfo pick = GenericPipelineUtils.getAllPickInfo(
+    	PipelineUtils.PickInfo pick = PipelineUtils.getAllPickInfo(
         		mouseMovedX, mouseMovedY,
         		untwistedFrame,
-        		genericPuzzleDescription );
+        		puzzleDescription );
     	int pickedSticker = pick == null ? -1 : pick.stickerIndex;
     	boolean newHighlit = true;
     	
         if( pickedSticker >= 0 && highlighter != null) {
         	// Let the supplied highlighter decide.
-        	if( ! highlighter.shouldHighlightSticker( genericPuzzleDescription, 
+        	if( ! highlighter.shouldHighlightSticker( puzzleDescription, 
         			pickedSticker, pick.gripIndex, mouseMovedX, mouseMovedY) )
         	{
         		newHighlit = false;
@@ -259,8 +259,8 @@ public class GenericGlue
     
     private boolean getViewRotationInfo( int x, int y, RotationHandler rotationHandler, ViewRotationInfo info )
     {
-        float nicePoint[] = GenericPipelineUtils.pickPointToRotateToCenter(
-        	x, y, this.untwistedFrame, this.genericPuzzleDescription, RotationHandler.getSnapSetting() );
+        float nicePoint[] = PipelineUtils.pickPointToRotateToCenter(
+        	x, y, this.untwistedFrame, this.puzzleDescription, RotationHandler.getSnapSetting() );
         
         if( nicePoint == null )
         	return false;
@@ -295,19 +295,15 @@ public class GenericGlue
     		float twistFactor,
     		int slicemask,
     		Component view )
-    {
-        GenericGlue genericGlue = this;
-        
+    {        
         /* Uncomment to debug the pick
         {
-            int hit[] = GenericPipelineUtils.pick(e.getX(), e.getY(),
-                                                  genericGlue.untwistedFrame,
-                                                  genericGlue.genericPuzzleDescription);
+            int hit[] = PipelineUtils.pick(e.getX(), e.getY(), untwistedFrame, puzzleDescription);
             if (hit != null)
             {
                 int iSticker = hit[0];
-                int iFace = genericGlue.genericPuzzleDescription.getSticker2Face()[iSticker];
-                int iCubie = genericGlue.genericPuzzleDescription.getSticker2Cubie()[iSticker];
+                int iFace = puzzleDescription.getSticker2Face()[iSticker];
+                int iCubie = puzzleDescription.getSticker2Cubie()[iSticker];
                 System.err.println("    Hit sticker "+iSticker+"(polygon "+hit[1]+")");
                 System.err.println("        face "+iFace);
                 System.err.println("        cubie "+iCubie);
@@ -322,15 +318,15 @@ public class GenericGlue
         }
 
         boolean rightClick = SwingUtilities.isRightMouseButton(e);
-        genericGlue.nRotation = calculateNTwists( rotInfo.totalRotationAngle, twistFactor );
+        nRotation = calculateNTwists( rotInfo.totalRotationAngle, twistFactor );
         // XXX ARGH! we'd like the speed to vary as the user changes the slider,
         // XXX but the above essentially locks in the speed for this rotation
-        genericGlue.iRotation = 0; // we are iRotation frames into nRotation
-        genericGlue.rotationFrom = rightClick ? rotInfo.minusWAxis : rotInfo.nicePointOnScreen;
-        genericGlue.rotationTo = rightClick ? rotInfo.nicePointOnScreen : rotInfo.minusWAxis;
+        iRotation = 0; // we are iRotation frames into nRotation
+        rotationFrom = rightClick ? rotInfo.minusWAxis : rotInfo.nicePointOnScreen;
+        rotationTo = rightClick ? rotInfo.nicePointOnScreen : rotInfo.minusWAxis;
         view.repaint();
 
-        if (genericGlue.iRotation == genericGlue.nRotation)
+        if (iRotation == nRotation)
         {
             // Already in the center
             System.err.println("Can't rotate that.\n");
@@ -366,8 +362,6 @@ public class GenericGlue
         float twistFactor,
         Component view)
     {
-        GenericGlue genericGlue = this;
-
         // steal PolygonManager's stuff-- this should be an interface but that's not allowed here apparently
         abstract class InterpFunc { public abstract float func(float f); }
         InterpFunc sine_interp = new InterpFunc() {
@@ -382,7 +376,7 @@ public class GenericGlue
         //InterpFunc interp = linear_interp;
 
         double[][] viewMat4d = rotationHandler.current4dView();
-        if (genericGlue.iRotation < genericGlue.nRotation)
+        if (iRotation < nRotation)
         {
             //
             // 4d rotation in progress
@@ -392,9 +386,9 @@ public class GenericGlue
             for (int j = 0; j < 4; ++j)
             	copy[i][j] = viewMat4d[i][j];
 
-            double incFrac = interp.func((genericGlue.iRotation+1)/(float)genericGlue.nRotation)
-                           - interp.func(genericGlue.iRotation/(float)genericGlue.nRotation);
-            double incmatD[][] = VecMath.makeRowRotMatThatSlerps(genericGlue.rotationFrom, genericGlue.rotationTo, incFrac);
+            double incFrac = interp.func((iRotation+1)/(float)nRotation)
+                           - interp.func(iRotation/(float)nRotation);
+            double incmatD[][] = VecMath.makeRowRotMatThatSlerps(rotationFrom, rotationTo, incFrac);
             copy = VecMath.mxm(copy, incmatD);
             VecMath.gramschmidt(copy, copy);
 
@@ -402,9 +396,9 @@ public class GenericGlue
             for (int j = 0; j < 4; ++j)
                 viewMat4d[i][j] = copy[i][j];
             
-            //System.out.println("    "+genericGlue.iRotation+"/"+genericGlue.nRotation+" -> "+(genericGlue.iRotation+1)+"/"+genericGlue.nRotation+"");
-            genericGlue.iRotation++;
-            if(genericGlue.iRotation == genericGlue.nRotation) {
+            //System.out.println("    "+iRotation+"/"+nRotation+" -> "+(iRotation+1)+"/"+nRotation+"");
+            iRotation++;
+            if(iRotation == nRotation) {
             	Audio.stop(Audio.Sound.TWISTING);
             	Audio.play(Audio.Sound.SNAP);
             }
@@ -412,24 +406,24 @@ public class GenericGlue
         }
 
         int iGripOfTwist = -1;
-        int twistDir = 0;
-        int slicemask = 0;
+        int itwistDir = 0;
+        int islicemask = 0;
         float fracIntoTwist = 0.f;
-        GenericPipelineUtils.AnimFrame glueFrameToDrawInto = genericGlue.untwistedFrame;
+        PipelineUtils.AnimFrame glueFrameToDrawInto = untwistedFrame;
 
-        if (genericGlue.iTwist < genericGlue.nTwist)
+        if (iTwist < nTwist)
         {
             //
             // Twist in progress (and maybe a 4d rot too at the same time)
             //
-            glueFrameToDrawInto = genericGlue.twistingFrame;
+            glueFrameToDrawInto = twistingFrame;
 
-            iGripOfTwist = genericGlue.iTwistGrip;
-            twistDir = genericGlue.twistDir;
-            slicemask = genericGlue.twistSliceMask;
+            iGripOfTwist = iTwistGrip;
+            itwistDir = twistDir;
+            islicemask = twistSliceMask;
 
-            fracIntoTwist = interp.func((genericGlue.iTwist+1)/(float)genericGlue.nTwist);
-            //System.out.println("    "+genericGlue.iTwist+"/"+genericGlue.nTwist+" -> "+(genericGlue.iTwist+1)+"/"+genericGlue.nTwist+"");
+            fracIntoTwist = interp.func((iTwist+1)/(float)nTwist);
+            //System.out.println("    "+iTwist+"/"+nTwist+" -> "+(iTwist+1)+"/"+nTwist+"");
 
             view.repaint(); // make sure we keep drawing while there's more to do
         }
@@ -453,17 +447,17 @@ public class GenericGlue
         	viewMat4df[i][j] = (float)viewMat4d[i][j];
         
         // XXX probably doing this more than necessary... when it's a rest frame that hasn't changed
-        GenericPipelineUtils.computeFrame(
+        PipelineUtils.computeFrame(
             glueFrameToDrawInto,
 
-            genericGlue.genericPuzzleDescription,
+            puzzleDescription,
             faceShrink,
             stickerShrink,
 
             iGripOfTwist,
-              twistDir,
-              slicemask,
-              fracIntoTwist,
+            itwistDir,
+            islicemask,
+            fracIntoTwist,
 
             VecMath.mxs(viewMat4df, scaleFudge4d),
             eyeW,
@@ -478,32 +472,32 @@ public class GenericGlue
         // THE COMPUTE PART ENDS HERE
         // THE PAINT PART STARTS HERE (maybe should be a separate function)
 
-        GenericPipelineUtils.paintFrame(
+        PipelineUtils.paintFrame(
                 glueFrameToDrawInto,
-                genericGlue.genericPuzzleDescription,
-                genericGlue.genericPuzzleState,
+                puzzleDescription,
+                puzzleState,
                 showShadows,
                 ground,
                 faceRGB,
-                highlit ? genericGlue.iStickerUnderMouse :-1,
+                highlit ? iStickerUnderMouse :-1,
                 highlightByCubie,
                 outlineColor,
                 g);
 
-        if (genericGlue.iTwist < genericGlue.nTwist)
+        if (iTwist < nTwist)
         {
-        	if(genericGlue.iTwist == 0) {
+        	if(iTwist == 0) {
         		Audio.loop(Audio.Sound.TWISTING);
         	}
-            genericGlue.iTwist++;
-            if (genericGlue.iTwist == genericGlue.nTwist)
+            iTwist++;
+            if (iTwist == nTwist)
             {
                 // End of twist animation-- apply the twist to the state.
-                genericGlue.genericPuzzleDescription.applyTwistToState(
-                            genericGlue.genericPuzzleState,
-                            genericGlue.iTwistGrip,
-                            genericGlue.twistDir,
-                            genericGlue.twistSliceMask);
+                puzzleDescription.applyTwistToState(
+                            puzzleState,
+                            iTwistGrip,
+                            twistDir,
+                            twistSliceMask);
             	Audio.stop(Audio.Sound.TWISTING);
         		Audio.play(Audio.Sound.SNAP);
                 // XXX need to update the hovered-over sticker! I think.
@@ -512,4 +506,4 @@ public class GenericGlue
         }
     } // computeAndPaintFrame
 
-} // class GenericGlue
+} // class PuzzleManager
