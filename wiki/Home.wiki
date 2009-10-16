@@ -1,0 +1,7 @@
+#summary MagicCube4D project home page.
+
+= Introduction =
+
+Documentation for MagicCube4D.
+
+= Details =
