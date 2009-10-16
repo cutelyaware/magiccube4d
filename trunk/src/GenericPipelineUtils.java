@@ -49,7 +49,7 @@ public class GenericPipelineUtils
      * are retained; this can be used for mapping 2d pick points
      * back up to 4d if desired.
      */
-    public static class Frame
+    public static class AnimFrame
     {
         // NOTE: the pre-projected Z and W components
         // are retained; this can be used for mapping 2d pick points
@@ -86,7 +86,7 @@ public class GenericPipelineUtils
     * Attempts to avoid doing any new memory allocations
     * when called repeatedly on a given puzzleDescription.
     */
-    public static void computeFrame(Frame frame, // return into here
+    public static void computeFrame(AnimFrame frame, // return into here
 
                                     GenericPuzzleDescription puzzleDescription,
 
@@ -494,7 +494,7 @@ public class GenericPipelineUtils
     * XXX I think I want to take out the Y inversion from the Frame?  not sure
     */
     public static int[] pick(float x, float y,
-                             Frame frame,
+                             AnimFrame frame,
                              GenericPuzzleDescription puzzleDescription)
     {
         if (verboseLevel >= 1) System.out.println("    in GenericPipelineUtils.pick");
@@ -529,7 +529,7 @@ public class GenericPipelineUtils
     }
 
     public static int pickSticker(float x, float y,
-                                  Frame frame,
+                                  AnimFrame frame,
                                   GenericPuzzleDescription puzzleDescription)
     {
         int iStickerAndPoly[] = pick(x, y, frame, puzzleDescription);
@@ -551,23 +551,6 @@ public class GenericPipelineUtils
         	return false;
         
         return true;
-    }
-    
-    public static int pickStickerValidForHighlighting( float x, float y, Frame frame,
-    	GenericPuzzleDescription puzzle, boolean ctrlDown )
-    {
-    	PickInfo pickInfo = getAllPickInfo( x, y, frame, puzzle );
-    	if( pickInfo == null )
-    		return -1;
-    	
-    	// If control is down, we can show any sticker.
-    	// Otherwise, we need to make sure the twist makes sense.
-    	if( ctrlDown )
-    		return pickInfo.stickerIndex;
-    	if( !gripHasValidTwist( pickInfo.gripIndex, puzzle ) )
-    		return -1;
-
-        return pickInfo.stickerIndex;
     }
     
     private static boolean is2x2x2Cell( float polyCenter[], float stickerCenter[], float faceCenter[] )
@@ -600,7 +583,7 @@ public class GenericPipelineUtils
     }
     
     private static PickInfo pickPolyAndStickerCenters(float x, float y,
-                                                  Frame frame,
+                                                  AnimFrame frame,
                                                   GenericPuzzleDescription puzzleDescription)
     {
         int hit[] = pick(x, y, frame, puzzleDescription);
@@ -634,7 +617,7 @@ public class GenericPipelineUtils
     }
 
     public static PickInfo getAllPickInfo( float x, float y,
-                               Frame frame,
+                               AnimFrame frame,
                                GenericPuzzleDescription puzzleDescription )
     {
     	PickInfo pickInfo = pickPolyAndStickerCenters( x, y, frame, puzzleDescription );
@@ -646,7 +629,7 @@ public class GenericPipelineUtils
     }
     
     public static int pickGrip(float x, float y,
-                               Frame frame,
+                               AnimFrame frame,
                                GenericPuzzleDescription puzzleDescription)
     {
     	PickInfo pickInfo = getAllPickInfo( x, y, frame, puzzleDescription );
@@ -654,7 +637,7 @@ public class GenericPipelineUtils
     }
 
     public static float[] pickPointToRotateToCenter(float x, float y,
-                                                        Frame frame,
+                                                        AnimFrame frame,
                                                         GenericPuzzleDescription puzzleDescription,
                                                         RotationHandler.Snap snapOption )
     {
@@ -686,7 +669,7 @@ public class GenericPipelineUtils
     private static java.util.Random jitterGenerator = new java.util.Random();
     private static int jitterRadius = 0; // haha, for debugging, but cool effect, should publicize it
 
-    public static void paintFrame(Frame frame,
+    public static void paintFrame(AnimFrame frame,
                                   GenericPuzzleDescription puzzleDescription,
                                   int puzzleState[],
 

@@ -23,7 +23,7 @@ import com.donhatchsw.util.VecMath;
  * Created July 15, 2006
  * @author Melinda Green
  */
-public class MacroManager implements GenericGlue.HighlightingCallback {
+public class MacroManager implements GenericGlue.Highlighter {
     private String filePath;
     private Vector<Macro> macros = new Vector<Macro>();
     private Macro curMacro;
@@ -150,12 +150,7 @@ public class MacroManager implements GenericGlue.HighlightingCallback {
         nrefs = 0;
     }
     
-    // HighlightingCallback impl.
-	public boolean active()
-	{
-		return isOpen();
-	}
-	public boolean shouldHighlightSticker( GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex )
+	public boolean shouldHighlightSticker( GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y )
 	{	
 		// Macros are currently grip based, though that may change in the future.
 		MagicCube.Stickerspec grip = new MagicCube.Stickerspec();

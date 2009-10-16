@@ -21,6 +21,7 @@ HIGHLIGHTING
 GUI
 * Choose better slider ranges.
 * Reenable "Reset to Defaults" button in the preferences panel and sync prefs with Viwe4D without losing puzzle state.
+* Add a macro creation wizard to the macros tab.
 * Make initial EyeW a function of puzzle size and maybe make the slider adjust view scale to keep it constant?
 * Add cross-eyed stereo viewing mode.
 * Figure out a UI that allows for twists with "directions" that are multiples of 1 and -1.
