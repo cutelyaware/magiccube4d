@@ -150,6 +150,7 @@ public class MacroManager implements GenericGlue.Highlighter {
         nrefs = 0;
     }
     
+    @Override
 	public boolean shouldHighlightSticker( GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y )
 	{	
 		// Macros are currently grip based, though that may change in the future.
