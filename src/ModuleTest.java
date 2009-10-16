@@ -4,11 +4,11 @@ import java.io.Writer;
 
 public class ModuleTest
 {
-	public static void test( String puzzles[][] )
+	public static void main( String args[] )
 	{
 		try
 		{
-			testInternal( puzzles );
+			testInternal( MagicCube.SUPPORTED_PUZZLES );
 		}
     	catch( Exception e )
     	{
