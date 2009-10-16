@@ -234,7 +234,7 @@ public class GenericGlue
         }
         
         boolean changed = pickedSticker != iStickerUnderMouse || newHighlit != highlit;
-        if(pickedSticker >= 0 && iStickerUnderMouse != pickedSticker && newHighlit) {
+        if(pickedSticker >= 0 && changed && newHighlit) {
         	Audio.play(Audio.Sound.HIGHLIGHT); // hovering over a newly highlighted sticker
         }
         iStickerUnderMouse = pickedSticker;
