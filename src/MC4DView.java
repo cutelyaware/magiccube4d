@@ -34,6 +34,8 @@ public class MC4DView extends Component {
     private AnimationQueue animationQueue;
     public boolean isAnimating() { return animationQueue.isAnimating(); }
     private int slicemask; // bitmap representing which number keys are down
+    private boolean ctrlKeyDown;
+    public boolean isCtrlKeyDown() { return ctrlKeyDown; }
     private Color skyOverride = null; // null means use the user's preference from the PropertyManager.
     private int xOff, yOff;
     private float pixels2polySF = .01f; // screen transform data
@@ -98,8 +100,11 @@ public class MC4DView extends Component {
                 if(1 <= numkey && numkey <= 9)
                     slicemask |= 1<<numkey-1; // turn on the specified bit
 
-                if( arg0.getKeyCode() == KeyEvent.VK_CONTROL )
-                	genericGlue.updateStickerHighlighting( true, MC4DView.this, rotationHandler );
+                if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
+                	ctrlKeyDown = true;
+                	if(genericGlue.updateStickerHighlighting())
+                		repaint();
+                }
             }
             @Override
 			public void keyReleased(KeyEvent arg0) {
@@ -107,8 +112,11 @@ public class MC4DView extends Component {
                 if(1 <= numkey && numkey <= 9)
                     slicemask &= ~(1<<numkey-1); // turn off the specified bit
                 
-                if( arg0.getKeyCode() == KeyEvent.VK_CONTROL )
-                	genericGlue.updateStickerHighlighting( false, MC4DView.this, rotationHandler );
+                if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
+                	ctrlKeyDown = false;
+                	if(genericGlue.updateStickerHighlighting())
+                		repaint();
+                }
             }
         });
         this.addMouseListener(new MouseAdapter() {
@@ -143,10 +151,6 @@ public class MC4DView extends Component {
                 {
                     System.out.println("missed");
                 }
-                else if( !GenericPipelineUtils.gripHasValidTwist( grip, genericGlue.genericPuzzleDescription ) )
-                {
-                	System.out.println("can't twist that grip.");
-                }    
                 else {
                 	MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_puzzle = grip; // slamming new id. do we need to set the other members?
@@ -211,7 +215,8 @@ public class MC4DView extends Component {
                 super.mouseMoved(arg0);
                 if (genericGlue != null )
                 {
-                    genericGlue.mouseMovedAction(arg0, MC4DView.this, rotationHandler);
+                    if(genericGlue.mouseMovedAction(arg0))
+                    	repaint();
                     return;
                 }
             }
@@ -492,7 +497,7 @@ public class MC4DView extends Component {
 //            System.out.println("couldn't read history file");
 //        else
 //            hist.read(new java.io.StringReader(Util.readFileFromURL(histurl)));
-        final MC4DView view = new MC4DView(new GenericGlue("{4,3,3}", 3, new JProgressBar(),null), new RotationHandler(), hist, 6);
+        final MC4DView view = new MC4DView(new GenericGlue("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist, 6);
         view.addTwistListener(new MC4DView.TwistListener() {
             public void twisted(MagicCube.TwistData twisted) {
                 view.animate(twisted, true);

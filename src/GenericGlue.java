@@ -36,20 +36,18 @@ public class GenericGlue
     //
     public int nTwist = 0; // total number of twist frames in progress
     public int iTwist = 0; // number of twist frames done so far
-    public int iTwistGrip;     // of twist in progress, if any
-    public int twistDir;      // of twist in progress, if any
+    public int iTwistGrip; // of twist in progress, if any
+    public int twistDir; // of twist in progress, if any
     public int twistSliceMask; // of twist in progress, if any
     
-    //
-    // The sticker and cubie that the mouse is currently hovering over.
-    //
-    public int iStickerUnderMouse = -1;
+    private int iStickerUnderMouse = -1; // The sticker that the mouse is currently hovering over.
+    private boolean highlit = false; // Whether it should be highlighted.
 
     //
     // Two scratch Frames to use for computing and painting.
     //
-    GenericPipelineUtils.Frame untwistedFrame = new GenericPipelineUtils.Frame();
-    GenericPipelineUtils.Frame twistingFrame = new GenericPipelineUtils.Frame();
+    GenericPipelineUtils.AnimFrame untwistedFrame = new GenericPipelineUtils.AnimFrame();
+    GenericPipelineUtils.AnimFrame twistingFrame = new GenericPipelineUtils.AnimFrame();
         { twistingFrame = untwistedFrame; } // XXX HACK for now, avoid any issue about clicking in the wrong one or something
 
 
@@ -89,7 +87,7 @@ public class GenericGlue
     		builder.run();
     }
 
-    public GenericGlue(String initialSchlafli, double initialLength, JProgressBar progressView, HighlightingCallback hCallback )
+    public GenericGlue(String initialSchlafli, double initialLength, JProgressBar progressView )
     {
         super();
         if (verboseLevel >= 1) System.out.println("in GenericGlue ctor");
@@ -98,8 +96,6 @@ public class GenericGlue
             initPuzzle(initialSchlafli, ""+initialLength, progressView, new JLabel(), false, null);
         }
         if (verboseLevel >= 1) System.out.println("out GenericGlue ctor");
-        
-        highlightingCallback = hCallback;
     }
 
     public boolean isAnimating()
@@ -202,72 +198,59 @@ public class GenericGlue
     }
     
 
-    public void mouseMovedAction( MouseEvent e, Component view, RotationHandler rotationHandler )
+    public boolean mouseMovedAction( MouseEvent e )
     {
     	mouseMovedX = e.getX();
     	mouseMovedY = e.getY();
-    	updateStickerHighlighting( e.isControlDown(), view, rotationHandler );
+    	return(updateStickerHighlighting());
     } // mouseMovedAction
     private int mouseMovedX, mouseMovedY;
     
-    public interface HighlightingCallback
+    public interface Highlighter
     {
-    	public boolean active();
-    	public boolean shouldHighlightSticker( GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex );
+    	public boolean shouldHighlightSticker( GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y );
     }
-    private HighlightingCallback highlightingCallback;
+    private Highlighter highlighter;
+    public void setHighlighter(Highlighter highlighter) {
+    	this.highlighter = highlighter;
+    }
     
-    public void updateStickerHighlighting( boolean isControlDown, Component view, 
-    	RotationHandler rotationHandler )
+    public boolean updateStickerHighlighting()
     {
-        GenericGlue genericGlue = this;
-    	int pickedSticker = -1;
+    	GenericPipelineUtils.PickInfo pick = GenericPipelineUtils.getAllPickInfo(
+        		mouseMovedX, mouseMovedY,
+        		untwistedFrame,
+        		genericPuzzleDescription );
+    	int pickedSticker = pick == null ? -1 : pick.stickerIndex;
+    	boolean newHighlit = true;
     	
-        if( highlightingCallback != null && highlightingCallback.active() )
-        {
-        	GenericPipelineUtils.PickInfo pickInfo = GenericPipelineUtils.getAllPickInfo(
-        		genericGlue.mouseMovedX, genericGlue.mouseMovedY,
-        		genericGlue.untwistedFrame,
-        		genericGlue.genericPuzzleDescription );
-        	
-        	if( pickInfo != null )
+        if( pickedSticker >= 0 && highlighter != null) {
+        	// Let the supplied highlighter decide.
+        	if( ! highlighter.shouldHighlightSticker( genericPuzzleDescription, 
+        			pickedSticker, pick.gripIndex, mouseMovedX, mouseMovedY) )
         	{
-            	if( highlightingCallback.shouldHighlightSticker( genericGlue.genericPuzzleDescription, 
-            		pickInfo.stickerIndex, pickInfo.gripIndex ) )
-            	{
-            		pickedSticker = pickInfo.stickerIndex;
-            	}
+        		newHighlit = false;
         	}
-        	else
-        		pickedSticker = -1;
-        }
-        else
-        {  
-            pickedSticker = GenericPipelineUtils.pickStickerValidForHighlighting(
-            		genericGlue.mouseMovedX, genericGlue.mouseMovedY,
-            		genericGlue.untwistedFrame,
-            		genericGlue.genericPuzzleDescription, 
-            		isControlDown );
-        	
-	        // If this is a view rotation, we need to do further checks to see if the result is really valid.
-	        if( -1 != pickedSticker && isControlDown )
-	        {
-	        	ViewRotationInfo dummy = new ViewRotationInfo();
-	        	if( !getViewRotationInfo( genericGlue.mouseMovedX, genericGlue.mouseMovedY, rotationHandler, dummy ) )
-	        		pickedSticker = -1;
-	        }
         }
         
-        //System.out.println("    hover sticker "+genericGlue.iStickerUnderMouse+" -> "+pickedSticker+"");
-        if(pickedSticker != genericGlue.iStickerUnderMouse)
-            view.repaint(); // highlight changed (or turned on or off)
-        if(pickedSticker != -1 && genericGlue.iStickerUnderMouse != pickedSticker) {
-        	Audio.play(Audio.Sound.HIGHLIGHT);
+        boolean changed = pickedSticker != iStickerUnderMouse || newHighlit != highlit;
+        if(pickedSticker >= 0 && iStickerUnderMouse != pickedSticker && newHighlit) {
+        	Audio.play(Audio.Sound.HIGHLIGHT); // hovering over a newly highlighted sticker
         }
-        genericGlue.iStickerUnderMouse = pickedSticker;
+        iStickerUnderMouse = pickedSticker;
+        highlit = newHighlit;
+        return changed;
+    }
+    
+    // scratch space for speed. note: not threadsafe.
+    private static ViewRotationInfo scratch = new ViewRotationInfo();
+    
+    public boolean canRotateToCenter( int x, int y, RotationHandler rotationHandler ) 
+    {
+    	return getViewRotationInfo(x, y, rotationHandler, scratch);
     }
 
-    private class ViewRotationInfo
+    private static class ViewRotationInfo
     {
     	public double totalRotationAngle;
     	public double[] nicePointOnScreen;
@@ -432,7 +415,7 @@ public class GenericGlue
         int twistDir = 0;
         int slicemask = 0;
         float fracIntoTwist = 0.f;
-        GenericPipelineUtils.Frame glueFrameToDrawInto = genericGlue.untwistedFrame;
+        GenericPipelineUtils.AnimFrame glueFrameToDrawInto = genericGlue.untwistedFrame;
 
         if (genericGlue.iTwist < genericGlue.nTwist)
         {
@@ -502,7 +485,7 @@ public class GenericGlue
                 showShadows,
                 ground,
                 faceRGB,
-                genericGlue.iStickerUnderMouse,
+                highlit ? genericGlue.iStickerUnderMouse :-1,
                 highlightByCubie,
                 outlineColor,
                 g);

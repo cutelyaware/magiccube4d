@@ -38,6 +38,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     private History hist;
     private MC4DView view;
     
+    private RotationHandler rotations = new RotationHandler();
+    
     private JPanel viewcontainer = new JPanel(new BorderLayout()); // JComponent container so we can use addHotKey
     private JPanel macroControlsContainer = new JPanel(new BorderLayout());
     private JFileChooser
@@ -66,6 +68,18 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     	int twists = hist.countTwists();
         twistLabel.setText("Total Twists: " + twists);
     }
+    
+    
+    private class NormalHighlighter implements GenericGlue.Highlighter {
+		@Override
+		public boolean shouldHighlightSticker(GenericPuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y) {
+			if(view.isCtrlKeyDown())
+				return stickerIndex >= 0 && genericGlue.canRotateToCenter(x, y, rotations);
+			else
+				return GenericPipelineUtils.gripHasValidTwist( gripIndex, genericGlue.genericPuzzleDescription );
+		}
+    };
+    NormalHighlighter normalHighlighter = new NormalHighlighter();
 
 
     /*
@@ -263,10 +277,12 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                             lastMacro.length() + " move" + (lastMacro.length()==1 ? "." : "s."));
                     }
                     view.setSkyOverride(null);
+                    genericGlue.setHighlighter(normalHighlighter); // Return to normal highlighting mode.
                 } else { // begin macro definition
                     macroMgr.open();
                     statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
                     view.setSkyOverride(Color.white);
+                    genericGlue.setHighlighter(macroMgr); // Start highlighting in macro mode.
                 }
             }
         },
@@ -279,6 +295,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 macroMgr.cancel();
                 statusLabel.setText("Cancelled");
                 view.setSkyOverride(null);
+                genericGlue.setHighlighter(normalHighlighter); // Make sure we're in normal highlighting mode.
                 applyingMacro = 0;
             }
         },
@@ -602,7 +619,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         contents.add(viewcontainer, "Center");
         contents.add(statusBar, "South");
 
-        genericGlue = new GenericGlue(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar, macroMgr);
+        genericGlue = new GenericGlue(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
+        genericGlue.setHighlighter(normalHighlighter);
         initMacroControls(); // to show controls
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));
@@ -810,7 +828,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         double initialLength = MagicCube.DEFAULT_LENGTH;
         int iLength = (int)Math.ceil(initialLength);
         hist = new History(iLength);
-        RotationHandler rotations = new RotationHandler();
         if(log != null) { // read the log file, possibly reinitializing length and history.
             File logfile = new File(log);
             if(logfile.exists()) {
