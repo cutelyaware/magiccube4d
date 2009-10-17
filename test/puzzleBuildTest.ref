@@ -305,15 +305,15 @@ NumStickers:	6818
 NumGrips:	522
 
 Puzzle:	{100}x{4} 1.0
-NumFaces:	4
+NumFaces:	104
 NumCubies:	1
-NumStickers:	4
+NumStickers:	104
 NumGrips:	5112
 
 Puzzle:	{100}x{4} 3.0
 NumFaces:	104
 NumCubies:	1808
-NumStickers:	2712
+NumStickers:	5112
 NumGrips:	5112
 
 Puzzle:	{5}x{5} 1.0
