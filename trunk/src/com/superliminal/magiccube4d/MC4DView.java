@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.FileReader;
@@ -9,6 +10,8 @@ import java.util.Enumeration;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+
+import com.superliminal.util.StaticUtils;
 
 
 /**
@@ -321,7 +324,7 @@ public class MC4DView extends Component {
     // Quick & dirty frame timer for debugging.
     //
     private static int frames = 0, FPS =0;
-    private static boolean debugging = PropertyManager.getBoolean("debugging", true);
+    private static boolean debugging = PropertyManager.getBoolean("debugging", false);
     private static Timer FPSTimer = new Timer(1000, new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {

@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 //
 // NdSolve.java - solves the d-dimensional analogue of Rubik's cube.
 //

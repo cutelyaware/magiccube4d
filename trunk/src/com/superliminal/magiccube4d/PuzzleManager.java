@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 //
 // This file is mostly throwaway--
 // it is an attempt to quickly glue the good new classes:
@@ -9,6 +10,7 @@
 // and figuring out where it should really go.
 
 import com.donhatchsw.util.VecMath;
+import com.superliminal.util.ColorUtils;
 
 import java.awt.*;
 import java.awt.event.*;

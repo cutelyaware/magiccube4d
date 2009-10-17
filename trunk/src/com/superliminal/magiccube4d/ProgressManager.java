@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 

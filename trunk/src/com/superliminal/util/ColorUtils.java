@@ -1,3 +1,4 @@
+package com.superliminal.util;
 
 import java.util.Random;
 
@@ -49,7 +50,7 @@ public class ColorUtils {
 	 * 
 	 * Warning: O N^2 algorithm blows up fast for more than 100 colors.
 	 */
-    static float[][] generateVisuallyDistinctRGBs(int ncolors, float minComponent, float maxComponent) {
+    public static float[][] generateVisuallyDistinctRGBs(int ncolors, float minComponent, float maxComponent) {
     	rand.setSeed(RAND_SEED); // So that we get consistent results for each combination of inputs
     	
 		float[][] yuv = new float[ncolors][3];

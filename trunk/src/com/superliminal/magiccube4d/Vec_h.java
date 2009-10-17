@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 
 /**
  * Contains implementations of vector arithmatic operations.
