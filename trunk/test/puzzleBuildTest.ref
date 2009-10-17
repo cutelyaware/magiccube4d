@@ -1,3 +1,57 @@
+Puzzle:	{3,3,3} 1.0
+NumFaces:	5
+NumCubies:	1
+NumStickers:	5
+NumGrips:	75
+
+Puzzle:	{3,3,3} 2.0
+NumFaces:	5
+NumCubies:	16
+NumStickers:	55
+NumGrips:	75
+
+Puzzle:	{3,3,3} 3.0
+NumFaces:	5
+NumCubies:	55
+NumStickers:	155
+NumGrips:	75
+
+Puzzle:	{3,3,3} 4.0
+NumFaces:	5
+NumCubies:	135
+NumStickers:	325
+NumGrips:	75
+
+Puzzle:	{3,3,3} 5.0
+NumFaces:	5
+NumCubies:	275
+NumStickers:	585
+NumGrips:	75
+
+Puzzle:	{3,3,3} 6.0
+NumFaces:	5
+NumCubies:	495
+NumStickers:	955
+NumGrips:	75
+
+Puzzle:	{3,3,3} 7.0
+NumFaces:	5
+NumCubies:	815
+NumStickers:	1455
+NumGrips:	75
+
+Puzzle:	{3,3,3} 8.0
+NumFaces:	5
+NumCubies:	1255
+NumStickers:	2105
+NumGrips:	75
+
+Puzzle:	{3,3,3} 9.0
+NumFaces:	5
+NumCubies:	1835
+NumStickers:	2925
+NumGrips:	75
+
 Puzzle:	{4,3,3} 1.0
 NumFaces:	8
 NumCubies:	1

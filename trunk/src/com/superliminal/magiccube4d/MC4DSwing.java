@@ -651,7 +651,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             boolean allowPuzzlesWithTriangles = false;
             if (!allowPuzzlesWithTriangles)
             {
-                if (schlafli != null && schlafli.indexOf("{3") != -1)
+                if (schlafli != null && schlafli.indexOf("{3") != -1 && !schlafli.equals( "{3,3,3}" ) )
                     continue;
             }
 
