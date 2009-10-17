@@ -1,9 +1,12 @@
+package com.superliminal.magiccube4d;
 import java.net.URL;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
+
+
 
 
 /**
@@ -76,7 +79,7 @@ public class Audio {
 	
 	private Clip get(String fname, float scale){
 		// Open an audio input stream.
-	    URL url = this.getClass().getClassLoader().getResource(fname);
+        URL url = this.getClass().getClassLoader().getResource(fname);
 	    AudioInputStream audioIn = null;
 	    Clip clip = null;
 		try {

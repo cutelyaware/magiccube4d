@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -15,7 +16,7 @@ public class MC4DLauncher {
 		String thisjar = new File(MC4DLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).toString();
 		if(thisjar.endsWith(".jar")) {
 			System.out.println("Jar: " + thisjar);
-			Runtime.getRuntime().exec("java -Xms128m -Xmx512m -cp " + thisjar + " MC4DSwing");
+			Runtime.getRuntime().exec("java -Xms128m -Xmx512m -cp " + thisjar + " " + MC4DSwing.class.getCanonicalName());
 		}
 		else {
 			System.out.println("Path: " + thisjar);

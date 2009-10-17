@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;

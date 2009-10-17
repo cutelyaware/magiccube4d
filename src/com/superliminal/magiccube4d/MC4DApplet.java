@@ -1,9 +1,12 @@
+package com.superliminal.magiccube4d;
 import java.applet.Applet;
 import java.awt.*;
 import java.io.StringReader;
 import java.io.PushbackReader;
 
 import javax.swing.JProgressBar;
+
+import com.superliminal.util.Util;
 
 
 /**

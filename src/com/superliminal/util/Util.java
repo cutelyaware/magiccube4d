@@ -1,3 +1,4 @@
+package com.superliminal.util;
 import java.net.*;
 import java.io.*;
 
@@ -29,7 +30,7 @@ public class Util {
                 url = new URL(name);
         }
         catch(Exception e){
-            System.err.println("IconUtils.getResource: can't load resource: " + name);
+            System.err.println("ResourceUtils.getResource: can't load resource: " + name);
         }
         return url;
     }

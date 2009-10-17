@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 /**
  * Description of a generic Rubik's-cube-like puzzle,
  * in any number of dimensions

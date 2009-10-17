@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 
 import javax.swing.filechooser.FileSystemView;
 import java.util.*;

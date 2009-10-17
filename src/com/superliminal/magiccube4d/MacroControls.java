@@ -1,5 +1,10 @@
+package com.superliminal.magiccube4d;
 
 import javax.swing.*;
+
+import com.superliminal.util.SpringUtilities;
+import com.superliminal.util.StaticUtils;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.*;

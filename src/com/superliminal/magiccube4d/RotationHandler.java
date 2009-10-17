@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 
 import java.io.BufferedReader;
 import java.io.Writer;

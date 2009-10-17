@@ -1,3 +1,4 @@
+package com.superliminal.magiccube4d;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -9,6 +10,10 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import com.superliminal.util.ColorButton;
+import com.superliminal.util.FloatSlider;
+import com.superliminal.util.StaticUtils;
 
 import de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel;
 
@@ -405,6 +410,11 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 statusLabel.setText("Wrote macro file " + macroMgr.getFilePath());
             }
         };
+        
+    private ImageIcon getImageIcon(String path) {
+        ClassLoader cl = getClass().getClassLoader();
+        return new ImageIcon(cl.getResource(path));
+    }
 
 
     /**
@@ -1113,11 +1123,6 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             add(tmp, "South");
         }
     } // end class PreferencesEditor
-
-    private ImageIcon getImageIcon(String path) {
-        ClassLoader cl = getClass().getClassLoader();
-        return new ImageIcon(cl.getResource(path));
-    }
 
 
     /**
