@@ -25,7 +25,7 @@ public class ModuleTest
         for( int i=0; i<puzzles.length; ++i )
         {
             final String schlafli = puzzles[i][0];
-            if( schlafli == null || schlafli.indexOf("{3") != -1 )
+            if( schlafli == null || ( schlafli.indexOf("{3") != -1 && !schlafli.equals( "{3,3,3}" ) ) )
             	continue;
             String lengthStrings[] = puzzles[i][1].split(",");
         	         

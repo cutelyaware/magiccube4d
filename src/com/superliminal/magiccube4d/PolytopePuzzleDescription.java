@@ -417,61 +417,72 @@ class PolytopePuzzleDescription implements PuzzleDescription {
                 }
                 Assert(fullThickness != 0.); // XXX actually this fails if puzzle dimension <= 1, maybe should disallow
 
-            	// XXX - Temporary hack for simplexes with an odd number per side.
-            	// 		 This is ugly, but gets them showing on the screen at least.
-            	if( schlafliProduct.equals( "{3,3,3}" ) && length % 2 == 1.0 )
-            		length += .01;
-                
-                //System.out.println("    slice thickness "+iFace+" = "+sliceThickness+"");
-
-                boolean isPrismOfThisFace = Math.abs(-1. - faceOffsets[iFace]) < 1e-6;
                 int ceilLength = (int)Math.ceil(length);
-
-                // Fractional lengths are basically a hack for pentagons
-                // and higher gons
-                // so that the middle edge width can be controlled
-                // by the user; we don't want it to apply
-                // to squares though
-                if (isPrismOfThisFace)
-                    length = ceilLength;
+                int nNearCuts = 0, nFarCuts = 0;
+                double sliceThickness = 0;
                 
-                double sliceThickness = fullThickness / length;
-
-                // If even length and *not* a prism of this face,
-                // then the middle-most cuts will meet,
-                // but the slice function can't handle that.
-                // So back off a little so they don't meet,
-                // so we'll get tiny invisible sliver faces there instead.
-                if (length == ceilLength
-                 && ceilLength % 2 == 0
-                 && !isPrismOfThisFace)
+                // Special case the simplex puzzles.
+                if( schlafliProduct.equals( "{3,3,3}" ) )
                 {
-                	//System.out.println( "going to have slivers" );
-                	needSliverRemoval = true;
+                	// Disallow fractional lengths for these puzzles.
+                	length = ceilLength;
                 	
+                	sliceThickness = fullThickness / length;
+                	
+                	// We need the sliver hack for these because the slicer
+                	// can't handle it otherwise.
                 	// Warning! edit with caution (sliver removal heuristic is tuned to this).
-                	sliceThickness *= .9999;
+                    sliceThickness *= .999;
+                    needSliverRemoval = true;
+                	
+                	// There are no opposite faces for the simplex,
+                    // and so we need to do all the cuts on the near side.
+                    nNearCuts = ceilLength - 1;
+                    nFarCuts = 0;
                 }
+                else
+                {
+	                boolean isPrismOfThisFace = Math.abs(-1. - faceOffsets[iFace]) < 1e-6;
+	
+	                // Fractional lengths are basically a hack for pentagons
+	                // and higher gons
+	                // so that the middle edge width can be controlled
+	                // by the user; we don't want it to apply
+	                // to squares though
+	                if (isPrismOfThisFace)
+	                    length = ceilLength;
+	                
+	                sliceThickness = fullThickness / length;
+	
+	                // If even length and *not* a prism of this face,
+	                // then the middle-most cuts will meet,
+	                // but the slice function can't handle that.
+	                // So back off a little so they don't meet,
+	                // so we'll get tiny invisible sliver faces there instead.
+	                if (length == ceilLength
+	                 && ceilLength % 2 == 0
+	                 && !isPrismOfThisFace)
+	                {
+	                	//System.out.println( "going to have slivers" );
+	                	needSliverRemoval = true;
+	                	
+	                	// Warning! edit with caution (sliver removal heuristic is tuned to this).
+	                	sliceThickness *= .9999;
+	                }
 
-                //sliceThickness = fullThickness/4;
-
-                /*
-                   Think about what's appropriate for simplex...
-                        thickness = 1/3 of full to get upside down tet in middle, 
-                                        with its verts poking the faces
-                        thickness = 1/4 of full to get nothing in middle
-                        thickness = 1/5 of full to get nice rightside up cell in middle
-                                        YES, this is what 3 should do I think
-
-
-                   But for triangular prism prism,
-                            1/4 of full is the nice one for 3
-                */
-
-                int nNearCuts = ceilLength / 2; // (n-1)/2 if odd, n/2 if even
-                int nFarCuts = face2OppositeFace[iFace]==-1 ? 0 :
-                               ceilLength%2==0 && isPrismOfThisFace ? nNearCuts-1 :
-                               nNearCuts;
+	                /*
+	               		But for triangular prism prism,
+	         			1/4 of full is the nice one for 3
+	              		STILL TBD
+						sliceThickness = fullThickness/4;
+	                */
+	
+	                nNearCuts = ceilLength / 2; // (n-1)/2 if odd, n/2 if even
+	                nFarCuts = face2OppositeFace[iFace]==-1 ? 0 :
+	                               ceilLength%2==0 && isPrismOfThisFace ? nNearCuts-1 :
+	                               nNearCuts;
+                }
+                
                 faceCutOffsets[iFace] = new double[nNearCuts + nFarCuts];
 
                 for (int iNearCut = 0; iNearCut < nNearCuts; ++iNearCut)
@@ -848,6 +859,12 @@ class PolytopePuzzleDescription implements PuzzleDescription {
                         // So fudge it a little towards the cell center.
                         // XXX should try to be more scientific...
                         VecMath.lerp(gripCenterD, gripCenterD, faceCentersD[iFace], .01);
+                        
+                        // XXX - ugly special casing for a particular puzzle.
+                        // If I don't do this, this puzzle can't twist because all stickers
+                        // are closest to the cell center.
+                        if( schlafliProduct.equals( "{3,3,3}" ) && length <= 2 )
+                        	VecMath.lerp(gripCenterD, gripCenterD, faceCentersD[iFace], .3);
 
                         gripCentersF[iGrip] = doubleToFloat(gripCenterD);
                         gripDims[iGrip] = iDim;

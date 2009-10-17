@@ -18,7 +18,7 @@ public class MagicCube {
         DEFAULT_LENGTH = 3;
 	public final static String DEFAULT_PUZZLE = "{4,3,3}";
 	public final static String SUPPORTED_PUZZLES[][] = {
-        {"{3,3,3}",  "1,1.9,2,3,4,5,6,7",	"Simplex"},
+        {"{3,3,3}",  "1,2,3,4,5,6,7,8,9",	"Simplex"},
         {"{3}x{4}",  "1,2,3,4,5,6,7",		"Triangular Duoprism"},
         {"{4,3,3}",  "1,2,3,4,5,6,7,8,9",	"Hypercube"},
         {"{5}x{4}",  "1,2,3,4,5,6,7",		"Pentagonal Duoprism"},
