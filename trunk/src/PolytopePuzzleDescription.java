@@ -368,6 +368,7 @@ class PolytopePuzzleDescription implements PuzzleDescription {
         // the corresponding cut offsets will be in increasing order,
         // for sanity.
         //
+        boolean needSliverRemoval = false;
         faceCutOffsets = new double[nFaces][];
         {
             for (int iFace = 0; iFace < nFaces; ++iFace)
@@ -445,6 +446,8 @@ class PolytopePuzzleDescription implements PuzzleDescription {
                  && !isPrismOfThisFace)
                 {
                 	//System.out.println( "going to have slivers" );
+                	needSliverRemoval = true;
+                	
                 	// Warning! edit with caution (sliver removal heuristic is tuned to this).
                 	sliceThickness *= .9999;
                 }
@@ -527,44 +530,42 @@ class PolytopePuzzleDescription implements PuzzleDescription {
         	progress.init("Fixing orientations");
         CSG.orientDeep(slicedPolytope); // XXX shouldn't be necessary!!!!
 
-        //
         // Remove slivers
         // XXX - This is a hack for a hack.
         // A better long term approach would be to improve the slice function.
-        //
-        if( progress != null )
-        	progress.init( "Cleaning up sliced polytope." );
-        
-        CSG.SPolytope facets[] = slicedPolytope.p.facets;
-        CSG.SPolytope validFacets[] = new CSG.SPolytope[facets.length];
-        
-        // Calculate a volume cutoff for slivers.
-        // Note: we needed to make this depend on the full volume of the puzzle.
-        // We'll make our cutoff 20% of the average volume of a sticker.
-        double fullVolume = Math.abs( slicedPolytope.volume() );
-        double cutoff = ( fullVolume / facets.length ) * .15;
-        //System.out.println( "sliver cutoff = " + cutoff );
-
-        int nValidFacets = 0;
-        for( int i=0; i<facets.length; i++ )
-        {
-        	double volume = Math.abs( facets[i].volume() );
-        	if( volume > cutoff )
-        		validFacets[nValidFacets++] = facets[i];
-        	
-        	// Warn if close to the cutoff.
-        	double fraction = volume / cutoff;
-        	if( 0.5 < fraction && fraction < 2 )
-        	{
-        		System.out.println( "Warning! Sliver removal heuristic is cutting it too close (pun intended). v = " + volume + " c = " + cutoff );
-        	}
+        if( needSliverRemoval )
+        {	        
+	        CSG.SPolytope facets[] = slicedPolytope.p.facets;
+	        CSG.SPolytope validFacets[] = new CSG.SPolytope[facets.length];
+	        
+	        // Calculate a volume cutoff for slivers.
+	        // Note: we needed to make this depend on the full volume of the puzzle.
+	        // We'll make our cutoff 20% of the average volume of a sticker.
+	        double fullVolume = Math.abs( slicedPolytope.volume() );
+	        double cutoff = ( fullVolume / facets.length ) * .15;
+	        //System.out.println( "sliver cutoff = " + cutoff );
+	
+	        int nValidFacets = 0;
+	        for( int i=0; i<facets.length; i++ )
+	        {
+	        	double volume = Math.abs( facets[i].volume() );
+	        	if( volume > cutoff )
+	        		validFacets[nValidFacets++] = facets[i];
+	        	
+	        	// Warn if close to the cutoff.
+	        	double fraction = volume / cutoff;
+	        	if( 0.5 < fraction && fraction < 2 )
+	        	{
+	        		System.out.println( "Warning! Sliver removal heuristic is cutting it too close (pun intended). v = " + volume + " c = " + cutoff );
+	        	}
+	        }
+	        validFacets = (CSG.SPolytope[])com.donhatchsw.util.Arrays.subarray( 
+	        		validFacets, 0, nValidFacets ); // resize
+	        
+	        // Setup the polytope with the valid facets.
+	        slicedPolytope.p.facets = validFacets;
+	        slicedPolytope.p.resetAllElements();
         }
-        validFacets = (CSG.SPolytope[])com.donhatchsw.util.Arrays.subarray( 
-        		validFacets, 0, nValidFacets ); // resize
-        
-        // Setup the polytope with the valid facets.
-        slicedPolytope.p.facets = validFacets;
-        slicedPolytope.p.resetAllElements();
         
         CSG.Polytope stickers[] = slicedPolytope.p.getAllElements()[nDims-1];
         int nStickers = stickers.length;
