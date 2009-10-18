@@ -429,10 +429,11 @@ class PolytopePuzzleDescription implements PuzzleDescription {
                 	
                 	sliceThickness = fullThickness / length;
                 	
-                	// We need the sliver hack for these because the slicer
-                	// can't handle it otherwise.
+                	// We need the sliver hack for these because the slicer can't handle it otherwise.
                 	// Warning! edit with caution (sliver removal heuristic is tuned to this).
-                    sliceThickness *= .999;
+                	// Also, in the simplex case, making this too close to 1 was affecting
+                	// drawing, and making it too far from 1 was affecting grip detection. Argh!
+                    sliceThickness *= .995;
                     needSliverRemoval = true;
                 	
                 	// There are no opposite faces for the simplex,
