@@ -198,12 +198,18 @@ public class PuzzleManager
         return newPuzzle;
     }
 
-    // XXX unscientific rounding-- and it's too fast for small angles!  
-    // It's more noticeable here than for twists because very small angles are possible here.  
+    // XXX unscientific rounding-- and it's too fast for small angles!
     // Really we'd like to bound the max acceleration.
     public int calculateNTwists( double totalRotationAngle, double twistFactor )
     {
-    	return (int)(totalRotationAngle/(Math.PI/2) * 11 * twistFactor);
+    	int nTwists = (int)(totalRotationAngle/(Math.PI/2) * 11 * twistFactor);
+    	
+    	// We should always do at least one,
+    	// or small angle twists can get missed!
+    	if( nTwists == 0 )
+    		return 1;
+    	else
+    		return nTwists;
     }
     
 
