@@ -674,10 +674,10 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                         if (schlafli == null)
                         {
                             String prompt = "Enter your invention:";
-                            String initialInput = 
-                            	puzzleManager.puzzleDescription.getSchlafliProduct() + " " +
-                                puzzleManager.puzzleDescription.getEdgeLength();
-
+                            String name = puzzleManager.puzzleDescription.getSchlafliProduct();
+                            double length = puzzleManager.puzzleDescription.getEdgeLength();
+                            boolean integralLength = length == (int)length;
+                            String initialInput = name + (integralLength ? " "+(int)length : " "+length);
                             while (true)
                             {
                                 String reply = JOptionPane.showInputDialog(prompt, initialInput);
@@ -888,6 +888,9 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 solveitem.setEnabled(!puzzleManager.isSolved() && puzzleManager.puzzleDescription.getEdgeLength()<4);
                 updateTwistsLabel();
                 if(puzzleManager.isSolved()) {
+                	int intlen = (int)puzzleManager.puzzleDescription.getEdgeLength();
+                	if(intlen <= 1)
+                		return; // No soup for you!
                     switch (scrambleState) {
                         case SCRAMBLE_PARTIAL:
                             statusLabel.setText("Solved!");
@@ -899,7 +902,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                             Congratulations congrats = new Congratulations(
         						"<html>" + 
         			            	"<center><H1>You have solved the " +
-        							puzzleManager.puzzleDescription.getSchlafliProduct() + " " + (int)puzzleManager.puzzleDescription.getEdgeLength() + 
+        							puzzleManager.puzzleDescription.getSchlafliProduct() + " " + intlen + 
         							"!</H1></center>" + 
         			                "<br>You may want to use File > Save As to archive your solution." +
         			                "<br>If this is a first for you or it is a record, consider submitting it to" +
