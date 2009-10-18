@@ -57,18 +57,24 @@ public class PuzzleManager
 
 
     public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground, final Callback cb) {
-
     	statusLabel.setText("");
+        double length = Double.parseDouble(lengthString);
+        boolean integralLength = length == (int)length;
+        final String finalLengthString = integralLength ? " "+(int)length : " "+length;
     	ProgressManager builder = new ProgressManager(progressView) {
+    		private boolean succeeded = false;
             /*
              * Main task. Executed in background thread.
              */
             @Override
             public Void doInBackground() {
-            	puzzleDescription = buildPuzzle(schlafli, lengthString, this);
-            	if( puzzleDescription != null )
+            	PuzzleDescription newPuzzle = buildPuzzle(schlafli, finalLengthString, this);
+            	if( newPuzzle != null ) {
+            		succeeded = true;
+                	puzzleDescription  = newPuzzle;
             		puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());
-                faceRGB = ColorUtils.generateVisuallyDistinctRGBs(puzzleDescription.nFaces(), .7f, .1f);
+            		faceRGB = ColorUtils.generateVisuallyDistinctRGBs(puzzleDescription.nFaces(), .7f, .1f);
+            	}
             	return null;
     		}
 
@@ -77,7 +83,8 @@ public class PuzzleManager
              */
 			@Override
 			public void done() {
-				statusLabel.setText(schlafli + "  length="+lengthString);
+				if(succeeded)
+					statusLabel.setText(schlafli + "  length = " + finalLengthString);
 				super.done();
 				if(cb != null) 
 					cb.call();
