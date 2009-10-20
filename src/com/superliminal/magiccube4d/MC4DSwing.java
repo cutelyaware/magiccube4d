@@ -80,7 +80,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 			if(view.isCtrlKeyDown())
 				return puzzleManager.canRotateToCenter(x, y, rotations);
 			else
-				return PipelineUtils.gripHasValidTwist( gripIndex, puzzleManager.puzzleDescription );
+				return PipelineUtils.hasValidTwist( gripIndex, view.getSlicemask(), puzzleManager.puzzleDescription );
 		}
     };
 

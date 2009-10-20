@@ -537,8 +537,13 @@ public class PipelineUtils
         return iStickerAndPoly != null ? iStickerAndPoly[0] : -1;
     }
 
-    public static boolean gripHasValidTwist( int grip, PuzzleDescription puzzle )
+    public static boolean hasValidTwist( int grip, int slicemask, PuzzleDescription puzzle )
     {
+    	int validSlices = puzzle.getNumSlicesForGrip(grip);
+    	int validBits = (1<<validSlices) - 1;
+    	if((validBits & slicemask) == 0)
+    		return false; // this twist won't affect valid slices.
+    	
     	int[] orders = puzzle.getGripSymmetryOrders();
         if( grip < 0 || grip >= orders.length )
         	return false;
