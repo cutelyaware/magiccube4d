@@ -437,6 +437,7 @@ public class MC4DView extends Component {
                     animating = (QueueItem)item;
 
                     int iTwistGrip = animating.twist.grip.id_within_puzzle;
+                    int iSlicemask = animating.twist.slicemask;
                     int[] orders = puzzleManager.puzzleDescription.getGripSymmetryOrders();
                     if(0 > iTwistGrip || iTwistGrip >= orders.length) {
                     	System.err.println("order indexing error in MC4CView.AnimationQueue.getAnimating()");
@@ -444,7 +445,7 @@ public class MC4DView extends Component {
                     }
                     int order = orders[iTwistGrip];
                     
-                    if( !PipelineUtils.hasValidTwist( iTwistGrip, slicemask, puzzleManager.puzzleDescription ) )
+                    if( !PipelineUtils.hasValidTwist( iTwistGrip, iSlicemask, puzzleManager.puzzleDescription ) )
                     	continue;
                     
                     double totalRotationAngle = 2*Math.PI/order;                    
