@@ -109,11 +109,11 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 scrambleState + " " +
                 hist.countTwists() + " " +
                 puzzleManager.puzzleDescription.getSchlafliProduct() + " " +
-                puzzleManager.puzzleDescription.getEdgeLength());
+                puzzleManager.getPrettyLength());
             writer.write(sep);
             view.getRotations().write(writer);
             //writer.write(sep + puzzle.toString());
-            writer.write(sep + "*" + sep);
+            writer.write("*" + sep);
             hist.write(writer);
             writer.close();
             String filepath = file.getAbsolutePath();
@@ -675,9 +675,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                         {
                             String prompt = "Enter your invention:";
                             String name = puzzleManager.puzzleDescription.getSchlafliProduct();
-                            double length = puzzleManager.puzzleDescription.getEdgeLength();
-                            boolean integralLength = length == (int)length;
-                            String initialInput = name + (integralLength ? " "+(int)length : " "+length);
+                            String initialInput = name + " " + puzzleManager.getPrettyLength();
                             while (true)
                             {
                                 String reply = JOptionPane.showInputDialog(prompt, initialInput);
