@@ -54,13 +54,20 @@ public class PuzzleManager
 
 
     public interface Callback { public void call(); }
+    
+    static String prettyLength(double length) {
+        boolean integralLength = length == (int)length;
+        return integralLength ? ""+(int)length : ""+length;
+    }
+    
+    public String getPrettyLength() {
+    	return prettyLength(puzzleDescription.getEdgeLength());
+    }
 
 
     public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground, final Callback cb) {
     	statusLabel.setText("");
-        double length = Double.parseDouble(lengthString);
-        boolean integralLength = length == (int)length;
-        final String finalLengthString = integralLength ? " "+(int)length : " "+length;
+        final String finalLengthString = " " + prettyLength(Double.parseDouble(lengthString));
     	ProgressManager builder = new ProgressManager(progressView) {
     		private boolean succeeded = false;
             /*

@@ -446,15 +446,19 @@ public class History {
                 if (node == current)
                     writer.write("c ");
                 if (node.stickerid >= 0) {
-                	writer.write(" " + node.stickerid);
+                	writer.write("" + node.stickerid);
                     writer.write("," + node.dir);
                     writer.write("," + node.slicesmask);
                 }
                 else
                     writer.write("m" + node.mark);
                 nwritten++;
-                if (node.next != null && node.next!=current && nwritten % 10 == 0) // write a line break
-                    writer.write(System.getProperty("line.separator"));
+                if (node.next != null && node.next!=current) {
+                	if(nwritten % 10 == 0) // write a line break
+                		writer.write(System.getProperty("line.separator"));
+                	else
+                		writer.write(" ");
+                }
             }
             writer.write("." + System.getProperty("line.separator")); // end of history marker
         } catch(IOException ioe) {
@@ -1135,9 +1139,9 @@ public class History {
     	for(Enumeration<MagicCube.TwistData> e=hist.moves(); e.hasMoreElements(); ) {
     		MagicCube.TwistData move = e.nextElement();
     		System.out.print(
-    				" " + move.grip.id_within_puzzle +
+    				move.grip.id_within_puzzle +
     				"," + move.direction +
-    				"," + move.slicemask);
+    				"," + move.slicemask + " ");
     	}
     	System.out.println();
     }
