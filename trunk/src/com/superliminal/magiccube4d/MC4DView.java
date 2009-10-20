@@ -37,6 +37,7 @@ public class MC4DView extends Component {
     private AnimationQueue animationQueue;
     public boolean isAnimating() { return animationQueue.isAnimating(); }
     private int slicemask; // bitmap representing which number keys are down
+    public int getSlicemask() { return slicemask == 0 ? 1 : slicemask; }
     private boolean ctrlKeyDown;
     public boolean isCtrlKeyDown() { return ctrlKeyDown; }
     private Color skyOverride = null; // null means use the user's preference from the PropertyManager.
@@ -100,8 +101,11 @@ public class MC4DView extends Component {
             @Override
 			public void keyPressed(KeyEvent arg0) {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
-                if(1 <= numkey && numkey <= 9)
+                if(1 <= numkey && numkey <= 9) {
                     slicemask |= 1<<numkey-1; // turn on the specified bit
+                    if(puzzleManager.updateStickerHighlighting())
+                    	repaint();
+                }
 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = true;
@@ -112,8 +116,11 @@ public class MC4DView extends Component {
             @Override
 			public void keyReleased(KeyEvent arg0) {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
-                if(1 <= numkey && numkey <= 9)
+                if(1 <= numkey && numkey <= 9) {
                     slicemask &= ~(1<<numkey-1); // turn off the specified bit
+                    if(puzzleManager.updateStickerHighlighting())
+                    	repaint();
+                }
                 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = false;
@@ -135,10 +142,10 @@ public class MC4DView extends Component {
                 	if( puzzleManager != null )
 		            {
 		                puzzleManager.mouseClickedAction(e,
-		                                               rotationHandler,
-		                                               PropertyManager.getFloat("twistfactor", 1),
-		                                               slicemask,
-		                                               MC4DView.this);
+                           rotationHandler,
+                           PropertyManager.getFloat("twistfactor", 1),
+                           getSlicemask(),
+                           MC4DView.this);
 		            }
                     return;
             	}
@@ -154,7 +161,7 @@ public class MC4DView extends Component {
                 {
                     System.out.println("missed");
                 }
-                else {
+                else if(PipelineUtils.hasValidTwist(grip, getSlicemask(), puzzleManager.puzzleDescription)) {
                 	MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_puzzle = grip; // slamming new id. do we need to set the other members?
                     clicked.face = puzzleManager.puzzleDescription.getGrip2Face()[grip];
@@ -164,7 +171,7 @@ public class MC4DView extends Component {
                     int dir = (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
                     //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
                     //    dir *= 2;
-                    fireTwistEvent( new MagicCube.TwistData( clicked, dir, slicemask ) );
+                    fireTwistEvent(new MagicCube.TwistData( clicked, dir, getSlicemask()));
                     repaint();
                 }
             }
@@ -437,7 +444,7 @@ public class MC4DView extends Component {
                     }
                     int order = orders[iTwistGrip];
                     
-                    if( !PipelineUtils.gripHasValidTwist( iTwistGrip, puzzleManager.puzzleDescription ) )
+                    if( !PipelineUtils.hasValidTwist( iTwistGrip, slicemask, puzzleManager.puzzleDescription ) )
                     	continue;
                     
                     double totalRotationAngle = 2*Math.PI/order;                    
