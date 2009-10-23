@@ -9,6 +9,12 @@ import java.awt.Color;
  * @author Melinda Green & Don Hatch
  */
 public class MagicCube {
+    /**
+     * Version constants
+     */
+    public final static String PUZZLE_VERSION = "4.0.111";
+    public final static int LOG_FILE_VERSION = 3;
+    public final static int MACRO_FILE_VERSION = 2;
 	
 	/*
 	 * Constants that probably shouldn't be changed
@@ -16,6 +22,7 @@ public class MagicCube {
 	public final static int 
 		NDIMS          = 4,
         DEFAULT_LENGTH = 3;
+	
 	public final static String DEFAULT_PUZZLE = "{4,3,3}";
 	public final static String SUPPORTED_PUZZLES[][] = {
         {"{3,3,3}",  "1,2,3,4,5,6,7,8,9",	"Simplex"},
@@ -117,10 +124,6 @@ public class MagicCube {
         TITLE = "Magic Cube 4D", 
         LOGFILE = "MagicCube4D.log", // in user's home directory
         MAGIC_NUMBER = "MagicCube4D"; // 1st string in log and macro files for sanity checking
-    
-    public final static String PUZZLE_VERSION = "4.0.0";
-    public final static int LOG_FILE_VERSION = 3;
-    public final static int MACRO_FILE_VERSION = 2;
     
     public final static Color
         SKY    = new Color(20,170,235),
