@@ -1,7 +1,3 @@
 #summary MagicCube4D project home page.
 
-= Introduction =
-
-Documentation for MagicCube4D.
-
-= Details =
+This is probably not [http://wiki.superliminal.com/wiki/MagicCube4D The wiki you are looking for].
