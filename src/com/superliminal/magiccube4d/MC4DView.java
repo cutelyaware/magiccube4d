@@ -101,30 +101,32 @@ public class MC4DView extends Component {
             @Override
 			public void keyPressed(KeyEvent arg0) {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
+                Point mousePos = getMousePosition();
                 if(1 <= numkey && numkey <= 9) {
                     slicemask |= 1<<numkey-1; // turn on the specified bit
-                    if(puzzleManager.updateStickerHighlighting())
+                    if(puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
                     	repaint();
                 }
 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = true;
-                	if(puzzleManager.updateStickerHighlighting())
+                	if(puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
                 		repaint();
                 }
             }
             @Override
 			public void keyReleased(KeyEvent arg0) {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
+                Point mousePos = getMousePosition();
                 if(1 <= numkey && numkey <= 9) {
                     slicemask &= ~(1<<numkey-1); // turn off the specified bit
-                    if(puzzleManager.updateStickerHighlighting())
+                    if(puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
                     	repaint();
                 }
                 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = false;
-                	if(puzzleManager.updateStickerHighlighting())
+                	if(puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
                 		repaint();
                 }
             }
@@ -201,92 +203,39 @@ public class MC4DView extends Component {
         // watch for dragging gestures to rotate the 3D view
         this.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
-			public void mouseDragged(MouseEvent e) {
+			public void mouseDragged(MouseEvent me) {
                 if(lastDrag == null)
                     return;
                 float[]
-                    end = new float[] { e.getX(), e.getY() },
+                    end = new float[] { me.getX(), me.getY() },
                     drag_dir = new float[2];
                 Vec_h._VMV2(drag_dir, new float[] { lastDrag.x, lastDrag.y }, end);
                 drag_dir[1] *= -1;      // in Windows, Y is down, so invert it
                 
                 rotationHandler.mouseDragged( drag_dir[0], drag_dir[1],
-                		SwingUtilities.isLeftMouseButton(e), SwingUtilities.isMiddleMouseButton(e), e.isShiftDown() );
+                		SwingUtilities.isLeftMouseButton(me), SwingUtilities.isMiddleMouseButton(me), me.isShiftDown() );
                 frames = 0;
                 if(debugging)
                 	FPSTimer.restart();
                 
-                lastDrag = e.getPoint();
-                lastDragTime = e.getWhen();
+                lastDrag = me.getPoint();
+                lastDragTime = me.getWhen();
+                puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask());
                 repaint();
             }
             @Override
-			public void mouseMoved(MouseEvent arg0) {
-                super.mouseMoved(arg0);
+			public void mouseMoved(MouseEvent me) {
+                super.mouseMoved(me);
                 if (puzzleManager != null )
                 {
-                    if(puzzleManager.mouseMovedAction(arg0))
+                    if(puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask()));
                     	repaint();
                     return;
                 }
             }
         });
     } // end MC4DView
-    
-    
-    /*
-     * Returns an array of nShades * nColorsPerShade RGB triplets 
-     * from the upper satFrac fraction of the saturation range 0..1
-     *
-    private static float[][] generateHSVColors(int nShades, int nColorsPerShade, float satFrac) {
-    	final double G = 1 - (1 + Math.sqrt(5))/2; // golden fraction of 1.0
-    	float[][] colors = new float[nColorsPerShade*nShades][3];
-    	for(int s=0; s<nShades; s++) {
-		    for(int i=0; i<nColorsPerShade; i++) {
-			    int cid = s*nColorsPerShade + i;
-			    double x = G * cid;
-			    double hue = 6 * (x - Math.floor(x));
-			    double f = 1./2; // fraction of the range of saturation to use. E.G. 2/3 == .333 -> 1.
-			    double sat = nShades < 2 ? 1 : ((double)s)/(nShades-1) * f + (1 - f);
-			    hsv2rgb((float) hue, (float)sat, 1, colors[cid]);
-		    }
-    	}
-	    return colors;
-    }*/
-    
-    public static void hsv2rgb(float h, float s, float v, float[] rgb)
-	{
-		// H is given on [0->6] or -1. S and V are given on [0->1]. 
-		// RGB are each returned on [0->1]. 
-		float m, n, f;
-		int i; 
 
-		float[] hsv = new float[3];
-
-		hsv[0] = h;
-		hsv[1] = s;
-		hsv[2] = v;
-		System.out.println("H: " + h + " S: " + s + " V:" + v);
-		if(hsv[0] == -1) {
-			rgb[0] = rgb[1] = rgb[2] = hsv[2];
-			return;  
-		}
-		i = (int)(Math.floor(hsv[0]));
-		f = hsv[0] - i;
-		if(i%2 == 0) f = 1 - f; // if i is even 
-		m = hsv[2] * (1 - hsv[1]); 
-		n = hsv[2] * (1 - hsv[1] * f); 
-		switch (i) { 
-			case 6: 
-			case 0: rgb[0]=hsv[2]; rgb[1]=n; rgb[2]=m; break;
-			case 1: rgb[0]=n; rgb[1]=hsv[2]; rgb[2]=m; break;
-			case 2: rgb[0]=m; rgb[1]=hsv[2]; rgb[2]=n; break;
-			case 3: rgb[0]=m; rgb[1]=n; rgb[2]=hsv[2]; break;
-			case 4: rgb[0]=n; rgb[1]=m; rgb[2]=hsv[2]; break;
-			case 5: rgb[0]=hsv[2]; rgb[1]=m; rgb[2]=n; break;
-		} 
-    }
-    
    
     private void updateViewFactors() {
         int 

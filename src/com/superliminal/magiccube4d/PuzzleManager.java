@@ -220,27 +220,23 @@ public class PuzzleManager
     }
     
 
-    public boolean mouseMovedAction( MouseEvent e )
-    {
-    	mouseMovedX = e.getX();
-    	mouseMovedY = e.getY();
-    	return(updateStickerHighlighting());
-    } // mouseMovedAction
-    private int mouseMovedX, mouseMovedY;
-    
+    /**
+     * Application-supplied callback that can be set to specify when a hovered sticker should be highlighted
+     * based on application context.
+     */
     public interface Highlighter
     {
-    	public boolean shouldHighlightSticker( PuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y );
+    	public boolean shouldHighlightSticker( PuzzleDescription puzzle, int stickerIndex, int gripIndex, int slicemask, int x, int y );
     }
-    private Highlighter highlighter;
     public void setHighlighter(Highlighter highlighter) {
     	this.highlighter = highlighter;
     }
+    private Highlighter highlighter;
     
-    public boolean updateStickerHighlighting()
+    public boolean updateStickerHighlighting(int mouseX, int mouseY, int slicemask)
     {
     	PipelineUtils.PickInfo pick = PipelineUtils.getAllPickInfo(
-        		mouseMovedX, mouseMovedY,
+        		mouseX, mouseY,
         		untwistedFrame,
         		puzzleDescription );
     	int pickedSticker = pick == null ? -1 : pick.stickerIndex;
@@ -249,7 +245,7 @@ public class PuzzleManager
         if( pickedSticker >= 0 && highlighter != null) {
         	// Let the supplied highlighter decide.
         	if( ! highlighter.shouldHighlightSticker( puzzleDescription, 
-        			pickedSticker, pick.gripIndex, mouseMovedX, mouseMovedY) )
+        			pickedSticker, pick.gripIndex, slicemask, mouseX, mouseY) )
         	{
         		newHighlit = false;
         	}
