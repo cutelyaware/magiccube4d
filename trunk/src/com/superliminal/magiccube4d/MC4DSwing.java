@@ -76,11 +76,11 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
      
     PuzzleManager.Highlighter normalHighlighter = new PuzzleManager.Highlighter() {
 		@Override
-		public boolean shouldHighlightSticker(PuzzleDescription puzzle, int stickerIndex, int gripIndex, int x, int y) {
+		public boolean shouldHighlightSticker(PuzzleDescription puzzle, int stickerIndex, int gripIndex, int slicemask, int x, int y) {
 			if(view.isCtrlKeyDown())
 				return puzzleManager.canRotateToCenter(x, y, rotations);
 			else
-				return PipelineUtils.hasValidTwist( gripIndex, view.getSlicemask(), puzzleManager.puzzleDescription );
+				return PipelineUtils.hasValidTwist( gripIndex, slicemask, puzzleManager.puzzleDescription );
 		}
     };
 
