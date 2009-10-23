@@ -32,7 +32,6 @@ public class MagicCube {
         {"{3}x{5}",  "1,2,3,4,5,6,7",		""},
         {"{5}x{5}",  "1,2,3,4,5,6,7",		""}, // XXX look at twisting on 2
         {"{5}x{10}", "1,2,3",				""}, // XXX look at twisting on 2
-        {"{10}x{5}", "1,2,3",				""}, // XXX look at twisting on 2
         {"{10}x{10}","1,2,3",				""}, // XXX look at twisting on 2
         {"{3,3}x{}", "1,2,3,4,5,6,7",		"Tetrahedral Prism"},
         {"{5,3}x{}", "1,2,3,4,5,6,7",		"Dodecahedral Prism"},
