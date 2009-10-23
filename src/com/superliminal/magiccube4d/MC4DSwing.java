@@ -460,7 +460,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         editmenu.add(redoitem);
         editmenu.addSeparator();
         editmenu.add(cheatitem);
-        editmenu.add(solveitem);
+        //editmenu.add(solveitem); // commented out until we reimplement true solves.
         JMenu scramblemenu = new JMenu("Scramble");
         
         // Scrambling
