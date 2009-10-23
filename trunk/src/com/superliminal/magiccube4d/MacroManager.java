@@ -158,10 +158,7 @@ public class MacroManager implements PuzzleManager.Highlighter {
 		MagicCube.Stickerspec grip = new MagicCube.Stickerspec();
 		grip.id_within_puzzle = gripIndex;
 		
-		if( !refDeterminesUniqueOrientation( puzzle, grip ) )
-			return false;
-		
-		return true;
+		return refDeterminesUniqueOrientation( puzzle, grip ) ;
 	}
     
     private boolean colinear( double p1[], double p2[], double p3[] )
