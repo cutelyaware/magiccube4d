@@ -42,6 +42,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
     // These are the variables that will be (re)created in initPuzzle().
     private History hist;
     private MC4DView view;
+    private BoundedRangeModel viewScaleModel;
     
     private RotationHandler rotations = new RotationHandler();
     
@@ -938,6 +939,21 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 //}
             }
         });
+        
+        view.addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent mwe) {
+				if (mwe.getScrollType() == MouseWheelEvent.WHEEL_UNIT_SCROLL) {
+					int 
+						min = viewScaleModel.getMinimum(),
+						max = viewScaleModel.getMaximum(),
+						cur = viewScaleModel.getValue(),
+						newValue = cur + (max - min) / 300 * mwe.getWheelRotation();
+					//System.out.println("whee! " + " from " +  cur + " to " + newValue + " (" + min + "," + max + ")");
+					viewScaleModel.setValue(newValue);
+				}
+			}
+        });
     } // end initPuzzle
     
     
@@ -1036,7 +1052,9 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             sliders.add(new JLabel("Drag Speed"));
             sliders.add(new PropSlider("dragfactor", repainter, 1, .05f, 5));
             sliders.add(new JLabel("View Scale"));
-            sliders.add(new PropSlider("scale", repainter, 1, .1f, 5));
+            JScrollBar scaler = new PropSlider("scale", repainter, 1, .1f, 5);
+            viewScaleModel = scaler.getModel();
+            sliders.add(scaler);
             sliders.add(new JLabel("Face Shrink"));
             sliders.add(new PropSlider("faceshrink", repainter, MagicCube.FACESHRINK, .1f, 1.5f));
             sliders.add(new JLabel("Sticker Shrink"));
