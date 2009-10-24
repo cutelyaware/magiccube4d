@@ -943,7 +943,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         view.addMouseWheelListener(new MouseWheelListener() {
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent mwe) {
-				if (mwe.getScrollType() == MouseWheelEvent.WHEEL_UNIT_SCROLL) {
+				if (viewScaleModel != null && mwe.getScrollType() == MouseWheelEvent.WHEEL_UNIT_SCROLL) {
 					int 
 						min = viewScaleModel.getMinimum(),
 						max = viewScaleModel.getMaximum(),
