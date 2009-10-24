@@ -104,13 +104,13 @@ public class MC4DView extends Component {
                 Point mousePos = getMousePosition();
                 if(1 <= numkey && numkey <= 9) {
                     slicemask |= 1<<numkey-1; // turn on the specified bit
-                    if(puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
+                    if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
                     	repaint();
                 }
 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = true;
-                	if(puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
+                	if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
                 		repaint();
                 }
             }
@@ -120,13 +120,13 @@ public class MC4DView extends Component {
                 Point mousePos = getMousePosition();
                 if(1 <= numkey && numkey <= 9) {
                     slicemask &= ~(1<<numkey-1); // turn off the specified bit
-                    if(puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
+                    if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
                     	repaint();
                 }
                 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = false;
-                	if(puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
+                	if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
                 		repaint();
                 }
             }
