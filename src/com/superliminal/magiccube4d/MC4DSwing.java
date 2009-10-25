@@ -539,7 +539,8 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
 				                boolean fully = scramblechenfrengensen == -1;
 				                scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL;
 				                statusLabel.setText(fully ? "Fully Scrambled" : scramblechenfrengensen + " Random Twist" + (scramblechenfrengensen==1?"":"s"));
-								super.done();
+	                            updateTwistsLabel();
+	                            super.done();
 							}
 				        }.execute();
 					}

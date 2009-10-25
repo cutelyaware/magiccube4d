@@ -14,6 +14,8 @@ import com.superliminal.util.ColorUtils;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Random;
+
 import javax.swing.*;
 
 
@@ -24,6 +26,11 @@ public class PuzzleManager
     public PuzzleDescription puzzleDescription = null;
     public int puzzleState[] = null;
     public float faceRGB[][];
+    
+    public void resetPuzzleState() {
+    	if(puzzleDescription != null)
+    		puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());
+    }
 
     //
     // A rotation is currently in progress if iRotation < nRotation.
@@ -79,7 +86,7 @@ public class PuzzleManager
             	if( newPuzzle != null ) {
             		succeeded = true;
                 	puzzleDescription  = newPuzzle;
-            		puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());
+            		resetPuzzleState();
             		faceRGB = ColorUtils.generateVisuallyDistinctRGBs(puzzleDescription.nFaces(), .7f, .1f);
             	}
             	return null;
@@ -523,5 +530,62 @@ public class PuzzleManager
             }
         }
     } // computeAndPaintFrame
+    
+
+	private Random rand = new Random();
+	
+    public void scramble(int nTwists) {
+    	if(puzzleDescription == null)
+    		return;
+    	resetPuzzleState();
+        int previous_face = -1;
+        int[] grip2face = puzzleDescription.getGrip2Face();
+        int[] orders = puzzleDescription.getGripSymmetryOrders();
+        int[] face2opposite = puzzleDescription.getFace2OppositeFace();
+    	for(int s = 0; s < nTwists; s++) {
+            // select a random grip that is unrelated to the last one (if any)
+            int iGrip, iFace, order;
+            do {
+                iGrip = rand.nextInt(puzzleDescription.nGrips());
+                iFace = grip2face[iGrip];
+                order = orders[iGrip];
+            }
+            while (
+                order < 2 || // don't use 360 degree twists
+                iFace == previous_face || // mixing it up
+                (previous_face!=-1 && face2opposite[previous_face] == iFace));
+            previous_face = iFace;
+            int gripSlices = puzzleDescription.getNumSlicesForGrip(iGrip);
+            int slicemask = 1<<rand.nextInt(gripSlices);
+            int dir = rand.nextBoolean() ? -1 : 1;
+            // apply the twist to the puzzle state.
+            puzzleDescription.applyTwistToState(puzzleState, iGrip, dir, slicemask);
+        }
+    }
+    
+    public void scrambleFully() {
+    	if(puzzleDescription == null)
+    		return;
+        int totalTwistsNeededToFullyScramble = 
+        		puzzleDescription.nFaces() // needed twists is proportional to nFaces
+        		* (int)puzzleDescription.getEdgeLength() // and to number of slices
+        		* 2; // and to a fudge factor that brings the 3^4 close to the original 40 twists.
+        scramble(totalTwistsNeededToFullyScramble + rand.nextInt(10)); // add a few random twists so parity is unpredictable.
+    }
+    
+    public static void main(String[] args) {
+    	PuzzleManager puzzleManager = new PuzzleManager("{3,3,3}", 2, new JProgressBar());
+    	long start = System.currentTimeMillis();
+        int tries = 1000000, solved = 0;
+        for(int i=0; i<tries; i++) {
+        	puzzleManager.scrambleFully();
+        	if(puzzleManager.isSolved()) {
+        		solved++;
+        		System.out.println(""+solved + " so far out of " + i);
+        	}
+        }
+        System.out.println(solved == 0 ? "none in " + tries + " scrambles are solved" : ""+solved + " in " + tries + "(1 in " + tries/(float)solved + ") scrambles are solved.");
+        System.out.println("Total seconds: " + (System.currentTimeMillis() - start)/1000);
+    }
 
 } // class PuzzleManager
