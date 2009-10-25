@@ -638,7 +638,8 @@ class PolytopePuzzleDescription implements PuzzleDescription {
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
                 if (sticker2cubie[iSticker] == iSticker)
                     _nCubies++;
-            System.out.println("    There seem to be "+_nCubies+" accessible cubie(s).");
+            if(PropertyManager.getBoolean("debug", false))
+            		System.out.println("    There seem to be "+_nCubies+" accessible cubie(s).");
             // XXX note, we could easily collapse the cubie indicies
             // XXX so that they are consecutive, if we cared
         }
