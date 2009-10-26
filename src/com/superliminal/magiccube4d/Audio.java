@@ -6,6 +6,8 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 
+import com.superliminal.util.PropertyManager;
+
 
 
 
@@ -23,7 +25,7 @@ public class Audio {
 		snap,
 		correct,
 		fanfare;
-	private static boolean muted = false;
+	private static boolean muted = PropertyManager.getBoolean("muted", false);
 	
 	public Audio() {
 		twisting = get("white1000.wav", .3f);
