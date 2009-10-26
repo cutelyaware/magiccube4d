@@ -11,6 +11,7 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
+import com.superliminal.util.PropertyManager;
 import com.superliminal.util.StaticUtils;
 
 

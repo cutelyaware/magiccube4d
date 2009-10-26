@@ -25,7 +25,7 @@ public class PuzzleManager
 
     public PuzzleDescription puzzleDescription = null;
     public int puzzleState[] = null;
-    public float faceRGB[][];
+    public Color faceColors[];
     
     public void resetPuzzleState() {
     	if(puzzleDescription != null)
@@ -87,7 +87,7 @@ public class PuzzleManager
             		succeeded = true;
                 	puzzleDescription  = newPuzzle;
             		resetPuzzleState();
-            		faceRGB = ColorUtils.generateVisuallyDistinctRGBs(puzzleDescription.nFaces(), .7f, .1f);
+            		faceColors = ColorUtils.generateVisuallyDistinctColors(puzzleDescription.nFaces(), .7f, .1f);
             	}
             	return null;
     		}
@@ -503,7 +503,7 @@ public class PuzzleManager
                 puzzleState,
                 showShadows,
                 ground,
-                faceRGB,
+                faceColors,
                 highlit ? iStickerUnderMouse :-1,
                 highlightByCubie,
                 outlineColor,

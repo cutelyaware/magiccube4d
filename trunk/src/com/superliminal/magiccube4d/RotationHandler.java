@@ -5,6 +5,7 @@ import java.io.Writer;
 import java.io.IOException;
 
 import com.donhatchsw.util.VecMath;
+import com.superliminal.util.PropertyManager;
 
 
 // Class which manages view rotations, both ctrl-click and continuous style.
