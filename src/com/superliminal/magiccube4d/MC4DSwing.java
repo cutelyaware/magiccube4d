@@ -353,6 +353,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         // if one is supplied in the action event.
         reset = new AbstractAction("Reset") {
             public void actionPerformed(final ActionEvent ae) {
+                scrambleState = SCRAMBLE_NONE; // do first to avoid issue 64 (fanfare on reset).
                 cancel.doit(ae);
                 progressBar.setVisible(true);
                 final double length = puzzleManager.puzzleDescription.getEdgeLength();
@@ -362,7 +363,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             		new PuzzleManager.Callback() {
             	    	public void call() {
                             hist.clear((int)length);
-                            scrambleState = SCRAMBLE_NONE;
+                            scrambleState = SCRAMBLE_NONE; // probably redundant but shouldn't hurt.
                             updateTwistsLabel();
                             view.repaint();
                             if(ae.getSource() instanceof PuzzleManager.Callback)
@@ -493,6 +494,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                 reset.actionPerformed(new ActionEvent(new PuzzleManager.Callback(){
 					@Override
 					public void call() { // will be called by the reset action when it completes.
+						scrambleState = SCRAMBLE_NONE; // do first to avoid issue 62 (fanfare on scramble).
 		                progressBar.setVisible(true);
 		                new ProgressManager(progressBar) {
 							@Override
@@ -922,9 +924,9 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                             break;
                     }
                     scrambleState = SCRAMBLE_NONE;
-                }                
+                } // end if(isSolved())
             }
-        });
+        }); // end HistoryListener impl
 
         view.addTwistListener(this);
 
