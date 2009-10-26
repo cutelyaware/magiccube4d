@@ -681,7 +681,7 @@ public class PipelineUtils
 
                                   boolean showShadows, // XXX or isShadows? haven't decided whether this should get called again for shadows or if we should do both here
                                   Color ground,
-                                  float faceRGB[][],
+                                  Color faceColors[],
                                   int iStickerUnderMouse,
                                   boolean highlightByCubie,
                                   Color outlineColor,
@@ -718,7 +718,7 @@ public class PipelineUtils
                 int poly[] = stickerInds[iSticker][iPolyThisSticker];
                 float brightness = brightnesses[iSticker][iPolyThisSticker];
                 int colorOfSticker = puzzleState[iSticker];
-                float faceRGBThisSticker[] = faceRGB[colorOfSticker % faceRGB.length]; // XXX need to make more colors
+                Color faceColorThisSticker = faceColors[colorOfSticker % faceColors.length]; // XXX need to make more colors
 
                 if (poly.length > xs.length)
                 {
@@ -736,10 +736,12 @@ public class PipelineUtils
                         ys[i] += jitterGenerator.nextInt(2*jitterRadius+1)-jitterRadius;
                     }
                 }
+                float[] rgb = new float[3];
+                faceColorThisSticker.getColorComponents(rgb);
                 Color stickercolor = new Color(
-                    brightness*faceRGBThisSticker[0],
-                    brightness*faceRGBThisSticker[1],
-                    brightness*faceRGBThisSticker[2]);
+                		brightness*rgb[0],
+                		brightness*rgb[1],
+                		brightness*rgb[2]);
                 boolean highlight = highlightByCubie ? sticker2cubie[iSticker]==iCubieUnderMouse
                                                      : iSticker==iStickerUnderMouse;
                 if(highlight)

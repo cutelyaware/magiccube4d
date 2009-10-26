@@ -1,4 +1,4 @@
-package com.superliminal.magiccube4d;
+package com.superliminal.util;
 
 import javax.swing.filechooser.FileSystemView;
 import java.util.*;
@@ -333,13 +333,15 @@ public class PropertyManager extends Properties {
      * @return a Color object with the parsed red, green, and blue values.
      */
     public static Color getColor(String key, Color def) {
-        String str = top.getProperty(key);
-        if (str == null)
-            return def;
-        if (str.indexOf('#') >= 0)
-            return Color.decode(str);
+    	return parseColor(top.getProperty(key));
+    }
+    public static Color parseColor(String colstr) {
+        if (colstr == null)
+            return null;
+        if (colstr.indexOf('#') >= 0)
+            return Color.decode(colstr);
 
-        StringTokenizer toc = new StringTokenizer(str, ",");
+        StringTokenizer toc = new StringTokenizer(colstr, ",");
         int r = Integer.parseInt(toc.nextToken());
         int g = Integer.parseInt(toc.nextToken());
         int b = Integer.parseInt(toc.nextToken());

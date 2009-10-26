@@ -1,5 +1,6 @@
 package com.superliminal.util;
 
+import java.awt.Color;
 import java.util.Random;
 
 
@@ -85,7 +86,7 @@ public class ColorUtils {
 	 * 
 	 * Warning: O N^2 algorithm blows up fast for more than 100 colors.
 	 */
-    public static float[][] generateVisuallyDistinctRGBs(int ncolors, float minComponent, float maxComponent) {
+    public static Color[] generateVisuallyDistinctColors(int ncolors, float minComponent, float maxComponent) {
     	rand.setSeed(RAND_SEED); // So that we get consistent results for each combination of inputs
     	
 		float[][] yuv = new float[ncolors][3];
@@ -114,13 +115,15 @@ public class ColorUtils {
 	    		yuv[worstID] = best;
 		}
 
-		float[][] rgb = new float[yuv.length][3];
+		Color[] rgbs = new Color[yuv.length];
 		for(int i=0; i<yuv.length; i++) {
-			yuv2rgb(yuv[i][0], yuv[i][1], yuv[i][2], rgb[i]);
+			float[] rgb = new float[3];
+			yuv2rgb(yuv[i][0], yuv[i][1], yuv[i][2], rgb);
+			rgbs[i] = new Color(rgb[0], rgb[1], rgb[2]);
 			//System.out.println(rgb[i][0] + "\t" + rgb[i][1] + "\t" + rgb[i][2]);
 		}
 		
-		return rgb;
+		return rgbs;
     }
     
     private static float sqrdist(float[] a, float[] b) {
@@ -164,11 +167,10 @@ public class ColorUtils {
 	 */
 	public static void main(String[] args) {
 		final int ncolors = 10;
-		float[][] rgb = generateVisuallyDistinctRGBs(ncolors, .8f, .3f);
-		for(int i=0; i<rgb.length; i++) {
-			System.out.println(rgb[i][0] + "\t" + rgb[i][1] + "\t" + rgb[i][2]);
+		Color[] rgbs = generateVisuallyDistinctColors(ncolors, .8f, .3f);
+		for(int i=0; i<rgbs.length; i++) {
+			System.out.println(rgbs[i].toString());
 		}
-    	System.out.println("Worst fit " + worstFit(rgb));
 	}
 
 }

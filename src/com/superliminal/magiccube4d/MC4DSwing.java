@@ -2,9 +2,12 @@ package com.superliminal.magiccube4d;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Random;
 import java.util.Stack;
+import java.util.StringTokenizer;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -13,7 +16,9 @@ import javax.swing.event.ChangeListener;
 
 import com.superliminal.util.ColorButton;
 import com.superliminal.util.FloatSlider;
+import com.superliminal.util.PropertyManager;
 import com.superliminal.util.StaticUtils;
+import com.superliminal.util.Util;
 
 import de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel;
 
@@ -163,7 +168,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             	// Save to the previously used log file, if any, otherwise the default.
                 String fname = logFileChooser.getSelectedFile() == null ? null : logFileChooser.getSelectedFile().getAbsolutePath();
                 if(fname == null)
-                	fname = StaticUtils.getHomeDir() + File.separator + MagicCube.LOGFILE;
+                	fname = StaticUtils.getHomeDir() + File.separator + MagicCube.LOG_FILE;
                 saveAs(PropertyManager.top.getProperty("logfile", fname));
             }
         },
@@ -325,10 +330,13 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         };
         
-    private PuzzleManager.Callback viewRepainter = new PuzzleManager.Callback() {
+    private PuzzleManager.Callback puzzleConfigurator = new PuzzleManager.Callback() {
     	public void call() {
     		initMacroControls(); // to properly enable/disable the buttons
     		progressBar.setVisible(false);
+    		Color[] userColors = findColors(puzzleManager.puzzleDescription.nFaces(), MagicCube.FACE_COLORS_FILE);
+    		if(userColors != null)
+    			puzzleManager.faceColors = userColors;
     		view.repaint();
     	}
     };
@@ -699,7 +707,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                         }
                 		progressView.setVisible(true);
                 		System.out.println(newSchlafli + " " + newLengthString);
-                    	puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true, viewRepainter);
+                    	puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true, puzzleConfigurator);
                     	hist.clear((int)Double.parseDouble(newLengthString));
                     	updateTwistsLabel();
                     	scrambleState = SCRAMBLE_NONE;
@@ -831,7 +839,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                     // int numTwists = Integer.parseInt(firstline[3]);
                     String schlafli = firstline[4];
                     initialLength = Double.parseDouble(firstline[5]);
-                    puzzleManager.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false, viewRepainter);
+                    puzzleManager.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false, puzzleConfigurator);
                     iLength = (int)Math.round(initialLength);
                     hist = new History(iLength);
                     String title = MagicCube.TITLE;
@@ -1144,7 +1152,46 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         }
     } // end class PreferencesEditor
 
-
+    
+    private static Color[][] readColorLists(String fname) {
+    	URL furl = Util.getResource(fname);
+    	if(furl == null) return new Color[0][];
+    	String contents = Util.readFileFromURL(furl);
+    	//JOptionPane.showMessageDialog(null, contents);
+    	if(contents == null) return new Color[0][];
+    	ArrayList<Color[]> colorlines = new ArrayList<Color[]>();
+    	try {
+			BufferedReader br = new BufferedReader(new StringReader(contents));
+			for(String line = br.readLine(); line != null; ) {
+				StringTokenizer st = new StringTokenizer(line);
+				Color[] colorlist = new Color[st.countTokens()];
+				for(int i=0; i<colorlist.length; i++) {
+					String colstr = st.nextToken();
+					colorlist[i] = PropertyManager.parseColor(colstr);
+					if(colorlist[i] == null) {
+						colorlist = null;
+						break; // bad line
+					}
+				}
+				if(colorlist != null)
+					colorlines.add(colorlist);
+				line = br.readLine();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return colorlines.toArray(new Color[0][]);
+    }
+    
+    private static Color[] findColors(int len, String fname) {
+    	for(Color[] cols : readColorLists(fname)) {
+    		if(cols.length == len)
+    			return cols;
+    	}
+    	return null;
+    }
+    
+	
     /**
      * Main entry point for the MagicCube4D application.
      * @param args may contain override arguments for any in "defaults.prop"

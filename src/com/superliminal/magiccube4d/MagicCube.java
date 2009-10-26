@@ -122,7 +122,8 @@ public class MagicCube {
 
 	public final static String 
         TITLE = "Magic Cube 4D", 
-        LOGFILE = "MagicCube4D.log", // in user's home directory
+        LOG_FILE = "MagicCube4D.log", // in user's home directory
+        FACE_COLORS_FILE = "facecolors.txt", // relative to executable
         MAGIC_NUMBER = "MagicCube4D"; // 1st string in log and macro files for sanity checking
     
     public final static Color

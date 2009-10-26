@@ -3,6 +3,7 @@ import java.net.*;
 import java.io.*;
 
 
+
 /**
  * Contains static I/O methods for dealing with resources.
  * 
@@ -50,5 +51,27 @@ public class Util {
             return null;
         }
         return fBuf.toString();
+    }
+    
+    public static String readRelativeFile(String fname) {
+    	URL fileurl = getResource(fname);
+    	if(fileurl == null) {
+    		return null;
+    	}
+    	return readFileFromURL(fileurl);
+    }
+    
+    public static void main(String[] args) {
+    	URL fileurl = getResource("facecolors.txt");
+    	if(fileurl == null) {
+    		System.out.println("File not found");
+    		return;
+    	}
+    	String contents = readFileFromURL(fileurl);
+    	if(contents == null) {
+    		System.out.println("Couldn't read from file");
+    		return;
+    	}
+    	System.out.println("Contents: " + contents);
     }
 }

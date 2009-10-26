@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.event.*;
 
-import com.superliminal.magiccube4d.PropertyManager;
 
 @SuppressWarnings("serial")
 class ColorizedButton extends JButton {
