@@ -285,13 +285,11 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                         statusLabel.setText("Defined \"" + lastMacro.getName() + "\" macro with " +
                             lastMacro.length() + " move" + (lastMacro.length()==1 ? "." : "s."));
                     }
-                    view.setSkyOverride(null);
-                    puzzleManager.setHighlighter(normalHighlighter); // Return to normal highlighting mode.
+                    setSkyAndHighlighting(null, normalHighlighter);
                 } else { // begin macro definition
                     macroMgr.open();
                     statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
-                    view.setSkyOverride(Color.white);
-                    puzzleManager.setHighlighter(macroMgr); // Start highlighting in macro mode.
+                    setSkyAndHighlighting(Color.white, macroMgr);
                 }
             }
         },
@@ -303,8 +301,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     return;
                 macroMgr.cancel();
                 statusLabel.setText("Cancelled");
-                view.setSkyOverride(null);
-                puzzleManager.setHighlighter(normalHighlighter); // Make sure we're in normal highlighting mode.
+                setSkyAndHighlighting(null, normalHighlighter);
                 applyingMacro = 0;
             }
         },
@@ -326,10 +323,10 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 boolean modified = ae.getID() == ActionEvent.CTRL_MASK;
                 applyingMacro = modified? -1 : 1;
                 statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
-                view.setSkyOverride(new Color(255, 170, 170));
+                setSkyAndHighlighting(new Color(255, 170, 170), macroMgr);
             }
         };
-        
+
     private PuzzleManager.Callback puzzleConfigurator = new PuzzleManager.Callback() {
     	public void call() {
     		initMacroControls(); // to properly enable/disable the buttons
@@ -340,6 +337,12 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     		view.repaint();
     	}
     };
+    
+    private void setSkyAndHighlighting( Color c, PuzzleManager.Highlighter h )
+    {
+    	view.setSkyOverride( c );
+    	puzzleManager.setHighlighter( h );
+    }
 
     // those actions which *can* be realistically performed while animations are playing
     //
@@ -779,7 +782,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 	statusLabel.setText( "Picked reference won't determine unique orientation, please try another." );
                 else if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
                     if(applyingMacro != 0) {
-                        view.setSkyOverride(null);
+                    	setSkyAndHighlighting(null, normalHighlighter);
                         MagicCube.Stickerspec[] refs = macroMgr.close();
                         MagicCube.TwistData[] moves = lastMacro.getTwists(refs,puzzleManager.puzzleDescription);
                         if(moves == null)
@@ -796,7 +799,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     }
                     else {
                         statusLabel.setText("Now recording macro twists. Hit <ctrl>m when finished.");
-                        view.setSkyOverride(Color.black);
+                        setSkyAndHighlighting(Color.black, normalHighlighter);
                     }
                 }
                 else 
