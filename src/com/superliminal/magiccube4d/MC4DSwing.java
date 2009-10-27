@@ -799,7 +799,11 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
                         view.setSkyOverride(Color.black);
                     }
                 }
-                else statusLabel.setText(""+macroMgr.numRefs()); // a little camera sound here would be great.
+                else 
+                {
+                	statusLabel.setText(""+macroMgr.numRefs()); // a little camera sound here would be great.
+                	view.updateStickerHighlighting();
+                }
             }
         }
         else {

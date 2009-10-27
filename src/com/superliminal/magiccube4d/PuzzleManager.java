@@ -267,6 +267,13 @@ public class PuzzleManager
         return changed;
     }
     
+    // Checks whether or not it is ok to handle a mouse click.
+    // All the logic of this is really in the highlighters.
+    public boolean canMouseClick()
+    {
+    	return highlit;
+    }
+    
     // scratch space for speed. note: not threadsafe.
     private static ViewRotationInfo scratch = new ViewRotationInfo();
     
