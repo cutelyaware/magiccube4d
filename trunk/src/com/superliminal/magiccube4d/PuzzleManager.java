@@ -1,13 +1,4 @@
 package com.superliminal.magiccube4d;
-//
-// This file is mostly throwaway--
-// it is an attempt to quickly glue the good new classes:
-//      PuzzleDescription (interface)
-//      PolytopePuzzleDescription (implements PuzzleDescription)
-//      PipelineUtils
-// onto MC4DSwing/MC4DView with as minimal impact on the existing code
-// as possible, prior to Melinda getting a look at it
-// and figuring out where it should really go.
 
 import com.donhatchsw.util.VecMath;
 import com.superliminal.util.ColorUtils;
@@ -18,7 +9,14 @@ import java.util.Random;
 
 import javax.swing.*;
 
-
+/**
+ * Facility for creating, managing, and drawing a current puzzle.
+ * Meant to be a model object shared between the UI (controller) 
+ * and the rendering code (view).
+ * 
+ * TODO: Perhaps the drawing part should be moved to another service?
+ * TODO: Hide or consider hiding the public data.
+ */
 public class PuzzleManager
 {
 	public static int verboseLevel = 0; // set to something else to debug
