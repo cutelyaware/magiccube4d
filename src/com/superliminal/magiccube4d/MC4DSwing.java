@@ -30,7 +30,7 @@ import de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel;
  * @author Melinda Green
  */
 @SuppressWarnings("serial")
-public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
+public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
     private final static int
         SCRAMBLE_NONE = 0, 
@@ -769,7 +769,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         macroControlsContainer.validate();
     }
     
-    public void twisted(MagicCube.TwistData twisted) {
+    public void stickerClicked(MagicCube.TwistData twisted) {
         if(macroMgr.isOpen()) {
             if(macroMgr.recording()) {
                 macroMgr.addTwist(twisted);
@@ -885,7 +885,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
         
         if(view != null) {
         	// attempt to make the old view garbage-collectible.
-        	view.removeTwistListener(this);
+        	view.removeStickerListener(this);
         	view.setHistory(null);
         }
         view = new MC4DView(puzzleManager, rotations, hist, puzzleManager.puzzleDescription.nFaces());
@@ -932,7 +932,7 @@ public class MC4DSwing extends JFrame implements MC4DView.TwistListener {
             }
         }); // end HistoryListener impl
 
-        view.addTwistListener(this);
+        view.addStickerListener(this);
 
         Macro[] macros = macroMgr.getMacros();
         if(macros.length > 0)

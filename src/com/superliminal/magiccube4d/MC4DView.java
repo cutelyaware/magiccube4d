@@ -26,13 +26,13 @@ public class MC4DView extends Component {
 
     private PuzzleManager puzzleManager = null;
 
-    public static interface TwistListener { public void twisted(MagicCube.TwistData twisted); }
-    private Vector<TwistListener> twistListeners = new Vector<TwistListener>();
-    public void addTwistListener(TwistListener tl) { twistListeners.add(tl); }
-    public void removeTwistListener(TwistListener tl) { twistListeners.remove(tl); }
-    protected void fireTwistEvent(MagicCube.TwistData twist) {
-        for(Enumeration<TwistListener> e=twistListeners.elements(); e.hasMoreElements(); )
-            e.nextElement().twisted(twist);
+    public static interface StickerListener { public void stickerClicked(MagicCube.TwistData twisted); }
+    private Vector<StickerListener> stickerListeners = new Vector<StickerListener>();
+    public void addStickerListener(StickerListener tl) { stickerListeners.add(tl); }
+    public void removeStickerListener(StickerListener tl) { stickerListeners.remove(tl); }
+    protected void fireStickerClickedEvent(MagicCube.TwistData twist) {
+        for(Enumeration<StickerListener> e=stickerListeners.elements(); e.hasMoreElements(); )
+            e.nextElement().stickerClicked(twist);
     }
 
     private AnimationQueue animationQueue;
@@ -179,7 +179,7 @@ public class MC4DView extends Component {
                     int dir = (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
                     //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
                     //    dir *= 2;
-                    fireTwistEvent(new MagicCube.TwistData( clicked, dir, getSlicemask()));
+                    fireStickerClickedEvent(new MagicCube.TwistData( clicked, dir, getSlicemask()));
                     repaint();
                 }
             }
@@ -464,8 +464,8 @@ public class MC4DView extends Component {
 //        else
 //            hist.read(new java.io.StringReader(Util.readFileFromURL(histurl)));
         final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist, 6);
-        view.addTwistListener(new MC4DView.TwistListener() {
-            public void twisted(MagicCube.TwistData twisted) {
+        view.addStickerListener(new MC4DView.StickerListener() {
+            public void stickerClicked(MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
             }
         });
