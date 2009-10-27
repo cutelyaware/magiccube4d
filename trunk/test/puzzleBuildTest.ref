@@ -430,24 +430,6 @@ NumCubies:	230
 NumStickers:	645
 NumGrips:	645
 
-Puzzle:	{10}x{5} 1.0
-NumFaces:	15
-NumCubies:	1
-NumStickers:	15
-NumGrips:	645
-
-Puzzle:	{10}x{5} 2.0
-NumFaces:	15
-NumCubies:	165
-NumStickers:	430
-NumGrips:	645
-
-Puzzle:	{10}x{5} 3.0
-NumFaces:	15
-NumCubies:	230
-NumStickers:	645
-NumGrips:	645
-
 Puzzle:	{10}x{10} 1.0
 NumFaces:	20
 NumCubies:	1
