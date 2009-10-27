@@ -342,6 +342,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     {
     	view.setSkyOverride( c );
     	puzzleManager.setHighlighter( h );
+    	view.updateStickerHighlighting();
     }
 
     // those actions which *can* be realistically performed while animations are playing
