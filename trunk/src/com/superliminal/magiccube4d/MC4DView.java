@@ -91,6 +91,13 @@ public class MC4DView extends Component {
     	this.animationQueue = new AnimationQueue(h);
     }
 
+    public void updateStickerHighlighting()
+    {
+    	Point mousePos = getMousePosition();
+        if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
+        	repaint();	
+    }
+    
     public MC4DView(PuzzleManager gg, RotationHandler rotations, History hist, int nfaces) {
     	this.puzzleManager = gg;
         this.rotationHandler = rotations;
@@ -102,33 +109,27 @@ public class MC4DView extends Component {
             @Override
 			public void keyPressed(KeyEvent arg0) {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
-                Point mousePos = getMousePosition();
                 if(1 <= numkey && numkey <= 9) {
                     slicemask |= 1<<numkey-1; // turn on the specified bit
-                    if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
-                    	repaint();
+                    updateStickerHighlighting();
                 }
 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = true;
-                	if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
-                		repaint();
+                	updateStickerHighlighting();
                 }
             }
             @Override
 			public void keyReleased(KeyEvent arg0) {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
-                Point mousePos = getMousePosition();
                 if(1 <= numkey && numkey <= 9) {
                     slicemask &= ~(1<<numkey-1); // turn off the specified bit
-                    if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
-                    	repaint();
+                    updateStickerHighlighting();
                 }
                 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
                 	ctrlKeyDown = false;
-                	if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
-                		repaint();
+                	updateStickerHighlighting();
                 }
             }
         });
@@ -137,6 +138,9 @@ public class MC4DView extends Component {
             @Override
 			public void mouseClicked(MouseEvent e) {
             	MC4DView.this.requestFocusInWindow(); // to start receiving key events.
+            	
+            	if( !puzzleManager.canMouseClick() )
+            		return;
             	
             	boolean isViewRotation = e.isControlDown() || SwingUtilities.isMiddleMouseButton(e);
                 if( isViewRotation )
@@ -158,13 +162,14 @@ public class MC4DView extends Component {
                         e.getX(), e.getY(),
                         puzzleManager.untwistedFrame,
                         puzzleManager.puzzleDescription);
-                     
+
                 // The twist might be illegal.
                 if( grip < 0 ) 
                 {
                     System.out.println("missed");
                 }
-                else if(PipelineUtils.hasValidTwist(grip, getSlicemask(), puzzleManager.puzzleDescription)) {
+                else
+                {
                 	MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_puzzle = grip; // slamming new id. do we need to set the other members?
                     clicked.face = puzzleManager.puzzleDescription.getGrip2Face()[grip];
