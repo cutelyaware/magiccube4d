@@ -1037,6 +1037,22 @@ class PolytopePuzzleDescription implements PuzzleDescription {
                              + faceCenter[j];
             }
         }
+        
+        public float[][] getStandardStickerVertsAtRest()
+        {
+        	// Return the cached values if we've already calculated them.
+        	if( standardStickerVertsAtRest != null )
+        		return standardStickerVertsAtRest;
+
+        	standardStickerVertsAtRest = new float[nVerts()][nDims()];
+            computeStickerVertsAtRest( standardStickerVertsAtRest,
+                    1.f,  // faceShrink
+                    1.f); // stickerShrink
+        	
+        	return standardStickerVertsAtRest;
+        }
+        private float[][] standardStickerVertsAtRest;
+        
         public int[/*nStickers*/][/*nPolygonsThisSticker*/][/*nVertsThisPolygon*/]
             getStickerInds()
         {

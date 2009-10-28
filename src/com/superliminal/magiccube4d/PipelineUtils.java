@@ -578,6 +578,52 @@ public class PipelineUtils
         return itsProbablyThe2;
     }
     
+    /* Returns all the grips for a given sticker
+     * NOTE: The only current situation where there is more than one 
+     * 		 grip per sticker is for 2x2x2 cells */
+    public static int[] getGripsForSticker( int stickerIndex, PuzzleDescription puzzle )
+    {
+    	int stickerInds[][][] = puzzle.getStickerInds();
+    	int sticker[][] = stickerInds[stickerIndex];
+    	float verts[][] = puzzle.getStandardStickerVertsAtRest();
+    	float stickerCenter[] = VecMath.averageIndexed(sticker, verts);
+    	int faceIndex = puzzle.getSticker2Face()[stickerIndex];
+    	
+    	// If this is not a length-2 puzzle, our life is easy.
+    	if( puzzle.getEdgeLength() > 2 )
+    	{
+    		int ret[] = new int[1];
+    		ret[0] = puzzle.getClosestGrip( stickerCenter, faceIndex, false );
+    		return ret;
+    	}
+    	else
+    	{
+    		float[] faceCenter = puzzle.getFaceCenter(faceIndex);
+    		
+    		// Cycle through all the polys.
+    		java.util.List<Integer> grips = new java.util.ArrayList<Integer>();
+    		for( int i=0; i<sticker.length; i++ )
+    		{
+    			int poly[] = sticker[i];
+    			float polyCenter[] = VecMath.averageIndexed(poly, verts);
+    			boolean is2x2x2 = is2x2x2Cell( polyCenter, stickerCenter, faceCenter );
+    			float center[] = is2x2x2 ? polyCenter : stickerCenter;
+    			
+    			int gripIndex = puzzle.getClosestGrip( center, faceIndex, is2x2x2 );
+    			if( !grips.contains( gripIndex ) )
+    				grips.add( gripIndex );
+    		}
+    		
+    		// Why the manual copying here? See 
+    		// http://stackoverflow.com/questions/960431/how-to-convert-listinteger-to-int-in-java
+    		int[] ret = new int[grips.size()];
+    		for( int i=0; i<ret.length; i++)
+    			ret[i] = grips.get(i);
+    		
+			return ret;
+    	}
+    }
+    
     public static class PickInfo
     {
     	public int faceIndex;
@@ -598,11 +644,7 @@ public class PipelineUtils
         // XXX would really like to map the pick point back to 4d...
         // XXX for now, map the polygon center back.
 
-        // XXX argh, this is sure overkill here...
-        float verts[][] = new float[puzzleDescription.nVerts()][puzzleDescription.nDims()];
-        puzzleDescription.computeStickerVertsAtRest(verts,
-                                                    1.f,  // faceShrink
-                                                    1.f); // stickerShrink
+        float verts[][] = puzzleDescription.getStandardStickerVertsAtRest();
         int stickerInds[][][] = puzzleDescription.getStickerInds();
         int sticker[][] = stickerInds[hit[0]];
         int poly[] = sticker[hit[1]];
