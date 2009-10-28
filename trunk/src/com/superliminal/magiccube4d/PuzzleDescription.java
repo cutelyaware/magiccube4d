@@ -30,6 +30,8 @@ interface PuzzleDescription {
     public void computeStickerVertsAtRest(float verts[/*nVerts*/][/*nDims*/],
                                           float faceShrink,
                                           float stickerShrink);
+    public float[][] getStandardStickerVertsAtRest();
+    
     /**
     * Get the indices (into the vertices returned by getDrawVertsAtRest()
     * or getDrawVertsPartiallyTwisted())
@@ -79,7 +81,7 @@ interface PuzzleDescription {
 
     /**
     * XXX floundering here... closest in what sense? normalized vectors on a sphere?
-    * The is2x2x2x2Cell is used to control only looking at a subset of the grips.
+    * The is2x2x2Cell is used to control only looking at a subset of the grips.
     */
     public int getClosestGrip(float pickCoords[/*4*/]);
     public int getClosestGrip(float pickCoords[/*4*/], int faceIndex, boolean is2x2x2Cell);
