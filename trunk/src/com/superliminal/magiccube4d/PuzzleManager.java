@@ -539,6 +539,25 @@ public class PuzzleManager
 
 	private Random rand = new Random();
 	
+	public int getRandomGrip()
+	{
+		// Get a random sticker.
+		int iSticker, iGrip;
+		iSticker = rand.nextInt(puzzleDescription.nStickers());
+		
+		// Get the grip(s) for this sticker and pick a random one of those.
+        int grips[] = PipelineUtils.getGripsForSticker(iSticker, puzzleDescription);
+        if( grips.length == 1 )
+        	iGrip = grips[0];
+        else
+        {
+        	int idx = rand.nextInt( grips.length );
+        	iGrip = grips[idx];
+        }
+        
+        return iGrip;
+	}
+	
     public void scramble(int nTwists) {
     	if(puzzleDescription == null)
     		return;
@@ -551,7 +570,7 @@ public class PuzzleManager
             // select a random grip that is unrelated to the last one (if any)
             int iGrip, iFace, order;
             do {
-                iGrip = rand.nextInt(puzzleDescription.nGrips());
+                iGrip = getRandomGrip();
                 iFace = grip2face[iGrip];
                 order = orders[iGrip];
             }

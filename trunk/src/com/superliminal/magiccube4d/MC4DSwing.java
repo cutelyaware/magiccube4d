@@ -518,7 +518,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 				                    // select a random grip that is unrelated to the last one (if any)
 				                    int iGrip, iFace, order;
 				                    do {
-				                        iGrip = rand.nextInt(puzzleManager.puzzleDescription.nGrips());
+				                    	iGrip = puzzleManager.getRandomGrip();
 				                        iFace = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
 				                        order = puzzleManager.puzzleDescription.getGripSymmetryOrders()[iGrip];
 				                    }
