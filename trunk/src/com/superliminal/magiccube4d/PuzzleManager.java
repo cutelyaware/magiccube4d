@@ -558,6 +558,12 @@ public class PuzzleManager
         return iGrip;
 	}
 	
+	
+	//
+	// Everything from here down is just for testing/example purposes.
+	// though the scramble methods are public since they could be useful.
+	// 
+	
     public void scramble(int nTwists) {
     	if(puzzleDescription == null)
     		return;
