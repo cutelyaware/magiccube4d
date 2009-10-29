@@ -159,7 +159,7 @@ public class History {
         if(slicesmask == 0)
             slicesmask = 1; // 0 means slicemask 1 so keep them consistent so they always compare equal.
         HistoryNode node = getPreviousMove();
-        if(!atMacroClose()
+        if(!atMacroClose() // to not corrupt any macro. can screw up edit->cheat (issue 66) but compressing history first may fix that.
             && node != null // there is a previous twist
             && node.stickerid == stickerid // on the same axis
             && node.slicesmask == slicesmask // affecting the same slices
