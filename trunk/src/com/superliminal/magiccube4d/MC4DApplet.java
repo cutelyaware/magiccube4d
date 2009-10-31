@@ -1,6 +1,7 @@
 package com.superliminal.magiccube4d;
 import java.applet.Applet;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.io.StringReader;
 import java.io.PushbackReader;
 
@@ -34,7 +35,7 @@ public class MC4DApplet extends Applet {
             hist.read(new PushbackReader(new StringReader(Util.readFileFromURL(histurl))));
         final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist, 6);
         view.addStickerListener(new MC4DView.StickerListener() {
-            public void stickerClicked(MagicCube.TwistData twisted) {
+            public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
             }
         });

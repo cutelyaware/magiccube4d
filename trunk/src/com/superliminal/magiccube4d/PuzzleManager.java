@@ -231,14 +231,15 @@ public class PuzzleManager
      */
     public interface Highlighter
     {
-    	public boolean shouldHighlightSticker( PuzzleDescription puzzle, int stickerIndex, int gripIndex, int slicemask, int x, int y );
+    	public boolean shouldHighlightSticker( PuzzleDescription puzzle, 
+    			int stickerIndex, int gripIndex, int slicemask, int x, int y, boolean isControlDown );
     }
     public void setHighlighter(Highlighter highlighter) {
     	this.highlighter = highlighter;
     }
     private Highlighter highlighter;
     
-    public boolean updateStickerHighlighting(int mouseX, int mouseY, int slicemask)
+    public boolean updateStickerHighlighting(int mouseX, int mouseY, int slicemask, boolean isControlDown )
     {
     	PipelineUtils.PickInfo pick = PipelineUtils.getAllPickInfo(
         		mouseX, mouseY,
@@ -250,7 +251,7 @@ public class PuzzleManager
         if( pickedSticker >= 0 && highlighter != null) {
         	// Let the supplied highlighter decide.
         	if( ! highlighter.shouldHighlightSticker( puzzleDescription, 
-        			pickedSticker, pick.gripIndex, slicemask, mouseX, mouseY) )
+        			pickedSticker, pick.gripIndex, slicemask, mouseX, mouseY, isControlDown ) )
         	{
         		newHighlit = false;
         	}
