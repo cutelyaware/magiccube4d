@@ -152,7 +152,8 @@ public class MacroManager implements PuzzleManager.Highlighter {
     }
     
     @Override
-	public boolean shouldHighlightSticker( PuzzleDescription puzzle, int stickerIndex, int gripIndex, int slicemask, int x, int y )
+	public boolean shouldHighlightSticker( PuzzleDescription puzzle, 
+			int stickerIndex, int gripIndex, int slicemask, int x, int y, boolean isControlDown )
 	{	
 		// Macros are currently grip based, though that may change in the future.
 		MagicCube.Stickerspec grip = new MagicCube.Stickerspec();

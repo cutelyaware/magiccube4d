@@ -26,21 +26,19 @@ public class MC4DView extends Component {
 
     private PuzzleManager puzzleManager = null;
 
-    public static interface StickerListener { public void stickerClicked(MagicCube.TwistData twisted); }
+    public static interface StickerListener { public void stickerClicked(InputEvent e, MagicCube.TwistData twisted); }
     private Vector<StickerListener> stickerListeners = new Vector<StickerListener>();
     public void addStickerListener(StickerListener tl) { stickerListeners.add(tl); }
     public void removeStickerListener(StickerListener tl) { stickerListeners.remove(tl); }
-    protected void fireStickerClickedEvent(MagicCube.TwistData twist) {
+    protected void fireStickerClickedEvent(InputEvent event, MagicCube.TwistData twist) {
         for(Enumeration<StickerListener> e=stickerListeners.elements(); e.hasMoreElements(); )
-            e.nextElement().stickerClicked(twist);
+            e.nextElement().stickerClicked(event, twist);
     }
 
     private AnimationQueue animationQueue;
     public boolean isAnimating() { return animationQueue.isAnimating(); }
     private int slicemask; // bitmap representing which number keys are down
     public int getSlicemask() { return slicemask == 0 ? 1 : slicemask; }
-    private boolean ctrlKeyDown;
-    public boolean isCtrlKeyDown() { return ctrlKeyDown; }
     private Color skyOverride = null; // null means use the user's preference from the PropertyManager.
     private int xOff, yOff;
     private float pixels2polySF = .01f; // screen transform data
@@ -91,11 +89,16 @@ public class MC4DView extends Component {
     	this.animationQueue = new AnimationQueue(h);
     }
 
-    public void updateStickerHighlighting()
+    public void updateStickerHighlighting( boolean isControlDown )
     {
     	Point mousePos = getMousePosition();
-        if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask()))
+        if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask(), isControlDown ))
         	repaint();	
+    }
+    
+    public void updateStickerHighlighting( InputEvent e )
+    {
+    	updateStickerHighlighting( e.isControlDown() );
     }
     
     public MC4DView(PuzzleManager gg, RotationHandler rotations, History hist, int nfaces) {
@@ -111,12 +114,11 @@ public class MC4DView extends Component {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
                 if(1 <= numkey && numkey <= 9) {
                     slicemask |= 1<<numkey-1; // turn on the specified bit
-                    updateStickerHighlighting();
+                    updateStickerHighlighting( arg0 );
                 }
 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
-                	ctrlKeyDown = true;
-                	updateStickerHighlighting();
+                	updateStickerHighlighting( arg0 );
                 }
             }
             @Override
@@ -124,12 +126,11 @@ public class MC4DView extends Component {
                 int numkey = arg0.getKeyCode() - KeyEvent.VK_0;
                 if(1 <= numkey && numkey <= 9) {
                     slicemask &= ~(1<<numkey-1); // turn off the specified bit
-                    updateStickerHighlighting();
+                    updateStickerHighlighting( arg0 );
                 }
                 
                 if( arg0.getKeyCode() == KeyEvent.VK_CONTROL ) {
-                	ctrlKeyDown = false;
-                	updateStickerHighlighting();
+                	updateStickerHighlighting( arg0 );
                 }
             }
         });
@@ -179,7 +180,7 @@ public class MC4DView extends Component {
                     int dir = (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
                     //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
                     //    dir *= 2;
-                    fireStickerClickedEvent(new MagicCube.TwistData( clicked, dir, getSlicemask()));
+                    fireStickerClickedEvent(e, new MagicCube.TwistData( clicked, dir, getSlicemask()));
                     repaint();
                 }
             }
@@ -226,7 +227,7 @@ public class MC4DView extends Component {
                 
                 lastDrag = me.getPoint();
                 lastDragTime = me.getWhen();
-                puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask());
+                puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown());
                 repaint();
             }
             @Override
@@ -234,7 +235,7 @@ public class MC4DView extends Component {
                 super.mouseMoved(me);
                 if (puzzleManager != null )
                 {
-                    if(puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask()));
+                    if(puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown()));
                     	repaint();
                     return;
                 }
@@ -465,7 +466,7 @@ public class MC4DView extends Component {
 //            hist.read(new java.io.StringReader(Util.readFileFromURL(histurl)));
         final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist, 6);
         view.addStickerListener(new MC4DView.StickerListener() {
-            public void stickerClicked(MagicCube.TwistData twisted) {
+            public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
             }
         });

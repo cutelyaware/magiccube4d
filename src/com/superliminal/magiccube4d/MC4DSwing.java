@@ -82,8 +82,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
      
     PuzzleManager.Highlighter normalHighlighter = new PuzzleManager.Highlighter() {
 		@Override
-		public boolean shouldHighlightSticker(PuzzleDescription puzzle, int stickerIndex, int gripIndex, int slicemask, int x, int y) {
-			if(view.isCtrlKeyDown())
+		public boolean shouldHighlightSticker(PuzzleDescription puzzle, 
+				int stickerIndex, int gripIndex, int slicemask, int x, int y, boolean isControlDown) {
+			if( isControlDown )
 				return puzzleManager.canRotateToCenter(x, y, rotations);
 			else
 				return PipelineUtils.hasValidTwist( gripIndex, slicemask, puzzleManager.puzzleDescription );
@@ -285,11 +286,11 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                         statusLabel.setText("Defined \"" + lastMacro.getName() + "\" macro with " +
                             lastMacro.length() + " move" + (lastMacro.length()==1 ? "." : "s."));
                     }
-                    setSkyAndHighlighting(null, normalHighlighter);
+                    setSkyAndHighlighting(null, normalHighlighter, isControlDown( ae ));
                 } else { // begin macro definition
                     macroMgr.open();
                     statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
-                    setSkyAndHighlighting(Color.white, macroMgr);
+                    setSkyAndHighlighting(Color.white, macroMgr, isControlDown( ae ));
                 }
             }
         },
@@ -301,7 +302,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     return;
                 macroMgr.cancel();
                 statusLabel.setText("Cancelled");
-                setSkyAndHighlighting(null, normalHighlighter);
+                setSkyAndHighlighting(null, normalHighlighter, isControlDown( ae ));
                 applyingMacro = 0;
             }
         },
@@ -323,7 +324,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 boolean modified = ae.getID() == ActionEvent.CTRL_MASK;
                 applyingMacro = modified? -1 : 1;
                 statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
-                setSkyAndHighlighting(new Color(255, 170, 170), macroMgr);
+                setSkyAndHighlighting(new Color(255, 170, 170), macroMgr, isControlDown( ae ));
             }
         };
 
@@ -338,11 +339,16 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     	}
     };
     
-    private void setSkyAndHighlighting( Color c, PuzzleManager.Highlighter h )
+    private static boolean isControlDown( ActionEvent e )
+    {
+    	return (e.getModifiers() & ActionEvent.CTRL_MASK) == ActionEvent.CTRL_MASK;
+    }
+    
+    private void setSkyAndHighlighting( Color c, PuzzleManager.Highlighter h, boolean isControlDown )
     {
     	view.setSkyOverride( c );
     	puzzleManager.setHighlighter( h );
-    	view.updateStickerHighlighting();
+    	view.updateStickerHighlighting( isControlDown );
     }
 
     // those actions which *can* be realistically performed while animations are playing
@@ -776,7 +782,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         macroControlsContainer.validate();
     }
     
-    public void stickerClicked(MagicCube.TwistData twisted) {
+    public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
         if(macroMgr.isOpen()) {
             if(macroMgr.recording()) {
                 macroMgr.addTwist(twisted);
@@ -786,7 +792,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 	statusLabel.setText( "Picked reference won't determine unique orientation, please try another." );
                 else if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
                     if(applyingMacro != 0) {
-                    	setSkyAndHighlighting(null, normalHighlighter);
+                    	setSkyAndHighlighting(null, normalHighlighter, e.isControlDown());
                         MagicCube.Stickerspec[] refs = macroMgr.close();
                         MagicCube.TwistData[] moves = lastMacro.getTwists(refs,puzzleManager.puzzleDescription);
                         if(moves == null)
@@ -803,13 +809,13 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     }
                     else {
                         statusLabel.setText("Now recording macro twists. Hit <ctrl>m when finished.");
-                        setSkyAndHighlighting(Color.black, normalHighlighter);
+                        setSkyAndHighlighting(Color.black, normalHighlighter, e.isControlDown());
                     }
                 }
                 else 
                 {
                 	statusLabel.setText(""+macroMgr.numRefs()); // a little camera sound here would be great.
-                	view.updateStickerHighlighting();
+                	view.updateStickerHighlighting( e );
                 }
             }
         }
