@@ -337,6 +337,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     		if(userColors != null)
     			puzzleManager.faceColors = userColors;
     		view.repaint();
+    		System.out.println("circumradus: " + puzzleManager.puzzleDescription.circumRadius());
+    		System.out.println("inradus: " + puzzleManager.puzzleDescription.inRadius());
     	}
     };
     
