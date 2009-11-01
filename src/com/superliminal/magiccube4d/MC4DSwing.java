@@ -1,4 +1,5 @@
 package com.superliminal.magiccube4d;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -196,7 +197,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 if(hist.atMacroClose()) {
                     statusLabel.setText("undoing macro");
                     for(MagicCube.TwistData toUndo=hist.undo(); toUndo!=null; toUndo=hist.undo()) {
-                        view.animate(toUndo, false);
+                        view.animate(toUndo, false, true);
                         if(hist.atMacroOpen())
                             break;
                     }
@@ -221,7 +222,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 if(hist.atMacroOpen()) {
                     statusLabel.setText("redoing macro");
                     for(MagicCube.TwistData toRedo=hist.redo(); toRedo!=null; toRedo=hist.redo()) {
-                        view.animate(toRedo, false);
+                        view.animate(toRedo, false, true);
                         if(hist.atMacroClose())
                             break;
                     }
@@ -457,6 +458,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         StaticUtils.addHotKey(KeyEvent.VK_R, resetitem, "Reset", reset);
         StaticUtils.addHotKey(KeyEvent.VK_Z, undoitem, "Undo", undo);
         StaticUtils.addHotKey(KeyEvent.VK_V, redoitem, "Redo", redo);
+        StaticUtils.addHotKey(KeyEvent.VK_Y, redoitem, "Redo", redo);
         StaticUtils.addHotKey(KeyEvent.VK_O, openitem, "Open", open);
         StaticUtils.addHotKey(KeyEvent.VK_S, saveitem, "Save", save);
         StaticUtils.addHotKey(KeyEvent.VK_Q, quititem, "Quit", quit);
@@ -1034,6 +1036,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         	
         	removeAll();
             
+        	// TODO: implement PropRadioButton class for these and quick move buttons
             final JRadioButton 
 	        	ctrlRotateByFace  = new JRadioButton("by Face"),
 	        	ctrlRotateByCubie = new JRadioButton("by Cubie");
@@ -1096,13 +1099,55 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             general.add(new PropCheckBox("Show Shadows", "shadows", true, repainter));
             general.add(new PropCheckBox("Allow Auto-Rotation", "autorotate", true, repainter));
             general.add(new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter));
-            general.add(new PropCheckBox("Quick Moves", "quickmoves", false, repainter));
             general.add(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter));
             general.add(mute);
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
+            
+            // quick mode controls
+            final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter);
+            JPanel quickMode = new JPanel();
+            quickMode.setLayout(new BoxLayout(quickMode, BoxLayout.X_AXIS));
+            quickMode.add(quick);
+            quickMode.add(Box.createHorizontalGlue());
+            quick.setAlignmentX(Component.LEFT_ALIGNMENT);
+            general.add(quickMode);
+            final JRadioButton 
+	        	allMoves  = new JRadioButton("All Moves"),
+	        	justMacros = new JRadioButton("Just Macros");
+			allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
+			justMacros.setEnabled(PropertyManager.getBoolean("quickmoves", false));
+	        ButtonGroup quickGroup = new ButtonGroup();
+	        quickGroup.add(allMoves);
+	        quickGroup.add(justMacros);
+	        if(PropertyManager.getBoolean("quickmacros", false))
+	        	justMacros.setSelected(true);
+	        else
+	        	allMoves.setSelected(true);
+	        justMacros.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					PropertyManager.userprefs.setProperty("quickmacros", ""+justMacros.isSelected());
+				}
+	        });
+	        allMoves.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					PropertyManager.userprefs.setProperty("quickmacros", ""+!allMoves.isSelected());
+				}
+	        });
+	        quick.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					allMoves.setEnabled(quick.isSelected());
+					justMacros.setEnabled(quick.isSelected());
+				}
+	        });
+	        general.add(allMoves);
+	        general.add(justMacros);
             general.add(rotateMode);
             general.add(ctrlRotateByFace);
             general.add(ctrlRotateByCubie);
+            
             general.add(Box.createVerticalGlue());
 
             // background controls
