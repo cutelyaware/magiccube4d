@@ -317,9 +317,12 @@ public class MC4DView extends Component {
         
         // antialiasing makes for a beautiful image but can also be expensive to draw therefore
         // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
+        boolean inMotion = 
+        			lastDrag != null 
+					|| rotationHandler.isSpinning() 
+					|| (puzzleManager!=null ? puzzleManager.isAnimating() : isAnimating());
         if(g instanceof Graphics2D) {
-            boolean okToAntialias = PropertyManager.getBoolean("antialiasing", true) && lastDrag==null && rotationHandler.isSpinning()
-                                 && !(puzzleManager!=null ? puzzleManager.isAnimating() : isAnimating());
+            boolean okToAntialias = !inMotion && PropertyManager.getBoolean("antialiasing", true);
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
         }
@@ -335,29 +338,26 @@ public class MC4DView extends Component {
         // paint the puzzle
         if (puzzleManager != null && puzzleManager.puzzleDescription != null)
         {
-            puzzleManager.computeAndPaintFrame(
-              // used by compute part...
-            	PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),
-            	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
-                rotationHandler,
-                PropertyManager.getFloat("eyew", MagicCube.EYEW),
-                MagicCube.EYEZ,
-                PropertyManager.getFloat("scale", 1),
-                pixels2polySF,
-                xOff,
-                yOff,
-                MagicCube.SUNVEC,
-
-              // used by compute and paint part...
-                PropertyManager.getBoolean("shadows", true),
-
-              // used by paint part only...
-                PropertyManager.getBoolean("ground", false) ? PropertyManager.getColor("ground.color") : null,
-                PropertyManager.getBoolean("highlightbycubie", false),
-                PropertyManager.getBoolean("outlines", false) ? PropertyManager.getColor("outlines.color") : null,
-                g,
-                PropertyManager.getFloat("twistfactor", 1),
-                this);
+        	PipelineUtils.AnimFrame frame = puzzleManager.computeFrame(
+                	PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),
+                	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
+        			rotationHandler, 
+                    PropertyManager.getFloat("eyew", MagicCube.EYEW),
+                    MagicCube.EYEZ,
+                    PropertyManager.getFloat("scale", 1),
+                    pixels2polySF,
+                    xOff,
+                    yOff,
+                    MagicCube.SUNVEC,
+                    PropertyManager.getBoolean("shadows", true),
+                    this);
+        	puzzleManager.paintFrame(g,
+        			frame, 
+                    PropertyManager.getBoolean("shadows", true), 
+                    PropertyManager.getBoolean("ground", false) ? PropertyManager.getColor("ground.color") : null, 
+            		PropertyManager.getBoolean("highlightbycubie", false), 
+            		PropertyManager.getBoolean("outlines", false) ? PropertyManager.getColor("outlines.color") : null, 
+        			PropertyManager.getFloat("twistfactor", 1));
             
             if(FPSTimer.isRunning() && rotationHandler.continueSpin() && lastDrag == null) {
             	StringBuffer sb = new StringBuffer();
@@ -428,7 +428,7 @@ public class MC4DView extends Component {
                     queueHist.mark(((Character)item).charValue());
             }
             return animating == null ? null : animating.twist;
-        }
+        } // end getAnimating
 
         public boolean isAnimating() {
             return animating != null;

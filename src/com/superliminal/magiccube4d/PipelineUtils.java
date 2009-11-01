@@ -52,9 +52,6 @@ public class PipelineUtils
      */
     public static class AnimFrame
     {
-        // NOTE: the pre-projected Z and W components
-        // are retained; this can be used for mapping 2d pick points
-        // back up to 4d if desired.
         // verts[i] refers to the same vertex as vertex i in
         // the puzzle description (although unused indices may end up
         // with arbitrary values).
@@ -73,7 +70,16 @@ public class PipelineUtils
         // Memory used by drawList (before culling and sorting).
         // We keep this around so that a Frame can be reused
         // without having to do any memory allocations.
-        public int drawListBuffer[/*nStickers*/][/*nPolysThisSticker*/][/*2*/];
+        private int drawListBuffer[/*nStickers*/][/*nPolysThisSticker*/][/*2*/];
+        
+        public float visibleRadius2D() {
+        	float maxVertDist = -1;
+        	for(int i=0; i<drawListSize; i++) {
+        		float dist = Vec_h._NORMSQRD2(verts[i]);
+        		maxVertDist = Math.max(dist, maxVertDist);
+        	}
+        	return maxVertDist;
+        }
     } // class Frame
 
     static private void Assert(boolean condition) { if (!condition) throw new Error("Assertion failed"); }
@@ -717,17 +723,17 @@ public class PipelineUtils
     private static java.util.Random jitterGenerator = new java.util.Random();
     private static int jitterRadius = 0; // haha, for debugging, but cool effect, should publicize it
 
-    public static void paintFrame(AnimFrame frame,
-                                  PuzzleDescription puzzleDescription,
-                                  int puzzleState[],
-
-                                  boolean showShadows, // XXX or isShadows? haven't decided whether this should get called again for shadows or if we should do both here
-                                  Color ground,
-                                  Color faceColors[],
-                                  int iStickerUnderMouse,
-                                  boolean highlightByCubie,
-                                  Color outlineColor,
-                                  Graphics g)
+    public static void paintFrame(
+    		Graphics g,
+            AnimFrame frame,
+			PuzzleDescription puzzleDescription,
+			int puzzleState[],
+			boolean showShadows, // XXX or isShadows? haven't decided whether this should get called again for shadows or if we should do both here
+			Color ground,
+			Color faceColors[],
+			int iStickerUnderMouse,
+			boolean highlightByCubie,
+			Color outlineColor)
     {
         if (verboseLevel >= 2) System.out.println("    in PipelineUtils.paintFrame");
         if (verboseLevel >= 2) System.out.println("        iStickerUnderMouse = "+iStickerUnderMouse);

@@ -132,7 +132,7 @@ public class RotationHandler
         VecMath.gramschmidt( viewMat4d, viewMat4d );
 	}
 	
-	// Returns true if our settings are such that we should continue.
+	// Advances auto-rotation (if any) and returns true if our settings are such that we should continue.
 	public boolean continueSpin()
 	{
 		if( PropertyManager.getBoolean("autorotate", true) && spinDelta != null )
@@ -146,7 +146,7 @@ public class RotationHandler
 	
 	public boolean isSpinning() 
 	{ 
-		return spinDelta == null; 
+		return spinDelta != null; 
 	}
 	
 	public void stopSpinning()

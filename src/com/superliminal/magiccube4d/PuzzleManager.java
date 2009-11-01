@@ -366,31 +366,19 @@ public class PuzzleManager
     	Audio.loop(Audio.Sound.TWISTING);            
     }
 
-    // XXX Could maybe separate this out
-    // XXX into a compute part and a paint part,
-    // XXX since they seem to be doing logically separated
-    // XXX things with almost entirely disjoint subsets of the parameters
-    public void computeAndPaintFrame(
-        // These are used by the compute part only
+
+    public PipelineUtils.AnimFrame computeFrame(
         float faceShrink,
         float stickerShrink,
         RotationHandler rotationHandler,
         float eyeW,
-        float eyeZ, // MagicCube.EYEZ
-        float scale, // whatever the fuck that means
-        float pixels2polySF, // whatever the fuck that means
+        float eyeZ,
+        float viewScale,
+        float pixels2polySF, // scale factor that maps distances in view space to polygon space
         int xOff,
         int yOff,
-
-        float towardsSunVec[], // used by compute part if showShadows is true
-        boolean showShadows, // used by both compute and paint parts
-
-        // All the rest are for paint the paint part only
-        Color ground,
-        boolean highlightByCubie,
-        Color outlineColor,
-        Graphics g,
-        float twistFactor,
+        float towardsSunVec[], // used if showShadows is true
+        boolean showShadows,
         Component view)
     {
         // steal PolygonManager's stuff-- this should be an interface but that's not allowed here apparently
@@ -440,14 +428,14 @@ public class PuzzleManager
         int itwistDir = 0;
         int islicemask = 0;
         float fracIntoTwist = 0.f;
-        PipelineUtils.AnimFrame glueFrameToDrawInto = untwistedFrame;
+        PipelineUtils.AnimFrame frameToDrawInto = untwistedFrame;
 
         if (iTwist < nTwist)
         {
             //
             // Twist in progress (and maybe a 4d rot too at the same time)
             //
-            glueFrameToDrawInto = twistingFrame;
+            frameToDrawInto = twistingFrame;
 
             iGripOfTwist = iTwistGrip;
             itwistDir = twistDir;
@@ -479,7 +467,7 @@ public class PuzzleManager
         
         // XXX probably doing this more than necessary... when it's a rest frame that hasn't changed
         PipelineUtils.computeFrame(
-            glueFrameToDrawInto,
+            frameToDrawInto,
 
             puzzleDescription,
             faceShrink,
@@ -493,18 +481,29 @@ public class PuzzleManager
             VecMath.mxs(viewMat4df, scaleFudge4d),
             eyeW,
             eyeZ,
-            new float[][]{{scaleFudge2d*scale/pixels2polySF, 0},
-                          {0, -scaleFudge2d*scale/pixels2polySF},           
+            new float[][]{{scaleFudge2d*viewScale/pixels2polySF, 0},
+                          {0, -scaleFudge2d*viewScale/pixels2polySF},           
                           {xOff, yOff}},
             VecMath.normalize(towardsSunVec),
             groundNormal,
             groundOffset);
+        
+        return frameToDrawInto;
+    } // end computeFrame
+    
 
-        // THE COMPUTE PART ENDS HERE
-        // THE PAINT PART STARTS HERE (maybe should be a separate function)
-
+	public void paintFrame(
+		Graphics g,
+		PipelineUtils.AnimFrame frame,
+		boolean showShadows,
+        Color ground,
+        boolean highlightByCubie,
+        Color outlineColor,
+        float twistFactor)
+    {
         PipelineUtils.paintFrame(
-                glueFrameToDrawInto,
+        		g,
+                frame,
                 puzzleDescription,
                 puzzleState,
                 showShadows,
@@ -512,8 +511,7 @@ public class PuzzleManager
                 faceColors,
                 highlit ? iStickerUnderMouse :-1,
                 highlightByCubie,
-                outlineColor,
-                g);
+                outlineColor);
 
         if (iTwist < nTwist)
         {
@@ -531,11 +529,9 @@ public class PuzzleManager
                             twistSliceMask);
             	Audio.stop(Audio.Sound.TWISTING);
         		Audio.play(Audio.Sound.SNAP);
-                // XXX need to update the hovered-over sticker! I think.
-                // XXX it would suffice to just call the mouseMoved callback.
             }
         }
-    } // computeAndPaintFrame
+    } // end paintFrame
     
 
 	private Random rand = new Random();
