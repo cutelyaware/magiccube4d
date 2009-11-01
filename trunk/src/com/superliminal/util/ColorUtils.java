@@ -135,11 +135,14 @@ public class ColorUtils {
     	return sum;
     }
     
-    private static double worstFit(float[][] colors) {
+    private static double worstFit(Color[] colors) {
     	float worst = 8888;
+    	float[] a = new float[3], b = new float[3];
     	for(int i=1; i<colors.length; i++) {
+    		colors[i].getColorComponents(a);
     		for(int j=0; j<i; j++) {
-	    		float dist = sqrdist(colors[i], colors[j]);
+        		colors[j].getColorComponents(b);
+	    		float dist = sqrdist(a, b);
 	    		if(dist < worst) {
 	    			worst = dist;
 	    		}
@@ -167,10 +170,11 @@ public class ColorUtils {
 	 */
 	public static void main(String[] args) {
 		final int ncolors = 10;
-		Color[] rgbs = generateVisuallyDistinctColors(ncolors, .8f, .3f);
-		for(int i=0; i<rgbs.length; i++) {
-			System.out.println(rgbs[i].toString());
+		Color[] colors = generateVisuallyDistinctColors(ncolors, .8f, .3f);
+		for(int i=0; i<colors.length; i++) {
+			System.out.println(colors[i].toString());
 		}
+		System.out.println("Worst fit color = " + worstFit(colors));
 	}
 
 }
