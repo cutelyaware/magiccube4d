@@ -6,50 +6,50 @@ NumGrips:	75
 
 Puzzle:	{3,3,3} 2.0
 NumFaces:	5
-NumCubies:	16
-NumStickers:	55
+NumCubies:	6
+NumStickers:	25
 NumGrips:	75
 
 Puzzle:	{3,3,3} 3.0
 NumFaces:	5
-NumCubies:	55
-NumStickers:	155
+NumCubies:	25
+NumStickers:	75
 NumGrips:	75
 
 Puzzle:	{3,3,3} 4.0
 NumFaces:	5
-NumCubies:	135
-NumStickers:	325
+NumCubies:	70
+NumStickers:	170
 NumGrips:	75
 
 Puzzle:	{3,3,3} 5.0
 NumFaces:	5
-NumCubies:	275
-NumStickers:	585
+NumCubies:	155
+NumStickers:	325
 NumGrips:	75
 
 Puzzle:	{3,3,3} 6.0
 NumFaces:	5
-NumCubies:	495
-NumStickers:	955
+NumCubies:	295
+NumStickers:	555
 NumGrips:	75
 
 Puzzle:	{3,3,3} 7.0
 NumFaces:	5
-NumCubies:	815
-NumStickers:	1455
+NumCubies:	505
+NumStickers:	875
 NumGrips:	75
 
 Puzzle:	{3,3,3} 8.0
 NumFaces:	5
-NumCubies:	1255
-NumStickers:	2105
+NumCubies:	800
+NumStickers:	1300
 NumGrips:	75
 
 Puzzle:	{3,3,3} 9.0
 NumFaces:	5
-NumCubies:	1835
-NumStickers:	2925
+NumCubies:	1195
+NumStickers:	1845
 NumGrips:	75
 
 Puzzle:	{4,3,3} 1.0
