@@ -59,9 +59,12 @@ public class MC4DView extends Component {
     /**
      * Performs a move and optionally applies it to the history when finished.
      */
-    public void animate(MagicCube.TwistData move, boolean applyToHist) {
-        animationQueue.append(move, applyToHist);
+    public void animate(MagicCube.TwistData move, boolean applyToHist, boolean macroMove) {
+        animationQueue.append(move, applyToHist, macroMove);
         repaint();
+    }
+    public void animate(MagicCube.TwistData move, boolean applyToHist) {
+        animate(move, applyToHist, false);
     }
 
     /**
@@ -374,9 +377,11 @@ public class MC4DView extends Component {
         private class QueueItem {
             public MagicCube.TwistData twist;
             public boolean applyAnimHistWhenDone = true; // whether to change history after animating
-            public QueueItem(MagicCube.TwistData twist, boolean applyAnimHistWhenDone) {
+            public boolean macroMove = false;
+            public QueueItem(MagicCube.TwistData twist, boolean applyAnimHistWhenDone, boolean macroMove) {
                 this.twist = twist;
                 this.applyAnimHistWhenDone = applyAnimHistWhenDone;
+                this.macroMove = macroMove;
             }
         }
 
@@ -405,8 +410,13 @@ public class MC4DView extends Component {
                     	continue;
                     
                     double totalRotationAngle = 2*Math.PI/order;                    
-                    
-                    puzzleManager.nTwist = PropertyManager.getBoolean("quickmoves", false) ? 1 : 
+                    boolean quickly = false;
+                    if(PropertyManager.getBoolean("quickmoves", false)) // use some form of quick moves
+                    	if(PropertyManager.getBoolean("quickmacros", true))
+                    		quickly = animating.macroMove;
+                    	else
+                    		quickly = true;
+                    puzzleManager.nTwist = quickly ? 1 : 
                     	puzzleManager.calculateNTwists( totalRotationAngle, PropertyManager.getFloat("twistfactor", 1) );
                     puzzleManager.iTwist = 0;
                     puzzleManager.iTwistGrip = iTwistGrip;
@@ -424,8 +434,8 @@ public class MC4DView extends Component {
             return animating != null;
         }
 
-        public void append(MagicCube.TwistData twist, boolean applyAnimHistWhenDone) {
-            queue.add(new QueueItem(twist,applyAnimHistWhenDone));
+        public void append(MagicCube.TwistData twist, boolean applyAnimHistWhenDone, boolean macroMove) {
+            queue.add(new QueueItem(twist,applyAnimHistWhenDone, macroMove));
             getAnimating(); // in case queue was empty this sets twist as animating
         }
 
