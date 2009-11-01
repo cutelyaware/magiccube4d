@@ -1,7 +1,9 @@
-package com.superliminal.magiccube4d;
+package com.superliminal.test;
+import com.superliminal.magiccube4d.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+
 
 public class ModuleTest
 {
@@ -43,6 +45,19 @@ public class ModuleTest
         		writer.write( "NumStickers:\t" + puzzle.nStickers() + sep );
         		writer.write( "NumGrips:\t" + puzzle.nGrips() + sep );
         		writer.write( sep );
+        		
+        		/* Not part of the test output at this point,
+        		 * but was useful for testing.
+        		for( int s=0; s<puzzle.nStickers(); s++ )
+        		{
+        			int stickerGrips[] = PipelineUtils.getGripsForSticker( s, puzzle );
+        			if( stickerGrips.length == 1 )
+        				System.out.print( "" + stickerGrips[0] + " " );
+        			else
+        				System.out.print( "" + stickerGrips.length );
+        		}
+        		System.out.println( "" );
+        		*/
             }
         }
         

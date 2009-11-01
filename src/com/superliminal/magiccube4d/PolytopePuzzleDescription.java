@@ -185,7 +185,7 @@ package com.superliminal.magiccube4d;
 import com.donhatchsw.util.*; // XXX get rid
 import com.superliminal.util.PropertyManager;
 
-class PolytopePuzzleDescription implements PuzzleDescription {
+public class PolytopePuzzleDescription implements PuzzleDescription {
     private CSG.SPolytope originalPolytope;
     private CSG.SPolytope slicedPolytope;
     
