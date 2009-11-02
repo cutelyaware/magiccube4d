@@ -299,6 +299,8 @@ public class MC4DView extends Component {
 			frames = 0;
 		}
     });
+    
+    private static float visibleRadius = 1;
 
     @Override
 	public void paint(Graphics g) {
@@ -325,6 +327,11 @@ public class MC4DView extends Component {
             boolean okToAntialias = !inMotion && PropertyManager.getBoolean("antialiasing", true);
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
+        }
+        
+        if(! inMotion) {
+        	visibleRadius = puzzleManager.untwistedFrame.visibleRadius2D();
+        	//System.out.println("visible radius: " + visibleRadius);
         }
 
         // paint the background
@@ -354,7 +361,7 @@ public class MC4DView extends Component {
         	puzzleManager.paintFrame(g,
         			frame, 
                     PropertyManager.getBoolean("shadows", true), 
-                    PropertyManager.getBoolean("ground", false) ? PropertyManager.getColor("ground.color") : null, 
+                    PropertyManager.getBoolean("ground", true) ? PropertyManager.getColor("ground.color") : null, 
             		PropertyManager.getBoolean("highlightbycubie", false), 
             		PropertyManager.getBoolean("outlines", false) ? PropertyManager.getColor("outlines.color") : null, 
         			PropertyManager.getFloat("twistfactor", 1));
