@@ -10,8 +10,8 @@ import java.io.*;
  * Copyright 2005 - Superliminal Software
  * @author Melinda Green
  */
-public class Util {
-    private Util() {
+public class ResourceUtils {
+    private ResourceUtils() {
     }
 
     /**
@@ -25,7 +25,7 @@ public class Util {
         URL url = null;
         try {
             if(name.indexOf(':') == -1) {
-                url = Util.class.getClassLoader().getResource(name);
+                url = ResourceUtils.class.getClassLoader().getResource(name);
             }
             else
                 url = new URL(name);

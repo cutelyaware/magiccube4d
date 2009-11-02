@@ -5,7 +5,9 @@ import com.superliminal.util.ColorUtils;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import javax.swing.*;
 
@@ -58,7 +60,12 @@ public class PuzzleManager
     { twistingFrame = untwistedFrame; } // XXX HACK for now, avoid any issue about clicking in the wrong one or something
 
 
-    public interface Callback { public void call(); }
+    // Listener support
+    public static interface PuzzleListener { public void puzzleChanged(Object cbdata); }
+    private Set<PuzzleListener> puzzleListeners = new HashSet<PuzzleListener>();
+    public void addPuzzleListener(PuzzleListener tl) { puzzleListeners.add(tl); }
+    public void removePuzzleListener(PuzzleListener tl) { puzzleListeners.remove(tl); }
+    protected void firePuzzleChanged(Object cbdata) { for(PuzzleListener pl : puzzleListeners) pl.puzzleChanged(cbdata); }
     
     static String prettyLength(double length) {
         boolean integralLength = length == (int)length;
@@ -70,7 +77,7 @@ public class PuzzleManager
     }
 
 
-    public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground, final Callback cb) {
+    public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground, final Object cbdata) {
     	statusLabel.setText("");
         final String finalLengthString = " " + prettyLength(Double.parseDouble(lengthString));
     	ProgressManager builder = new ProgressManager(progressView) {
@@ -83,7 +90,7 @@ public class PuzzleManager
             	PuzzleDescription newPuzzle = buildPuzzle(schlafli, finalLengthString, this);
             	if( newPuzzle != null ) {
             		succeeded = true;
-                	puzzleDescription  = newPuzzle;
+                	puzzleDescription = newPuzzle;
             		resetPuzzleState();
             		faceColors = ColorUtils.generateVisuallyDistinctColors(puzzleDescription.nFaces(), .7f, .1f);
             	}
@@ -95,11 +102,9 @@ public class PuzzleManager
              */
 			@Override
 			public void done() {
-				if(succeeded)
-					statusLabel.setText(schlafli + "  length = " + finalLengthString);
+				if(succeeded) statusLabel.setText(schlafli + "  length = " + finalLengthString);
 				super.done();
-				if(cb != null) 
-					cb.call();
+				if(succeeded) firePuzzleChanged(cbdata);
 			}
     	};
     	if(inBackground)

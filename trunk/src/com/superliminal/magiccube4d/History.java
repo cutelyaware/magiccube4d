@@ -582,18 +582,13 @@ public class History {
     // LISTENER SUPPORT
     //
     public static interface HistoryListener { public void currentChanged(); }
-    private Vector<HistoryListener> historyListeners = new Vector<HistoryListener>();
+    private Set<HistoryListener> historyListeners = new HashSet<HistoryListener>();
     public void addHistoryListener(HistoryListener listener) {
-        if(historyListeners.contains(listener))
-            return;
-        historyListeners.add(listener);
-        listener.currentChanged(); // perhaps not the best idea?
+        if(historyListeners.add(listener))
+        	listener.currentChanged(); // perhaps not the best idea?
     }
     public void removeHistoryListener(HistoryListener listener) { if(historyListeners.contains(listener)) historyListeners.remove(listener); }
-    protected void fireCurrentChanged() {
-        for(Enumeration<HistoryListener> e=historyListeners.elements(); e.hasMoreElements(); )
-            e.nextElement().currentChanged();
-    }
+    protected void fireCurrentChanged() { for(HistoryListener hl : historyListeners) hl.currentChanged(); }
 
 
     /**

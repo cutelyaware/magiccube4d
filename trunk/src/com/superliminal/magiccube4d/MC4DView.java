@@ -1,12 +1,16 @@
 package com.superliminal.magiccube4d;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PushbackReader;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 import java.util.Enumeration;
 
+import javax.swing.JFrame;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -26,13 +30,14 @@ public class MC4DView extends Component {
 
     private PuzzleManager puzzleManager = null;
 
+    // Listener support
     public static interface StickerListener { public void stickerClicked(InputEvent e, MagicCube.TwistData twisted); }
-    private Vector<StickerListener> stickerListeners = new Vector<StickerListener>();
+    private Set<StickerListener> stickerListeners = new HashSet<StickerListener>();
     public void addStickerListener(StickerListener tl) { stickerListeners.add(tl); }
     public void removeStickerListener(StickerListener tl) { stickerListeners.remove(tl); }
     protected void fireStickerClickedEvent(InputEvent event, MagicCube.TwistData twist) {
-        for(Enumeration<StickerListener> e=stickerListeners.elements(); e.hasMoreElements(); )
-            e.nextElement().stickerClicked(event, twist);
+        for(StickerListener sl : stickerListeners) 
+        	sl.stickerClicked(event, twist);
     }
 
     private AnimationQueue animationQueue;
@@ -104,7 +109,7 @@ public class MC4DView extends Component {
     	updateStickerHighlighting( e.isControlDown() );
     }
     
-    public MC4DView(PuzzleManager gg, RotationHandler rotations, History hist, int nfaces) {
+    public MC4DView(PuzzleManager gg, RotationHandler rotations, History hist) {
     	this.puzzleManager = gg;
         this.rotationHandler = rotations;
         this.setHistory(hist);
@@ -468,41 +473,17 @@ public class MC4DView extends Component {
      * Simple example program.
      */
     public static void main(String[] args) throws java.io.IOException {
-        int length = 3;
+    	final String SCHLAFLI = "{4,3,3}";
+        final int LENGTH = 3;
         System.out.println("version " + System.getProperty("java.version"));
-        Frame frame = new Frame("test");
-        final History hist = new History(length);
-        final String logfilename = "mc4d.log";
-        final java.io.File logfile = new java.io.File(logfilename);
-        if(logfile.exists())
-            hist.read(new PushbackReader(new FileReader(logfile)));
-//        java.net.URL histurl = Util.getResource(logfile);
-//        if(histurl == null)
-//            System.out.println("couldn't read history file");
-//        else
-//            hist.read(new java.io.StringReader(Util.readFileFromURL(histurl)));
-        final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist, 6);
+        JFrame frame = new StaticUtils.QuickFrame("test");
+        final MC4DView view = new MC4DView(new PuzzleManager(SCHLAFLI, LENGTH, new JProgressBar()), new RotationHandler(), new History(LENGTH));
         view.addStickerListener(new MC4DView.StickerListener() {
             public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
             }
         });
-        frame.add(view);
-        frame.setBounds(100, 100, 650, 650);
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-			public void windowClosing(WindowEvent arg0) {
-                //hist.compress();
-                System.out.println("writing " + hist.countTwists() + " twist" + (hist.countTwists()==1 ? "" : "s"));
-                try {
-                    java.io.Writer writer = new java.io.FileWriter(new java.io.File(logfilename));
-                    hist.write(writer);
-                    writer.close();
-                } 
-                catch (IOException e) { e.printStackTrace(); }
-                System.exit(0);
-            }
-        });
+        frame.getContentPane().add(view);
         frame.setVisible(true);
     }
 }
