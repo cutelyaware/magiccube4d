@@ -1,6 +1,8 @@
 package com.superliminal.util;
 
 import javax.swing.filechooser.FileSystemView;
+
+
 import java.util.*;
 import java.io.*;
 import java.awt.*;
@@ -57,21 +59,57 @@ import java.net.*;
  */
 @SuppressWarnings("serial")
 public class PropertyManager extends Properties {
-    private final static String PRODUCT_NAME = "mc4d"; // wants to be passed in but would need to be environment variable.
+	
+    public static interface PropertyListener { public void propertyChanged(String property, String newval); }
+    private HashMap<PropertyListener, String[]> PropertyListeners = new HashMap<PropertyListener, String[]>();
+    public void addPropertyListener(PropertyListener pl, String[] propnames) { PropertyListeners.put(pl, propnames); }
+    public void addPropertyListener(PropertyListener pl, String propname) { PropertyListeners.put(pl, new String[]{propname}); }
+    public void addPropertyListener(PropertyListener pl) { PropertyListeners.put(pl, new String[0]); }
+    public void removePropertyListener(PropertyListener pl) { PropertyListeners.remove(pl); }
+    protected void firePropertyChange(String property, String newval) {
+    	// listeners to levels below this one may want to know in case the new value hides the lower one.
+    	if(defaults != null) {
+        	//System.out.println("defaults class: " + defaults.getClass().getCanonicalName());
+    		((PropertyManager)defaults).firePropertyChange(property, newval);
+    	}
+    	// now inform listeners at this level.
+        for(PropertyListener pl : PropertyListeners.keySet())
+        	for(String prop : PropertyListeners.get(pl))
+        		if(prop.equals(property))// && !get(prop).equals(newval))
+        			pl.propertyChanged(property, newval);
+    }
+    @Override
+	public synchronized Object setProperty(String key, String value) {
+        Object previousValue = super.setProperty(key, value);
+        top.firePropertyChange(key, value);
+        return previousValue;
+    }
+    
+	// NOTE: Wants to be passed in but needs to be set during static initialization,
+	// therefore it probably needs to be environment variable.
+    private final static String PRODUCT_NAME = "mc4d"; 
 
-    /** apps should load any user-specific property overrides directly into this object and call setProperty to customize. */
+    /**
+     * Applications should load any user-specific property overrides directly into this object 
+     * and then call setProperty whenever a user action needs to change one. 
+     */
     public final static PropertyManager userprefs = new LocalProps(new File(FileSystemView.getFileSystemView().getHomeDirectory(), PRODUCT_NAME+".props"));
+    
+    /**
+     * Stores all system properties. These take precedence over user preferences 
+     * but are themselves overridden by command-line settings.
+     */
     private final static Properties sysprops = new PropertyManager(userprefs);
 
     /**
-     * apps should typically only call getProperty on this object
-     * although it is ok to store program arguments and other overrides here too.
-     * */
+     * Applications should typically only call getProperty on this object
+     * although it is OK to store program arguments and other overrides here too.
+     */
     public final static PropertyManager top = new PropertyManager(sysprops);
 
     static { init(); } // to perform static initialization
 
-    /** users have no business subclassing this class so a private empty constructor will forbid it. */
+    /** users have no business sub-classing this class so a private empty constructor will forbid it. */
     private PropertyManager() {}
 
     public PropertyManager(Properties defaults) { super(defaults); }
@@ -174,6 +212,7 @@ public class PropertyManager extends Properties {
 		public synchronized Object setProperty(String key, String value) {
             Object ret = super.setProperty(key, value);
             writeToFile();
+            // Notify all interested listeners in the chain by notifying the top and letting it recurse.
             return ret;
         }
         /**
@@ -217,7 +256,7 @@ public class PropertyManager extends Properties {
      * See the ClientProp documentation above for descriptions of the subtle syntax
      * differences for file locations and quoted keys.
      */
-    private static class RemoteProps extends Properties {
+    private static class RemoteProps extends PropertyManager {
         private String prefix;
         public RemoteProps(String fileurl, Properties def) {
             defaults = def;
@@ -333,7 +372,8 @@ public class PropertyManager extends Properties {
      * @return a Color object with the parsed red, green, and blue values.
      */
     public static Color getColor(String key, Color def) {
-    	return parseColor(top.getProperty(key));
+    	Color parsed = parseColor(top.getProperty(key));
+    	return parsed != null ? parsed : def;
     }
     public static Color parseColor(String colstr) {
         if (colstr == null)
@@ -363,8 +403,16 @@ public class PropertyManager extends Properties {
      * Simple example program.
      */
     public static void main(String args[]) {
+    	// test property listening.
+    	PropertyManager.top.addPropertyListener(new PropertyListener() {
+			@Override
+			public void propertyChanged(String property, String newval) {
+				System.out.println("*** Property change. " + property + " now " + newval);
+			}    		
+    	}, "debugging");
         // test of setting a top-level property, e.g. a setting specified on command line.
         PropertyManager.top.setProperty("debugging", "true");
+        PropertyManager.top.setProperty("debugging", "false");
         // get a bunch of application values from the property files
         System.out.println("main.background = " + getColor("main.background"));
         System.out.println("tables.header.background = " + top.getProperty("tables.header.background") + " -> "  +  getColor("tables.header.background"));
@@ -380,6 +428,7 @@ public class PropertyManager extends Properties {
         PropertyManager.userprefs.clear(); // testing that clearing userprefs writes the file
         System.out.println("num pref keys after clear: " + PropertyManager.userprefs.size());
         PropertyManager.userprefs.setProperty("test.runcount", runcount+"");
+        System.exit(0);
     }
 }
 
