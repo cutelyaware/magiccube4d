@@ -78,7 +78,7 @@ public class PipelineUtils
         		float dist = Vec_h._NORMSQRD2(verts[i]);
         		maxVertDist = Math.max(dist, maxVertDist);
         	}
-        	return maxVertDist;
+        	return (float) Math.sqrt(maxVertDist);
         }
     } // class Frame
 

@@ -54,8 +54,8 @@ public class PuzzleManager
     // Two scratch Frames to use for computing and painting.
     //
     PipelineUtils.AnimFrame untwistedFrame = new PipelineUtils.AnimFrame();
-    PipelineUtils.AnimFrame twistingFrame = new PipelineUtils.AnimFrame();
-        { twistingFrame = untwistedFrame; } // XXX HACK for now, avoid any issue about clicking in the wrong one or something
+    private PipelineUtils.AnimFrame twistingFrame = new PipelineUtils.AnimFrame();
+    { twistingFrame = untwistedFrame; } // XXX HACK for now, avoid any issue about clicking in the wrong one or something
 
 
     public interface Callback { public void call(); }
