@@ -19,7 +19,7 @@ import com.superliminal.util.ColorButton;
 import com.superliminal.util.FloatSlider;
 import com.superliminal.util.PropertyManager;
 import com.superliminal.util.StaticUtils;
-import com.superliminal.util.Util;
+import com.superliminal.util.ResourceUtils;
 
 import de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel;
 
@@ -328,19 +328,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 setSkyAndHighlighting(new Color(255, 170, 170), macroMgr, isControlDown( ae ));
             }
         };
-
-    private PuzzleManager.Callback puzzleConfigurator = new PuzzleManager.Callback() {
-    	public void call() {
-    		initMacroControls(); // to properly enable/disable the buttons
-    		progressBar.setVisible(false);
-    		Color[] userColors = findColors(puzzleManager.puzzleDescription.nFaces(), MagicCube.FACE_COLORS_FILE);
-    		if(userColors != null)
-    			puzzleManager.faceColors = userColors;
-    		view.repaint();
-    		System.out.println("circumradus: " + puzzleManager.puzzleDescription.circumRadius());
-    		System.out.println("inradus: " + puzzleManager.puzzleDescription.inRadius());
-    	}
-    };
     
     private static boolean isControlDown( ActionEvent e )
     {
@@ -370,25 +357,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 cancel.doit(ae);
                 progressBar.setVisible(true);
                 final double length = puzzleManager.puzzleDescription.getEdgeLength();
-                puzzleManager.initPuzzle(
-            		puzzleManager.puzzleDescription.getSchlafliProduct(),
-            		""+length, progressBar, statusLabel, true, 
-            		new PuzzleManager.Callback() {
-            	    	public void call() {
-                            hist.clear((int)length);
-                            scrambleState = SCRAMBLE_NONE; // probably redundant but shouldn't hurt.
-                            updateTwistsLabel();
-                            Color[] userColors = findColors(puzzleManager.puzzleDescription.nFaces(), MagicCube.FACE_COLORS_FILE);
-                    		if(userColors != null)
-                    			puzzleManager.faceColors = userColors;
-                            view.repaint();
-                            if(ae.getSource() instanceof PuzzleManager.Callback)
-                            {
-                            	((PuzzleManager.Callback)ae.getSource()).call();
-                            }
-            	    	}
-            	    }
-            	);
+                puzzleManager.initPuzzle(puzzleManager.puzzleDescription.getSchlafliProduct(), ""+length, progressBar, statusLabel, true, ae.getSource());
             }
         },
         read = new AbstractAction("Read") {
@@ -499,18 +468,21 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 this.scramblechenfrengensen = scramblechens;
             }
             // This becomes a little crazy but bear with me...
-            // This action runs in the background using a ProgressManager to keep the progress bar updated
+            // This scramble action runs in the background using a ProgressManager to keep the progress bar updated
             // during long scrambles of big puzzles. Problem is that it needs to first reset the puzzle
-            // which itself wants to run in the background. We therefore send a callback object the reset action 
-            // which it calls when the reset is finished. That callback then kicks off the scrambling action.
+            // which itself wants to run in the background. If both are allowed to run in background threads
+            // then there is a race condition in which the scramble thread might (read "probably will") complete
+            // before the reset thread which means that the scramble moves will be erased by the reset.
+            // The solution I used to serialize these background threads is to send the scramble callback in the reset 
+            // action event which then gets called by MC4DSwing's puzzle listener after the reset is finished.
             // Chaining of background tasks like this is risky but it seems to work well. If ever it becomes
             // suspect, try changing the reset method to not run in the background (change it's progress manager
             // flag) then unpackage the call method to perform it's work directly after the reset finishes.
             public void doit(ActionEvent e) {
                 progressBar.setVisible(true);
-                reset.actionPerformed(new ActionEvent(new PuzzleManager.Callback(){
+                reset.actionPerformed(new ActionEvent(new PuzzleManager.PuzzleListener(){
 					@Override
-					public void call() { // will be called by the reset action when it completes.
+					public void puzzleChanged(Object cbdata) { // will be called by the reset action when it completes.
 						scrambleState = SCRAMBLE_NONE; // do first to avoid issue 62 (fanfare on scramble).
 		                progressBar.setVisible(true);
 		                new ProgressManager(progressBar) {
@@ -657,6 +629,21 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         contents.add(statusBar, "South");
 
         puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
+        puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
+	    	public void puzzleChanged(Object cbdata) {
+	    		initMacroControls(); // to properly enable/disable the buttons
+	    		progressBar.setVisible(false);
+                hist.clear((int)puzzleManager.puzzleDescription.getEdgeLength());
+                scrambleState = SCRAMBLE_NONE; // probably redundant but shouldn't hurt.
+                updateTwistsLabel();
+                Color[] userColors = findColors(puzzleManager.puzzleDescription.nFaces(), MagicCube.FACE_COLORS_FILE);
+        		if(userColors != null)
+        			puzzleManager.faceColors = userColors;
+        		if(cbdata != null && cbdata instanceof PuzzleManager.PuzzleListener)
+        			((PuzzleManager.PuzzleListener)cbdata).puzzleChanged(null);
+                view.repaint();
+	    	}
+	    });
         puzzleManager.setHighlighter(normalHighlighter);
         initMacroControls(); // to show controls
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
@@ -726,7 +713,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                         }
                 		progressView.setVisible(true);
                 		System.out.println(newSchlafli + " " + newLengthString);
-                    	puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true, puzzleConfigurator);
+                    	puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true, null);
                     	hist.clear((int)Double.parseDouble(newLengthString));
                     	updateTwistsLabel();
                     	scrambleState = SCRAMBLE_NONE;
@@ -862,7 +849,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     // int numTwists = Integer.parseInt(firstline[3]);
                     String schlafli = firstline[4];
                     initialLength = Double.parseDouble(firstline[5]);
-                    puzzleManager.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false, puzzleConfigurator);
+                    puzzleManager.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false, null);
                     iLength = (int)Math.round(initialLength);
                     hist = new History(iLength);
                     String title = MagicCube.TITLE;
@@ -880,7 +867,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             }
             else
                 statusLabel.setText("Couldn't find log file '" + log + "'");
-        }
+        } // end initPuzzle
         
         // initialize generic version state
         try {
@@ -905,7 +892,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         	view.removeStickerListener(this);
         	view.setHistory(null);
         }
-        view = new MC4DView(puzzleManager, rotations, hist, puzzleManager.puzzleDescription.nFaces());
+        view = new MC4DView(puzzleManager, rotations, hist);
 
         viewcontainer.removeAll(); 
         viewcontainer.add(view, "Center");
@@ -1220,9 +1207,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
     
     private static Color[][] readColorLists(String fname) {
-    	URL furl = Util.getResource(fname);
+    	URL furl = ResourceUtils.getResource(fname);
     	if(furl == null) return new Color[0][];
-    	String contents = Util.readFileFromURL(furl);
+    	String contents = ResourceUtils.readFileFromURL(furl);
     	//JOptionPane.showMessageDialog(null, contents);
     	if(contents == null) return new Color[0][];
     	ArrayList<Color[]> colorlines = new ArrayList<Color[]>();
