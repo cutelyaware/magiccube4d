@@ -2,9 +2,6 @@ package com.superliminal.magiccube4d;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PushbackReader;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
@@ -249,8 +246,40 @@ public class MC4DView extends Component {
                 }
             }
         });
+        
+        puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
+			@Override
+			public void puzzleChanged(Object cbdata) {
+				updateEyeParams();
+			}
+		});
+        PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
+			@Override
+			public void propertyChanged(String property, String newval) {
+				//updateEyeParams();
+			}
+        }, new String[] {"eyew", "scale"});
     } // end MC4DView
+    
 
+    private static float visibleRadius = 1;
+    
+    private void updateEyeParams() {
+    	visibleRadius = puzzleManager.computeFrame(
+            	PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),
+            	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
+    			new RotationHandler(), // It's important to force the frame into a standard 4D orientation.
+                PropertyManager.getFloat("eyew", MagicCube.EYEW),
+                MagicCube.EYEZ,
+                PropertyManager.getFloat("scale", 1),
+                pixels2polySF,
+                xOff,
+                yOff,
+                MagicCube.SUNVEC,
+                PropertyManager.getBoolean("shadows", true),
+                this).visibleRadius2D();
+    	System.out.println("visible radius: " + visibleRadius);
+    }
    
     private void updateViewFactors() {
         int 
@@ -304,8 +333,6 @@ public class MC4DView extends Component {
 			frames = 0;
 		}
     });
-    
-    private static float visibleRadius = 1;
 
     @Override
 	public void paint(Graphics g) {
@@ -332,11 +359,6 @@ public class MC4DView extends Component {
             boolean okToAntialias = !inMotion && PropertyManager.getBoolean("antialiasing", true);
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
-        }
-        
-        if(! inMotion) {
-        	visibleRadius = puzzleManager.untwistedFrame.visibleRadius2D();
-        	//System.out.println("visible radius: " + visibleRadius);
         }
 
         // paint the background

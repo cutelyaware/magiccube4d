@@ -11,9 +11,12 @@ import com.superliminal.util.PropertyManager;
 // Class which manages view rotations, both ctrl-click and continuous style.
 public class RotationHandler
 {
-	RotationHandler()
+	public RotationHandler() {
+		set4dView(null);
+	}
+	public RotationHandler(double[][] initialMatrix)
 	{
-		reset4dView();
+		set4dView(initialMatrix);
 	}
 	
 	public enum Snap
@@ -55,15 +58,15 @@ public class RotationHandler
 	{
 		return viewMat4d;
 	}
-
-	public void reset4dView()
-	{
-		// Put us in a nice-looking start position.
-		this.viewMat4d = new double[][] {
-			{.732,-.196,.653,0},
-			{.681,.187,-.707,0},
-			{.016,.963,.270,0},
-			{0,0,0,1} };
+	
+	public void set4dView(double[][] mat) {
+		if(mat == null)
+			mat = new double[][] {
+					{1,0,0,0},
+					{0,1,0,0},
+					{0,0,1,0},
+					{0,0,0,1}
+				};
 		VecMath.gramschmidt( viewMat4d, viewMat4d );
 	}
 	
