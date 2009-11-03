@@ -71,15 +71,6 @@ public class PipelineUtils
         // We keep this around so that a Frame can be reused
         // without having to do any memory allocations.
         private int drawListBuffer[/*nStickers*/][/*nPolysThisSticker*/][/*2*/];
-        
-        public float visibleRadius2D() {
-        	float maxVertDist = -1;
-        	for(int i=0; i<drawListSize; i++) {
-        		float dist = Vec_h._NORMSQRD2(verts[i]);
-        		maxVertDist = Math.max(dist, maxVertDist);
-        	}
-        	return (float) Math.sqrt(maxVertDist);
-        }
     } // class Frame
 
     static private void Assert(boolean condition) { if (!condition) throw new Error("Assertion failed"); }

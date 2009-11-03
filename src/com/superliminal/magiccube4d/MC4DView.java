@@ -43,7 +43,7 @@ public class MC4DView extends Component {
     public int getSlicemask() { return slicemask == 0 ? 1 : slicemask; }
     private Color skyOverride = null; // null means use the user's preference from the PropertyManager.
     private int xOff, yOff;
-    private float pixels2polySF = .01f; // screen transform data
+    private float polys2pixelsSF = .01f; // screen transform data
     private Point lastDrag; // non-null == dragging
     private long lastDragTime; // timestamp of last drag event
     private RotationHandler rotationHandler;
@@ -247,61 +247,62 @@ public class MC4DView extends Component {
             }
         });
         
+        // Listen for changes to factors that affect puzzle/view scaling
+        //
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
 			@Override
 			public void puzzleChanged(Object cbdata) {
-				updateEyeParams();
+				updateViewFactors(); // affects puzzle size
 			}
 		});
         PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
 			@Override
 			public void propertyChanged(String property, String newval) {
-				//updateEyeParams();
+				updateViewFactors(); // properties listed below affect puzzle size
 			}
-        }, new String[] {"eyew", "scale"});
+        }, new String[] {"eyew", "faceshrink", "stickershrink"});
+        this.addComponentListener(new ComponentAdapter() {
+        	public void componentResized(ComponentEvent e) { // affects xOff & yOff
+        		updateViewFactors();            
+            }
+        });
     } // end MC4DView
     
-
-    private static float visibleRadius = 1;
-    
-    private void updateEyeParams() {
-    	visibleRadius = puzzleManager.computeFrame(
+   
+    private void updateViewFactors() {
+    	int 
+	        W = getWidth(),
+	        H = getHeight(),
+        minpix = Math.min(W, H);
+	    if(minpix == 0)
+	        return;
+        xOff = ((W>H) ? (W-H)/2 : 0) + minpix/2;
+        yOff = ((H>W) ? (H-W)/2 : 0) + minpix/2;
+	    
+    	// Generate view-independent vertices for the current puzzle in its original 4D orientation, centered at the origin.
+    	PipelineUtils.AnimFrame frame = puzzleManager.computeFrame(
             	PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),
             	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
     			new RotationHandler(), // It's important to force the frame into a standard 4D orientation.
                 PropertyManager.getFloat("eyew", MagicCube.EYEW),
                 MagicCube.EYEZ,
-                PropertyManager.getFloat("scale", 1),
-                pixels2polySF,
-                xOff,
-                yOff,
+                1, // get coords in model coords
+                0, 0, // No offset so that verts are centered.
                 MagicCube.SUNVEC,
-                PropertyManager.getBoolean("shadows", true),
-                this).visibleRadius2D();
-    	System.out.println("visible radius: " + visibleRadius);
-    }
-   
-    private void updateViewFactors() {
-        int 
-            W = getWidth(),
-            H = getHeight(),
-            min = W>H ? H : W;
-        if(W*H == 0)
-            return;
-        pixels2polySF = 1f / Math.min(W, H) / PropertyManager.getFloat("scale", 1);
-        xOff = ((W>H) ? (W-H)/2 : 0) + min/2;
-        yOff = ((H>W) ? (H-W)/2 : 0) + min/2;
-    }
-
-    
-    public static int distSqrd(int a[], int b[]) {
-        int sum = 0;
-        for(int i=0; i<a.length; i++) {
-            int diff = a[i]-b[i];
-            sum += diff * diff;
-        }
-        return sum;
-    }       
+                false, // Don't let shadow polygons muck up the calculation.
+                null);
+    	float maxVertDist = -1;
+    	for(int i=0; i<frame.drawListSize; i++) {
+    		float dist = Vec_h._NORMSQRD2(frame.verts[i]);
+    		maxVertDist = Math.max(dist, maxVertDist);
+    	}
+    	float visibleRadius = (float) Math.sqrt(maxVertDist);
+    	//System.out.println("visible radius: " + visibleRadius);
+    	
+    	// This is what corrects the view scale for changes in puzzle and puzzle geometry.
+    	// To remove this correction, just set polys2pixelSF = minpix.
+        polys2pixelsSF = minpix/(2*visibleRadius);
+    }  
     
 
     /**
@@ -337,7 +338,6 @@ public class MC4DView extends Component {
     @Override
 	public void paint(Graphics g) {
     	frames++;
-        updateViewFactors();
 
 		if(animationQueue.isAnimating() && puzzleManager.iTwist == puzzleManager.nTwist) {
 			animationQueue.getAnimating();
@@ -378,8 +378,7 @@ public class MC4DView extends Component {
         			rotationHandler, 
                     PropertyManager.getFloat("eyew", MagicCube.EYEW),
                     MagicCube.EYEZ,
-                    PropertyManager.getFloat("scale", 1),
-                    pixels2polySF,
+                    polys2pixelsSF * PropertyManager.getFloat("scale", 1),
                     xOff,
                     yOff,
                     MagicCube.SUNVEC,
