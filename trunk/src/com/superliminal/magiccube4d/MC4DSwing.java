@@ -586,10 +586,22 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         JMenu helpmenu = new JMenu("Help");
         helpmenu.add(new JMenuItem("About...")).addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
+            	
+            	// Get the minor version from our resource.
+            	URL url = this.getClass().getClassLoader().getResource( "version.txt" );
+            	String minorVersion = "";
+				try {
+					BufferedReader reader = new BufferedReader( new FileReader( url.getPath() ) );
+					minorVersion = "." + reader.readLine();
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+            	
                 JOptionPane.showMessageDialog(MC4DSwing.this, 
                 	"<html><center>" + 
 	                	MagicCube.TITLE + 
-	                    " Version " + MagicCube.PUZZLE_VERSION + 
+	                    " Version " + MagicCube.PUZZLE_MAJOR_VERSION + minorVersion +
 	                    "<br>Copyright 2005 by Melinda Green, Don Hatch" +
 	                    "<br>with invaluable help from Jay Berkenbilt and Roice Nelson." +
 	                    "<br>http://superliminal.com/cube/cube.htm" +
