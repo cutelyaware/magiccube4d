@@ -1020,7 +1020,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
      */
 	private class PreferencesEditor extends JPanel {
 		
-        
         public PreferencesEditor() {
         	init();
         }

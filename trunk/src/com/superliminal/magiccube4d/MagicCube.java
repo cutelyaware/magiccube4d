@@ -108,7 +108,7 @@ public class MagicCube {
 	public final static float 
 		FACESHRINK    = .4f,
 		STICKERSHRINK = .5f,
-		EYEW          = 5.2f;
+		EYEW          = 7.0f;
 
 	// Put us in a nice-looking start position.
 	public final static double[][] NICE_VIEW = new double[][] {

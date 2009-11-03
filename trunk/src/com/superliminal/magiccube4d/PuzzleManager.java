@@ -372,6 +372,8 @@ public class PuzzleManager
     }
 
 
+    // TODO: This method shouldn't have side-effects 
+    // of incrementing rotation & animation counters, playing sounds, etc.
     public PipelineUtils.AnimFrame computeFrame(
         float faceShrink,
         float stickerShrink,
@@ -379,7 +381,6 @@ public class PuzzleManager
         float eyeW,
         float eyeZ,
         float viewScale,
-        float pixels2polySF, // scale factor that maps distances in view space to polygon space
         int xOff,
         int yOff,
         float towardsSunVec[], // used if showShadows is true
@@ -426,7 +427,8 @@ public class PuzzleManager
             	Audio.stop(Audio.Sound.TWISTING);
             	Audio.play(Audio.Sound.SNAP);
             }
-            view.repaint(); // make sure we keep drawing while there's more to do
+            if(view != null)
+            	view.repaint(); // make sure we keep drawing while there's more to do
         }
 
         int iGripOfTwist = -1;
@@ -449,7 +451,8 @@ public class PuzzleManager
             fracIntoTwist = interp.func((iTwist+1)/(float)nTwist);
             //System.out.println("    "+iTwist+"/"+nTwist+" -> "+(iTwist+1)+"/"+nTwist+"");
 
-            view.repaint(); // make sure we keep drawing while there's more to do
+            if(view != null)
+            	view.repaint(); // make sure we keep drawing while there's more to do
         }
 
         // old params... but I don't think it was doing it right
@@ -486,8 +489,8 @@ public class PuzzleManager
             VecMath.mxs(viewMat4df, scaleFudge4d),
             eyeW,
             eyeZ,
-            new float[][]{{scaleFudge2d*viewScale/pixels2polySF, 0},
-                          {0, -scaleFudge2d*viewScale/pixels2polySF},           
+            new float[][]{{scaleFudge2d*viewScale, 0},
+                          {0, -scaleFudge2d*viewScale},           
                           {xOff, yOff}},
             VecMath.normalize(towardsSunVec),
             groundNormal,
