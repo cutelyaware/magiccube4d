@@ -50,7 +50,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     private MC4DView view;
     private BoundedRangeModel viewScaleModel;
     
-    private RotationHandler rotations = new RotationHandler();
+    private RotationHandler rotations = new RotationHandler(MagicCube.NICE_VIEW);
     
     private JPanel viewcontainer = new JPanel(new BorderLayout()); // JComponent container so we can use addHotKey
     private JPanel macroControlsContainer = new JPanel(new BorderLayout());

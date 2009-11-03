@@ -110,6 +110,14 @@ public class MagicCube {
 		STICKERSHRINK = .5f,
 		EYEW          = 5.2f;
 
+	// Put us in a nice-looking start position.
+	public final static double[][] NICE_VIEW = new double[][] {
+		{.732,-.196,.653,0},
+		{.681,.187,-.707,0},
+		{.016,.963,.270,0},
+		{0,0,0,1},
+	};
+
 	/*
 	 * 3d viewing defaults
 	 */
