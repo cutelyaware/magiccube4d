@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="./src" default="update_version">
+	<target name="update_version" >
+		<property name="revision" value="HEAD"/>
+		<exec executable="svn" output="version.txt">
+		    <arg line="info -r ${revision}"/>
+		    <redirector>
+		        <outputfilterchain>
+		            <linecontainsregexp>
+		                <regexp pattern='^Revision' />
+		            </linecontainsregexp>
+		            <tokenfilter>
+		                <replaceregex pattern='[\D]+([\d]+)' replace="\1" />
+		            </tokenfilter>
+		        </outputfilterchain>
+		    </redirector>
+		</exec>
+	</target>
+</project>
