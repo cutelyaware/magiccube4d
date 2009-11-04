@@ -140,6 +140,8 @@ public class MC4DView extends Component {
             }
         });
         this.addMouseListener(new MouseAdapter() {
+        	private boolean wasInMotionWhenPressed = true;
+        	
             // look for and initiate twist and rotation animations
             @Override
 			public void mouseClicked(MouseEvent e) {
@@ -185,16 +187,18 @@ public class MC4DView extends Component {
                     int dir = (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
                     //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
                     //    dir *= 2;
-                    fireStickerClickedEvent(e, new MagicCube.TwistData( clicked, dir, getSlicemask()));
+                    if( ! wasInMotionWhenPressed)
+	                    fireStickerClickedEvent(e, new MagicCube.TwistData( clicked, dir, getSlicemask()));
                     repaint();
                 }
             }
             // watch for dragging starts and stops
             @Override
 			public void mousePressed(MouseEvent arg0) {
+            	wasInMotionWhenPressed = isInMotion();
+                rotationHandler.stopSpinning();
                 lastDrag = arg0.getPoint();
                 lastDragTime = arg0.getWhen();
-                rotationHandler.stopSpinning();
                 FPSTimer.stop();
             }
             @Override
@@ -334,6 +338,12 @@ public class MC4DView extends Component {
 			frames = 0;
 		}
     });
+    
+    private boolean isInMotion() {
+    	return lastDrag != null 
+			|| rotationHandler.isSpinning() 
+			|| (puzzleManager!=null ? puzzleManager.isAnimating() : isAnimating());
+    }
 
     @Override
 	public void paint(Graphics g) {
@@ -351,12 +361,8 @@ public class MC4DView extends Component {
         
         // antialiasing makes for a beautiful image but can also be expensive to draw therefore
         // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
-        boolean inMotion = 
-        			lastDrag != null 
-					|| rotationHandler.isSpinning() 
-					|| (puzzleManager!=null ? puzzleManager.isAnimating() : isAnimating());
         if(g instanceof Graphics2D) {
-            boolean okToAntialias = !inMotion && PropertyManager.getBoolean("antialiasing", true);
+            boolean okToAntialias = !isInMotion() && PropertyManager.getBoolean("antialiasing", true);
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
         }
