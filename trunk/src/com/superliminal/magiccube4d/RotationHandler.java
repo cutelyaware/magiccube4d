@@ -67,6 +67,7 @@ public class RotationHandler
 					{0,0,1,0},
 					{0,0,0,1}
 				};
+		viewMat4d = mat;
 		VecMath.gramschmidt( viewMat4d, viewMat4d );
 	}
 	
