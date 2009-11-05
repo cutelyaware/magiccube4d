@@ -18,6 +18,8 @@ import java.awt.*;
  */
 @SuppressWarnings("serial")
 public class MacroControls extends JPanel {
+	private static final int MAX_BUTTON_WIDTH = 140;
+	
     /**
      * Reports Macro activity.
      */
@@ -85,6 +87,7 @@ public class MacroControls extends JPanel {
                     app.apply(macro, false);
                 }
             });
+            forward.setPreferredSize(new Dimension(Math.min(forward.getPreferredSize().width, MAX_BUTTON_WIDTH), forward.getPreferredSize().height));
             String appropriatePuzzle =  macro.getPuzzleString();
             appropriatePuzzle = appropriatePuzzle.substring(0, appropriatePuzzle.indexOf(' '));
             forward.setEnabled(appropriatePuzzle.equals(schlafli));
@@ -101,7 +104,7 @@ public class MacroControls extends JPanel {
             reverse.setToolTipText(appropriatePuzzle);
             grid.add(reverse);
         }
-        SpringUtilities.makeCompactGrid(grid, macros.length, 3, 0, 0, 0, 0);
+        SpringUtilities.makeCompactGrid(grid, macros.length, 3, 0, 0, 1, 2);
         JPanel tmp = new JPanel();
         tmp.add(grid);
         JScrollPane gridScroll = new JScrollPane(tmp);

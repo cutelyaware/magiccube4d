@@ -18,6 +18,7 @@ import javax.swing.event.ChangeListener;
 import com.superliminal.util.ColorButton;
 import com.superliminal.util.FloatSlider;
 import com.superliminal.util.PropertyManager;
+import com.superliminal.util.SpringUtilities;
 import com.superliminal.util.StaticUtils;
 import com.superliminal.util.ResourceUtils;
 
@@ -1173,18 +1174,14 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 }
             });
             
-            JPanel colors = new JPanel();
+            JPanel colors = new JPanel(new SpringLayout());
+            colors.add(new JLabel());
             colors.add(skyColor);
-            colors.add(Box.createVerticalStrut(15));
-            JPanel tmp = new JPanel();
-            tmp.add(drawGround);
-            tmp.add(ground);
-            colors.add(tmp);
-            tmp = new JPanel();
-            tmp.add(drawOutlines);
-            tmp.add(outlinesColor);
-            colors.add(tmp);
-            colors.add(Box.createVerticalGlue());
+            colors.add(drawGround);
+            colors.add(ground);
+            colors.add(drawOutlines);
+            colors.add(outlinesColor);
+            SpringUtilities.makeCompactGrid(colors, 3, 2, 0, 0, 0, 5);
             
             JButton reset = new JButton("Reset To Defaults");
             reset.addActionListener(new ActionListener() {
@@ -1210,9 +1207,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             setLayout(new BorderLayout());
             add(general, "North");
             add(colors, "Center");
-            tmp = new JPanel();
+            //JPanel tmp = new JPanel();
             //tmp.add(reset); // commented out until we can make this work well
-            add(tmp, "South");
+            //add(tmp, "South");
         }
     } // end class PreferencesEditor
 
