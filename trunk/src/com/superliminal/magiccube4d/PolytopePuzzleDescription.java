@@ -810,6 +810,17 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 }
             }
         }
+        
+        if(PropertyManager.getBoolean("debug", false)) {
+        	double maxSqrdVertDist4 = 0;
+        	for(double[] vert : restVerts) {
+        		double distSqrd4 = 0;
+        		for(double c : vert)
+        			distSqrd4 += c*c;
+        		maxSqrdVertDist4 = Math.max(distSqrd4, maxSqrdVertDist4);
+        	}
+        	System.out.println("4D radius: " + Math.sqrt(maxSqrdVertDist4));
+        }
 
         //
         // Now think about the twist grips.
