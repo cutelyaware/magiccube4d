@@ -442,7 +442,17 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         StaticUtils.addHotKey(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), viewcontainer, "Cancel", cancel);
         StaticUtils.addHotKey(KeyEvent.VK_A, viewcontainer, "Apply", last);
         
-        saveasitem.addActionListener(saveas); // no hotkey
+        // no hotkey
+        saveasitem.addActionListener(saveas);
+        
+        // for debugging
+        StaticUtils.addHotKey(KeyEvent.VK_I, viewcontainer, "Ident View", new ProbableAction("Identity View") {
+            @Override
+			public void doit(ActionEvent ae) {
+            	rotations.set4dView(null);
+            	view.repaint();
+            }
+        });
 
         JMenu filemenu = new JMenu("File");
         filemenu.add(openitem);
