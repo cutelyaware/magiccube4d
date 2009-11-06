@@ -685,9 +685,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             final String name = (schlafli==null ? table[i][2] :
                                  schlafli + "  " + table[i][2]);
 
-            // Puzzles with triangles kind of suck so far,
-            // so we might want to leave them out of the menu...
-            boolean allowPuzzlesWithTriangles = false;
+            // Puzzles with triangles have been problematic.
+            boolean allowPuzzlesWithTriangles = true;
             if (!allowPuzzlesWithTriangles)
             {
                 if (schlafli != null && schlafli.indexOf("{3") != -1 && !schlafli.equals( "{3,3,3}" ) )
