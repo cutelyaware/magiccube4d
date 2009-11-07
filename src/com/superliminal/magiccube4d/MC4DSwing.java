@@ -989,7 +989,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 						min = viewScaleModel.getMinimum(),
 						max = viewScaleModel.getMaximum(),
 						cur = viewScaleModel.getValue(),
-						newValue = cur + (max - min) / 300 * mwe.getWheelRotation();
+						newValue = (int) (cur + (max - min) / 100f * mwe.getWheelRotation());
 					//System.out.println("whee! " + " from " +  cur + " to " + newValue + " (" + min + "," + max + ")");
 					viewScaleModel.setValue(newValue);
 				}
