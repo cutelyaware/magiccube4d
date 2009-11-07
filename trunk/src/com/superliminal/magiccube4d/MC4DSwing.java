@@ -1002,9 +1002,10 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 		public PropSlider(final String propname, final Component dependent, double dflt, double min, double max) {
 			super(JSlider.HORIZONTAL, PropertyManager.getFloat(propname, (float)dflt), min, max);
 			setPreferredSize(new Dimension(200, 20));
-			addAdjustmentListener(new AdjustmentListener() {
-                public void adjustmentValueChanged(AdjustmentEvent ae) {
+			addChangeListener(new ChangeListener() {
+				public void stateChanged(ChangeEvent e) {
                     PropertyManager.userprefs.setProperty(propname, ""+(float)getFloatValue());
+                    //System.out.println(propname + ": " + (float)getFloatValue());
                     dependent.repaint();
                 }
             });
@@ -1087,22 +1088,30 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 }
             });
             
-            JPanel sliders = new JPanel(new GridLayout(6, 2));
-            sliders.add(new JLabel("Twist Speed"));
+            class MyLabel extends JLabel {
+            	public MyLabel(String text) { 
+            		super(text); 
+            		setPreferredSize(new Dimension(80, super.getPreferredSize().height));
+            	}
+            }
+            
+            JPanel sliders = new JPanel(new SpringLayout());
+            sliders.add(new MyLabel("Twist Speed"));
             sliders.add(new PropSlider("twistfactor", repainter, 1, .05f, 5));
-            sliders.add(new JLabel("Drag Speed"));
+            sliders.add(new MyLabel("Drag Speed"));
             sliders.add(new PropSlider("dragfactor", repainter, 1, .05f, 5));
-            sliders.add(new JLabel("View Scale"));
-            JScrollBar scaler = new PropSlider("scale", repainter, 1, .1f, 5);
+            sliders.add(new MyLabel("View Scale"));
+            JSlider scaler = new PropSlider("scale", repainter, 1, .1f, 5);
             viewScaleModel = scaler.getModel();
             sliders.add(scaler);
-            sliders.add(new JLabel("Face Shrink"));
+            sliders.add(new MyLabel("Face Shrink"));
             sliders.add(new PropSlider("faceshrink", repainter, MagicCube.FACESHRINK, .1f, 1.5f));
-            sliders.add(new JLabel("Sticker Shrink"));
+            sliders.add(new MyLabel("Sticker Shrink"));
             sliders.add(new PropSlider("stickershrink", repainter, MagicCube.STICKERSHRINK, .1f, 1.5f));
-            sliders.add(new JLabel("Eye W Scale"));
+            sliders.add(new MyLabel("Eye W Scale"));
             sliders.add(new PropSlider("eyew", repainter, MagicCube.EYEW, 1, 10));
             sliders.setMaximumSize(new Dimension(400, 20));
+            SpringUtilities.makeCompactGrid(sliders, 6, 2, 0, 0, 0, 0);
             JPanel general = new JPanel();
             general.setLayout(new BoxLayout(general, BoxLayout.Y_AXIS));
             general.add(sliders);
