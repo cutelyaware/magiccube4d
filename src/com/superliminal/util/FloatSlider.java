@@ -3,7 +3,10 @@ package com.superliminal.util;
 import java.awt.*;
 import java.awt.event.*;
 
-import javax.swing.JScrollBar;
+import javax.swing.JSlider;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * Floating point version of JSlider.
@@ -19,69 +22,58 @@ import javax.swing.JScrollBar;
  * @author Melinda Green & Don Hatch
  */
 @SuppressWarnings("serial")
-public class FloatSlider extends JScrollBar {
-    private final static int DEFAULT_RANGE = 1000; // number of discrete steps
-    private final static int DEFAULT_VISIBLE = 20; // pixel width of thumb
+public class FloatSlider extends JSlider {
     private double curFloat, minFloat, maxFloat;
     private boolean isLogScale;
+    
+    @Override
+    protected void fireStateChanged() {
+        int 
+            ival = FloatSlider.super.getValue(),
+            min = FloatSlider.super.getMinimum(),
+            max = FloatSlider.super.getMaximum();
+        double dval = transformRange(false,      min,      max,  ival,
+                                     isLogScale, minFloat, maxFloat);
+        // It's important to finish setting the float value before users get notified 
+        // about the change otherwise they'll get the old value when they ask.
+        setFloatValue(dval);  
+        super.fireStateChanged();
+    }
 
     /**
      * constructs a FloatSlider using a given number of slider positions.
-     * @param orientation - Scrollbar.VERTICAL or Scrollbar.HORIZONTAL.
+     * @param orientation - SwingConstants.VERTICAL or SwingConstants.HORIZONTAL.
      * @param cur - real valued initial value.
-     * @param vis - same as in Scrollbar base class.
      * @param min - real valued range minimum.
      * @param max - real valued range maximum.
      * @param log - log scale if true, linear otherwise.
      */
-    public FloatSlider(int orientation, double cur, int vis, double min, double max, int res, boolean log) {
-        super(orientation, 0, vis, 0, res+vis);
+    public FloatSlider(int orientation, double cur, double min, double max, boolean log) {
+        super(orientation);
+        super.getModel().setRangeProperties(1, 1, 0, 100, false);
+        super.setExtent(0);
+        minFloat = min;
+        maxFloat = max;
+        curFloat = cur;
         isLogScale = log;
-        setAll(min, max, cur);
-        addAdjustmentListener(new AdjustmentListener() {
-            public void adjustmentValueChanged(AdjustmentEvent ae) {
-                int 
-                    ival = FloatSlider.super.getValue(),
-                    vis = FloatSlider.super.getVisibleAmount(),
-                    min = FloatSlider.super.getMinimum(),
-                    max = FloatSlider.super.getMaximum();
-                double dval = transformRange(false,      min,      max-vis,  ival,
-                                             isLogScale, minFloat, maxFloat);
-                //System.out.println("getting: ival="+ival+" -> dval="+dval);
-                setFloatValue(dval);     
-            }
-        });
+        setFloatValue(cur);
     }
     /**
      * uses default scale (linear).
      */
-    public FloatSlider(int orientation, double cur, int vis, double min, double max, int res) {
-        this(orientation, cur, vis, min, max, res, false);
-    }
-    /**
-     * uses default visible(20) and resolution(1000).
-     */
-    public FloatSlider(int orientation, double cur, double min, double max, boolean log) {
-        this(orientation, cur, DEFAULT_VISIBLE, min, max, DEFAULT_RANGE, log);
-    }
-    /**
-     * uses default visible(20), resolution(1000), and scale (linear).
-     */
     public FloatSlider(int orientation, double cur, double min, double max) {
-        this(orientation, cur, DEFAULT_VISIBLE, min, max, DEFAULT_RANGE, false);
+        this(orientation, cur, min, max, false);
     }
-
     /**
      * returns the closest integer in the range of the actual int extents of the base Scrollbar.
      */
     protected int rangeValue(double dval) {
         dval = clamp(dval, minFloat, maxFloat);
         int 
-            vis = super.getVisibleAmount(),
             min = super.getMinimum(),
             max = super.getMaximum();
         //System.out.println("setting: dval="+dval+" -> ival="+ival);
-        return (int)Math.round(transformRange(isLogScale, minFloat, maxFloat, dval, false, min, max-vis));
+        return (int)Math.round(transformRange(isLogScale, minFloat, maxFloat, dval, false, min, max));
     }
 
     public double getFloatMinimum() {
@@ -104,10 +96,7 @@ public class FloatSlider extends JScrollBar {
         // update the model
         curFloat = newcur;
         // update the view
-        super.setValues(rangeValue(newcur),
-                        super.getVisibleAmount(),
-                        super.getMinimum(),
-                        super.getMaximum());
+        super.setValue(rangeValue(newcur));
     }
 
     public void setAll(double newmin, double newmax, double newcur) {
@@ -149,12 +138,15 @@ public class FloatSlider extends JScrollBar {
      */
     public static void main(String args[]) {
         Frame frame = new Frame("FloatSlider example");
-        final FloatSlider rslider = new FloatSlider(Scrollbar.HORIZONTAL, 10f, 1f, 100f, true);
+        final FloatSlider rslider = new FloatSlider(SwingConstants.HORIZONTAL, 10f, 1f, 100f, true);
         final Label curValue = new Label("FloatSlider value: " + rslider.getFloatValue());
-        rslider.addAdjustmentListener(new AdjustmentListener() {
-            public void adjustmentValueChanged(AdjustmentEvent ae) {
+        rslider.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
                 curValue.setText("FloatSlider value: " + rslider.getFloatValue());
-            }
+                curValue.repaint();
+                System.out.println("user got: " + rslider.getFloatValue() + " ival: " + rslider.getValue());
+			}
         });
         Container mainpanel = new Panel();
         mainpanel.setLayout(new GridLayout(3, 1));
