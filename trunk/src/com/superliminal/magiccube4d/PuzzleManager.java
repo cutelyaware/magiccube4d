@@ -468,10 +468,7 @@ public class PuzzleManager
         //float scaleFudge3d = 1.f;
         float scaleFudge2d = 4.7f;
 
-        float viewMat4df[][] = new float[4][4];
-        for( int i=0; i<4; ++i )
-        for( int j=0; j<4; ++j )
-        	viewMat4df[i][j] = (float)viewMat4d[i][j];
+        float viewMat4df[][] = VecMath.doubleToFloat( viewMat4d );
         
         // XXX probably doing this more than necessary... when it's a rest frame that hasn't changed
         PipelineUtils.computeFrame(
@@ -494,7 +491,9 @@ public class PuzzleManager
                           {xOff, yOff}},
             VecMath.normalize(towardsSunVec),
             groundNormal,
-            groundOffset);
+            groundOffset,
+            view == null
+        );
         
         return frameToDrawInto;
     } // end computeFrame

@@ -103,7 +103,9 @@ public class PipelineUtils
                                     
                                     float unitTowardsSunVec[/*3*/],
                                     float groundNormal[/*3*/], // null if no shadows
-                                    float groundOffset)
+                                    float groundOffset,
+                                    
+    								boolean do3dStepsOnly )
     {
         if (verboseLevel >= 2) System.out.println("    in PipelineUtils.computeFrame");
 
@@ -184,10 +186,8 @@ public class PipelineUtils
         // Rotate/scale in 4d
         //
         {
-            // Make it so circumradius is 6.
-            // XXX I have no basis for this except that empirically it makes
-            // XXX the 3^4 hypercube match what the puzzle usually does
-            float scale4d = 6.f/puzzleDescription.circumRadius();
+            // Normalize all the puzzles to have a circum radius of 1.
+            float scale4d = 1.f/puzzleDescription.circumRadius();
             float rotScale4d[][] = VecMath.mxs(rot4d, scale4d); // XXX MEMORY ALLOCATION
             float temp[] = new float[4]; // XXX MEMORY ALLOCATION
             for (int iVert = 0; iVert < verts.length; ++iVert)
@@ -215,7 +215,7 @@ public class PipelineUtils
                 float w = eyeW - verts[i][3];
                 float invW = 1.f/w;
                 for (int j = 0; j < 3; ++j)
-                    verts[i][j] *= invW;
+                    verts[i][j] *= eyeW * invW;
                 verts[i][3] = w; // keep this for future reference
             }
         }
@@ -250,6 +250,13 @@ public class PipelineUtils
         }
         if (verboseLevel >= 3) System.out.println("        after front-cell cull: verts = "+com.donhatchsw.util.Arrays.toStringCompact(verts));
 
+        // Are we just doing the 3D steps?
+        if( do3dStepsOnly )
+        {
+        	frame.drawListSize = drawListSize;
+        	return;
+        }
+        
         //
         // If doing shadows,
         // project the shadows onto the ground plane.
