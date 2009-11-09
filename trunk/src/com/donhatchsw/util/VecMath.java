@@ -42,6 +42,28 @@ public final class VecMath
 {
     private VecMath() {} // uninstantiatable
 
+    public static float[] doubleToFloat(double in[])
+    {
+        float out[] = new float[in.length];
+        for (int i = 0; i < in.length; ++i)
+            out[i] = (float)in[i];
+        return out;
+    }
+    public static float[][] doubleToFloat(double in[][])
+    {
+        float out[][] = new float[in.length][];
+        for (int i = 0; i < in.length; ++i)
+            out[i] = doubleToFloat(in[i]);
+        return out;
+    }
+    
+    public static double[] floatToDouble(float in[])
+    {
+        double out[] = new double[in.length];
+        for (int i = 0; i < in.length; ++i)
+            out[i] = (double)in[i];
+        return out;
+    }
 
     /** vector plus vector */
     public static void vpv(double result[], double v0[], double v1[])
