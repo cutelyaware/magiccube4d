@@ -26,7 +26,7 @@ public class MagicCube {
 	public final static String DEFAULT_PUZZLE = "{4,3,3}";
 	public final static String SUPPORTED_PUZZLES[][] = {
         {"{3,3,3}",  "1,2,3,4,5,6,7,8,9",	"Simplex"},
-        {"{3}x{4}",  "1,2,3,4",				"Triangular Duoprism"}, // FIX: More than 4 slices creates slivers.
+        {"{3}x{4}",  "1,2,3,4,5,6,7",		"Triangular Duoprism"},
         {"{4,3,3}",  "1,2,3,4,5,6,7,8,9",	"Hypercube"},
         {"{5}x{4}",  "1,2,3,4,5,6,7",		"Pentagonal Duoprism"},
         {"{6}x{4}",  "1,2,3,4,5,6,7", 		"Hexagonal Duoprism"},
@@ -35,8 +35,8 @@ public class MagicCube {
         {"{9}x{4}",  "1,2,3,4,5,6,7",		"Nonagonal Duoprism"},
         {"{10}x{4}", "1,2,3,4,5,6,7",		"Decagonal Duoprism"},
         {"{100}x{4}","1,3",					"Onehundredagonal Duoprism"},
-        {"{3}x{3}",  "1,2,3,4",				""}, // FIX: More than 4 slices creates slivers.
-        {"{3}x{5}",  "1,2,3,4",				""}, // FIX: More than 4 slices creates slivers.
+        {"{3}x{3}",  "1,2,3,4,5,6,7",		""},
+        {"{3}x{5}",  "1,2,3,4,5,6,7",		""},
         {"{5}x{10}", "1,2,3",				""},
         {"{5}x{5}",  "1,2,3,4,5,6,7",		""}, // TODO: look at twisting on 2 for all uniform duoprisms.
         {"{6}x{6}",  "1,2,3,4,5,6,7",		""},

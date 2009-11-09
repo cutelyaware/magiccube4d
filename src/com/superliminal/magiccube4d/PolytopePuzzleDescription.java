@@ -375,6 +375,8 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         {
             for (int iFace = 0; iFace < nFaces; ++iFace)
             {
+            	CSG.Polytope face = originalFaces[iFace];
+            	
                 double fullThickness = 0.;
                 {
                     // iVert = index of some vertex on face iFace
@@ -422,8 +424,18 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 int nNearCuts = 0, nFarCuts = 0;
                 double sliceThickness = 0;
                 
-                // Special case the simplex puzzles.
-                if( schlafliProduct.equals( "{3,3,3}" ) )
+                // Warning! edit with caution (sliver removal heuristic is tuned to these values).
+                // If you edit, you should rerun the module test at a minimum.
+            	// NOTES: In the simplex case, making this too close to 1 was affecting drawing
+            	// 		  and making it too far from 1 was affecting grip detection. Argh!
+                final double sliceMultiplier = 0.99999;
+                final double sliceMultiplierSimplex = 0.995;
+                
+                // Special case the simplex puzzles and triangular duoprisms.
+                boolean isSimplex = schlafliProduct.equals( "{3,3,3}" );
+                boolean slicingTriangularPrism = ( schlafliProduct.indexOf("{3}") != -1 && face.facets.length != 5 );
+                boolean isUniformTriangularDuoprism = schlafliProduct.equals( "{3}x{3}" ) || schlafliProduct.equals( "{3}*{3}" );
+                if( isSimplex || slicingTriangularPrism || isUniformTriangularDuoprism )
                 {
                 	// Disallow fractional lengths for these puzzles.
                 	length = ceilLength;
@@ -431,11 +443,11 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 	sliceThickness = fullThickness / length;
                 	
                 	// We need the sliver hack for these because the slicer can't handle it otherwise.
-                	// Warning! edit with caution (sliver removal heuristic is tuned to this).
-                	// Also, in the simplex case, making this too close to 1 was affecting
-                	// drawing, and making it too far from 1 was affecting grip detection. Argh!
-                    sliceThickness *= .995;
-                    needSliverRemoval = true;
+                	if( isSimplex )
+                		sliceThickness *= sliceMultiplierSimplex;
+                	else
+                		sliceThickness *= sliceMultiplier;
+                	needSliverRemoval = true;
                 	
                 	// There are no opposite faces for the simplex,
                     // and so we need to do all the cuts on the near side.
@@ -469,7 +481,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 	                	needSliverRemoval = true;
 	                	
 	                	// Warning! edit with caution (sliver removal heuristic is tuned to this).
-	                	sliceThickness *= .9999;
+	                	sliceThickness *= sliceMultiplier;
 	                }
 
 	                /*
