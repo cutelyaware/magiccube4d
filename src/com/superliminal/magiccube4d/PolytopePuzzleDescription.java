@@ -668,11 +668,12 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             }
         }
 
-        faceCenters = doubleToFloat(faceCentersD);
+        faceCenters = VecMath.doubleToFloat(faceCentersD);
         float stickerCentersMinusFaceCentersF[][] = new float[nStickers][];
         {
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
-                stickerCentersMinusFaceCentersF[iSticker] = doubleToFloat(VecMath.vmv(stickerCentersD[iSticker], faceCentersD[sticker2face[iSticker]]));
+                stickerCentersMinusFaceCentersF[iSticker] = VecMath.doubleToFloat(
+                		VecMath.vmv(stickerCentersD[iSticker], faceCentersD[sticker2face[iSticker]]));
         }
 
 
@@ -803,7 +804,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                     int iVert = stickerInds[iSticker][j][k];
                     if (vertsMinusStickerCenters[iVert] == null)
                     {
-                        vertsMinusStickerCenters[iVert] = doubleToFloat(VecMath.vmv(restVerts[iVert], stickerCentersD[iSticker]));
+                        vertsMinusStickerCenters[iVert] = VecMath.doubleToFloat(VecMath.vmv(restVerts[iVert], stickerCentersD[iSticker]));
                         vertStickerCentersMinusFaceCenters[iVert] = stickerCentersMinusFaceCentersF[iSticker];
                         vertFaceCenters[iVert] = faceCenters[iFace];
                     }
@@ -880,7 +881,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                         if( schlafliProduct.equals( "{3,3,3}" ) && length <= 2 )
                         	VecMath.lerp(gripCenterD, gripCenterD, faceCentersD[iFace], .3);
 
-                        gripCentersF[iGrip] = doubleToFloat(gripCenterD);
+                        gripCentersF[iGrip] = VecMath.doubleToFloat(gripCenterD);
                         gripDims[iGrip] = iDim;
                         grip2face[iGrip] = iFace;
                         
@@ -920,7 +921,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             for (int iElt = 0; iElt < originalElements[iDim].length; ++iElt)
             {
                 CSG.cgOfVerts(eltCenter, originalElements[iDim][iElt]);
-                nicePointsToRotateToCenter[iNicePoint++] = doubleToFloat(eltCenter);
+                nicePointsToRotateToCenter[iNicePoint++] = VecMath.doubleToFloat(eltCenter);
 
             }
             Assert(iNicePoint == nNicePoints);
@@ -954,20 +955,6 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     //
     // Utilities...
     //
-        private static float[] doubleToFloat(double in[])
-        {
-            float out[] = new float[in.length];
-            for (int i = 0; i < in.length; ++i)
-                out[i] = (float)in[i];
-            return out;
-        }
-        private static float[][] doubleToFloat(double in[][])
-        {
-            float out[][] = new float[in.length][];
-            for (int i = 0; i < in.length; ++i)
-                out[i] = doubleToFloat(in[i]);
-            return out;
-        }
 
         // magic crap used in a couple of methods below
         private double[][] getTwistMat(int gripIndex, int dir, double frac)
@@ -1153,7 +1140,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 slicemask = 1; // XXX is this the right place for this? lower and it might be time consuming, higher and too many callers will have to remember to do it
 
             double matD[][] = getTwistMat(gripIndex, dir, frac);
-            float matF[][] = doubleToFloat(matD);
+            float matF[][] = VecMath.doubleToFloat(matD);
 
             float restVerts[][] = new float[nVerts()][nDims()];
             computeStickerVertsAtRest(restVerts, faceShrink, stickerShrink);

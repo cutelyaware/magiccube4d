@@ -61,36 +61,18 @@ public class Macro {
     public void addMove(MagicCube.TwistData move) {
         moves.apply(move);
     }
-
-    // XXX - This is copied from PolytopePuzzleDescription.
-    //		 Move to a shared location.
-    private static float[] doubleToFloat(double in[])
-    {
-        float out[] = new float[in.length];
-        for (int i = 0; i < in.length; ++i)
-            out[i] = (float)in[i];
-        return out;
-    }
-    
-    private static double[] floatToDouble(float in[])
-    {
-        double out[] = new double[in.length];
-        for (int i = 0; i < in.length; ++i)
-            out[i] = (double)in[i];
-        return out;
-    }
     
     public static double[] getMacroRefCoords( MagicCube.Stickerspec grip, PuzzleDescription puzzle )
     {
     	// When/if we have sticker based macros, this method will need to be extended.
-    	return floatToDouble( puzzle.getGripCoords( grip.id_within_puzzle ) );
+    	return VecMath.floatToDouble( puzzle.getGripCoords( grip.id_within_puzzle ) );
     }
     
     public static double[] getMacroRefFaceCoords( MagicCube.Stickerspec grip, PuzzleDescription puzzle )
     {
     	// When/if we have sticker based macros, this method will need to be extended.
     	int faceIndex = puzzle.getGrip2Face()[grip.id_within_puzzle];
-    	return floatToDouble( puzzle.getFaceCenter( faceIndex ) );
+    	return VecMath.floatToDouble( puzzle.getFaceCenter( faceIndex ) );
     }
     
     /**
@@ -130,9 +112,9 @@ public class Macro {
             
             // Transform to new grip.
             int gripIndex = move.grip.id_within_puzzle;
-            double[] gripCoords = floatToDouble( puzzle.getGripCoords( gripIndex ) );
+            double[] gripCoords = VecMath.floatToDouble( puzzle.getGripCoords( gripIndex ) );
             double[] newCoords = VecMath.vxm( gripCoords, transform );
-            int newGripIndex = puzzle.getClosestGrip( doubleToFloat( newCoords ) );
+            int newGripIndex = puzzle.getClosestGrip( VecMath.doubleToFloat( newCoords ) );
             move.grip.id_within_puzzle = newGripIndex;
 
             twists[i] = move;
