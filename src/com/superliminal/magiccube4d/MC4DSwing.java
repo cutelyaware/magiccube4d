@@ -1109,7 +1109,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             sliders.add(new MyLabel("Sticker Shrink"));
             sliders.add(new PropSlider("stickershrink", repainter, MagicCube.STICKERSHRINK, .1f, 1.5f));
             sliders.add(new MyLabel("Eye W Scale"));
-            sliders.add(new PropSlider("eyew", repainter, MagicCube.EYEW, 1, 10));
+            sliders.add(new PropSlider("eyew", repainter, MagicCube.EYEW, .5f, 4));
             sliders.setMaximumSize(new Dimension(400, 20));
             SpringUtilities.makeCompactGrid(sliders, 6, 2, 0, 0, 0, 0);
             JPanel general = new JPanel();

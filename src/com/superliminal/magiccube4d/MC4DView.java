@@ -12,6 +12,7 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
+import com.donhatchsw.util.VecMath;
 import com.superliminal.util.PropertyManager;
 import com.superliminal.util.StaticUtils;
 
@@ -295,17 +296,26 @@ public class MC4DView extends Component {
                 MagicCube.SUNVEC,
                 false, // Don't let shadow polygons muck up the calculation.
                 null);
-    	float maxVertDist = -1;
+    	
+    	float radius3d = -1;
+    	int stickerInds[][][] = puzzleManager.puzzleDescription.getStickerInds();
     	for(int i=0; i<frame.drawListSize; i++) {
-    		float dist = Vec_h._NORMSQRD2(frame.verts[i]);
-    		maxVertDist = Math.max(dist, maxVertDist);
+    		int item[] = frame.drawList[i];
+            int iSticker = item[0];
+            int iPolyWithinSticker = item[1];
+            int poly[] = stickerInds[iSticker][iPolyWithinSticker];
+            for(int j=0; j<poly.length; j++) {
+            	int vertIndex = poly[j];
+        		frame.verts[vertIndex][3] = 0;	// The pipeline leaves this filled out.
+        		float dist = VecMath.norm(frame.verts[vertIndex]);
+        		radius3d = Math.max(dist, radius3d);    	
+            }
     	}
-    	float visibleRadius = (float) Math.sqrt(maxVertDist);
-    	//System.out.println("visible radius: " + visibleRadius);
+    	//System.out.println("visible radius: " + radius3d);
     	
     	// This is what corrects the view scale for changes in puzzle and puzzle geometry.
     	// To remove this correction, just set polys2pixelSF = minpix.
-        polys2pixelsSF = minpix/(2*visibleRadius);
+        polys2pixelsSF = minpix/(1.25f*radius3d);
     } // end updateViewFactors
     
 
