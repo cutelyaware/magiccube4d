@@ -213,9 +213,8 @@ public class PipelineUtils
             for (int i = 0; i < verts.length; ++i)
             {
                 float w = eyeW - verts[i][3];
-                float invW = 1.f/w;
                 for (int j = 0; j < 3; ++j)
-                    verts[i][j] *= eyeW * invW;
+                    verts[i][j] *= eyeW/w;
                 verts[i][3] = w; // keep this for future reference
             }
         }

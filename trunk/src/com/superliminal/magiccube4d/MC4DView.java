@@ -12,7 +12,6 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
-import com.donhatchsw.util.VecMath;
 import com.superliminal.util.PropertyManager;
 import com.superliminal.util.StaticUtils;
 
@@ -285,6 +284,7 @@ public class MC4DView extends Component {
         yOff = ((H>W) ? (H-W)/2 : 0) + minpix/2;
 	    
     	// Generate view-independent vertices for the current puzzle in its original 4D orientation, centered at the origin.
+        final boolean do3DStepsOnly = true;
     	PipelineUtils.AnimFrame frame = puzzleManager.computeFrame(
             	PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),
             	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
@@ -295,6 +295,7 @@ public class MC4DView extends Component {
                 0, 0, // No offset so that verts are centered.
                 MagicCube.SUNVEC,
                 false, // Don't let shadow polygons muck up the calculation.
+                do3DStepsOnly,
                 null);
     	
     	float radius3d = -1;
@@ -306,11 +307,11 @@ public class MC4DView extends Component {
             int poly[] = stickerInds[iSticker][iPolyWithinSticker];
             for(int j=0; j<poly.length; j++) {
             	int vertIndex = poly[j];
-        		frame.verts[vertIndex][3] = 0;	// The pipeline leaves this filled out.
-        		float dist = VecMath.norm(frame.verts[vertIndex]);
+        		float dist = Vec_h._NORMSQRD3(frame.verts[vertIndex]);
         		radius3d = Math.max(dist, radius3d);    	
             }
     	}
+    	radius3d = (float)Math.sqrt( radius3d );
     	//System.out.println("visible radius: " + radius3d);
     	
     	// This is what corrects the view scale for changes in puzzle and puzzle geometry.
@@ -388,6 +389,7 @@ public class MC4DView extends Component {
         // paint the puzzle
         if (puzzleManager != null && puzzleManager.puzzleDescription != null)
         {
+        	final boolean do3DStepsOnly = false;
         	PipelineUtils.AnimFrame frame = puzzleManager.computeFrame(
                 	PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),
                 	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
@@ -399,6 +401,7 @@ public class MC4DView extends Component {
                     yOff,
                     MagicCube.SUNVEC,
                     PropertyManager.getBoolean("shadows", true),
+                    do3DStepsOnly,
                     this);
         	puzzleManager.paintFrame(g,
         			frame, 
