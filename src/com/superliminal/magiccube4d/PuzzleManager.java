@@ -385,6 +385,7 @@ public class PuzzleManager
         int yOff,
         float towardsSunVec[], // used if showShadows is true
         boolean showShadows,
+        boolean do3dStepsOnly,
         Component view)
     {
         // steal PolygonManager's stuff-- this should be an interface but that's not allowed here apparently
@@ -492,7 +493,7 @@ public class PuzzleManager
             VecMath.normalize(towardsSunVec),
             groundNormal,
             groundOffset,
-            view == null
+            do3dStepsOnly
         );
         
         return frameToDrawInto;
