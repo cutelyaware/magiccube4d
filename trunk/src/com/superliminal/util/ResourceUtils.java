@@ -38,12 +38,18 @@ public class ResourceUtils {
     
     public static String readFileFromURL(URL url) {
         StringBuffer fBuf = new StringBuffer();
+        String lastLine = null;
         try {
             InputStream in=url.openStream (); // Open a stream to the file using the URL.
-            BufferedReader dis = new BufferedReader (new InputStreamReader (in));
+            BufferedReader bis = new BufferedReader (new InputStreamReader (in));
             String line;
-            while ( (line = dis.readLine ()) != null)
-                fBuf.append(line).append(System.getProperty("line.separator"));
+            while ( (line = bis.readLine ()) != null) {
+                fBuf.append(line);
+                if(lastLine != null) {
+                	lastLine = line;
+                	fBuf.append(System.getProperty("line.separator"));
+                }
+            }
             in.close ();
         }
         catch (IOException e) {

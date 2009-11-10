@@ -599,15 +599,13 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             public void actionPerformed(ActionEvent arg0) {
             	
             	// Get the minor version from our resource.
-            	URL url = this.getClass().getClassLoader().getResource( "version.txt" );
-            	String minorVersion = "";
-				try {
-					BufferedReader reader = new BufferedReader( new FileReader( url.getPath() ) );
-					minorVersion = "." + reader.readLine();
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
+            	String minorVersion = ResourceUtils.readRelativeFile("version.txt");
+            	if(minorVersion == null) {
+            		System.err.println("Couldn't read minor version number");
+            		minorVersion = "";
+            	}
+            	else
+            		minorVersion = "." + minorVersion;
             	
                 JOptionPane.showMessageDialog(MC4DSwing.this, 
                 	"<html><center>" + 
