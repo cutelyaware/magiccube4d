@@ -464,7 +464,7 @@ public class MC4DView extends Component {
                     double totalRotationAngle = 2*Math.PI/order;                    
                     boolean quickly = false;
                     if(PropertyManager.getBoolean("quickmoves", false)) // use some form of quick moves
-                    	if(PropertyManager.getBoolean("quickmacros", true))
+                    	if(PropertyManager.getBoolean("quickmacros", false))
                     		quickly = animating.macroMove;
                     	else
                     		quickly = true;
