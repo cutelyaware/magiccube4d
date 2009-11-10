@@ -887,7 +887,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             }
             else
                 statusLabel.setText("Couldn't find log file '" + log + "'");
-        } // end initPuzzle
+        } // end reading log file
         
         // initialize generic version state
         try {

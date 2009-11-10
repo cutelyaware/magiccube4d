@@ -44,11 +44,11 @@ public class ResourceUtils {
             BufferedReader bis = new BufferedReader (new InputStreamReader (in));
             String line;
             while ( (line = bis.readLine ()) != null) {
-                fBuf.append(line);
-                if(lastLine != null) {
+                if(lastLine == null)
                 	lastLine = line;
+                else
                 	fBuf.append(System.getProperty("line.separator"));
-                }
+                fBuf.append(line);
             }
             in.close ();
         }
