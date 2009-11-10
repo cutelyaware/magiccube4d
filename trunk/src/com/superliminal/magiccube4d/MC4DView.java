@@ -288,7 +288,7 @@ public class MC4DView extends Component {
     	PipelineUtils.AnimFrame frame = puzzleManager.computeFrame(
             	PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),
             	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
-    			new RotationHandler(), // It's important to force the frame into a standard 4D orientation.
+    			this.rotationHandler,
                 PropertyManager.getFloat("eyew", MagicCube.EYEW),
                 MagicCube.EYEZ,
                 1, // get coords in model coords
