@@ -796,6 +796,12 @@ public final class CSG
                     while (someVertexOnFacet.dim > 0)
                         someVertexOnFacet = someVertexOnFacet.facets[0].p;
                     double offset = VecMath.dot(normal, someVertexOnFacet.getCoords());
+                    
+                    // Make sure the offset is positive.
+                    // NOTE: This was done for the tetrahedral prism only!
+                    if( offset < 0 )
+                    	offset *= -1;
+                    
                     Hyperplane hyperplane = new Hyperplane(normal, offset);
                     Hyperplane hyperplanes[] = {hyperplane};
 
