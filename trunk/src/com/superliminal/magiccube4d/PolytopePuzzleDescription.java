@@ -645,7 +645,6 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             }
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
                 sticker2cubie[iSticker] = mf.find(iSticker);
-
             
             _nCubies = 0;
             for (int iSticker = 0; iSticker < nStickers; ++iSticker)
@@ -656,7 +655,6 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             // XXX note, we could easily collapse the cubie indicies
             // XXX so that they are consecutive, if we cared
         }
-
 
         //
         // Find the face centers and sticker centers.
@@ -887,12 +885,6 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                         // XXX should try to be more scientific...
                         VecMath.lerp(gripCenterD, gripCenterD, faceCentersD[iFace], .01);
                         
-                        // XXX - ugly special casing for a particular puzzle.
-                        // If I don't do this, this puzzle can't twist because all stickers
-                        // are closest to the cell center.
-                        if( schlafliProduct.equals( "{3,3,3}" ) && length <= 2 )
-                        	VecMath.lerp(gripCenterD, gripCenterD, faceCentersD[iFace], .3);
-
                         gripCentersF[iGrip] = VecMath.doubleToFloat(gripCenterD);
                         gripDims[iGrip] = iDim;
                         grip2face[iGrip] = iFace;
@@ -1085,13 +1077,60 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             return gripSymmetryOrders;
         }
         
-        public int getClosestGrip( float pickCoords[/*4*/] )
+        private int getNumColorsForCubie( int cubie )
         {
-        	return getClosestGrip( pickCoords, -1, false );
+        	if( numColorsForCubie != null )
+        		return numColorsForCubie.get( cubie );
+
+        	// We need to calc this.
+        	numColorsForCubie = new java.util.HashMap<Integer,Integer>();
+        	for( int s=0; s<nStickers(); s++ )
+        	{
+        		int c = getSticker2Cubie()[s];
+        		Integer temp = numColorsForCubie.get( c );
+        		if( temp == null )
+        			numColorsForCubie.put( c, 1 );
+        		else
+        			numColorsForCubie.put( c, temp+1 );
+        	}
+        	
+        	return numColorsForCubie.get( cubie );
         }
         
-        public int getClosestGrip( float pickCoords[/*4*/], int faceIndex, boolean is2x2x2Cell )
+        // Map from cubie id to num colors.
+        // See notes when sticker2cubie values are calculated,
+        // for why this needs to be a map.
+        private java.util.HashMap<Integer,Integer> numColorsForCubie;
+        
+        public int getClosestGrip( float pickCoords[/*4*/] )
         {
+        	return getClosestGrip( pickCoords, -1, -1, false );
+        }
+        
+        public int getClosestGrip( float pickCoords[/*4*/], int faceIndex, int stickerIndex, boolean is2x2x2Cell )
+        {
+        	boolean faceValid = -1 != faceIndex;
+        	boolean stickerValid = -1 != stickerIndex;
+        	
+        	// Find the dimension of the grips we want to consider.
+        	int gripDim = -1;
+        	if( stickerValid )
+        	{
+        		if( is2x2x2Cell )
+        			gripDim = 2;
+        		else
+        		{
+		        	int cubie = getSticker2Cubie()[stickerIndex];
+		        	int numColors = getNumColorsForCubie( cubie );
+		        	gripDim = nDims() - numColors;
+		        	
+		        	// This is necessary in some rare situations,
+		        	// e.g. the length-2 simplex has a 5C central piece.
+		        	if( gripDim < 0 )
+		        		gripDim = nDims()-1;
+        		}
+        	}
+	
             int bestIndex = -1;
             float bestDistSqrd = Float.MAX_VALUE;
             for (int i = 0; i < gripCentersF.length; ++i)
@@ -1099,11 +1138,12 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             	// Only consider grips on this face.
             	// This helped some poor behavior on 2x2x2 cells,
             	// and is a good check in general I think.
-            	if( -1 != faceIndex && this.getGrip2Face()[i] != faceIndex )
+            	if( faceValid && this.getGrip2Face()[i] != faceIndex )
             		continue;
             	
-            	if( is2x2x2Cell && gripDims[i] < 2 )
-            		continue;
+        		// Restrict the type of grips we search.
+        		if( stickerValid && gripDims[i] != gripDim )
+        			continue;
             	
                 float thisDistSqrd = VecMath.distsqrd(gripCentersF[i],
                                                       pickCoords);
@@ -1113,6 +1153,8 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                     bestIndex = i;
                 }
             }
+            
+            Assert( -1 != bestIndex );
             return bestIndex;
         }
         public float[/*nDims*/] getClosestNicePointToRotateToCenter(float pickCoords[])
