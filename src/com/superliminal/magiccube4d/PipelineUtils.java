@@ -596,7 +596,7 @@ public class PipelineUtils
     	if( puzzle.getEdgeLength() > 2 )
     	{
     		int ret[] = new int[1];
-    		ret[0] = puzzle.getClosestGrip( stickerCenter, faceIndex, false );
+    		ret[0] = puzzle.getClosestGrip( stickerCenter, faceIndex, stickerIndex, false );
     		return ret;
     	}
     	else
@@ -612,7 +612,7 @@ public class PipelineUtils
     			boolean is2x2x2 = is2x2x2Cell( polyCenter, stickerCenter, faceCenter );
     			float center[] = is2x2x2 ? polyCenter : stickerCenter;
     			
-    			int gripIndex = puzzle.getClosestGrip( center, faceIndex, is2x2x2 );
+    			int gripIndex = puzzle.getClosestGrip( center, faceIndex, stickerIndex, is2x2x2 );
     			if( !grips.contains( gripIndex ) )
     				grips.add( gripIndex );
     		}
@@ -675,7 +675,8 @@ public class PipelineUtils
         if( pickInfo == null )
             return null;
         float center[] = pickInfo.is2x2x2Cell ? pickInfo.polyCenter : pickInfo.stickerCenter;
-        pickInfo.gripIndex = puzzleDescription.getClosestGrip( center, pickInfo.faceIndex, pickInfo.is2x2x2Cell );
+        pickInfo.gripIndex = puzzleDescription.getClosestGrip( 
+        	center, pickInfo.faceIndex, pickInfo.stickerIndex, pickInfo.is2x2x2Cell );
         return pickInfo;
     }
     

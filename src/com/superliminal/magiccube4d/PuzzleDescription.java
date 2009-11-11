@@ -84,7 +84,7 @@ interface PuzzleDescription {
     * The is2x2x2Cell is used to control only looking at a subset of the grips.
     */
     public int getClosestGrip(float pickCoords[/*4*/]);
-    public int getClosestGrip(float pickCoords[/*4*/], int faceIndex, boolean is2x2x2Cell);
+    public int getClosestGrip(float pickCoords[/*4*/], int faceIndex, int stickerIndex, boolean is2x2x2Cell);
 
     /**
     * Get the vertices of the geometry that gets drawn
