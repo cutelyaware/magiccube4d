@@ -424,6 +424,8 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 int nNearCuts = 0, nFarCuts = 0;
                 double sliceThickness = 0;
                 
+                boolean isPrismOfThisFace = Math.abs(-1. - faceOffsets[iFace]) < 1e-6;
+                
                 // Warning! edit with caution (sliver removal heuristic is tuned to these values).
                 // If you edit, you should rerun the module test at a minimum.
             	// NOTES: In the simplex case, making this too close to 1 was affecting drawing
@@ -433,9 +435,10 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 
                 // Special case the simplex puzzles and triangular duoprisms.
                 boolean isSimplex = schlafliProduct.equals( "{3,3,3}" );
+                boolean isTetrahedralPrism = schlafliProduct.indexOf("{3,3}") != -1;
                 boolean slicingTriangularPrism = ( schlafliProduct.indexOf("{3}") != -1 && face.facets.length != 5 );
                 boolean isUniformTriangularDuoprism = schlafliProduct.equals( "{3}x{3}" ) || schlafliProduct.equals( "{3}*{3}" );
-                if( isSimplex || slicingTriangularPrism || isUniformTriangularDuoprism )
+                if( isSimplex || (isTetrahedralPrism && !isPrismOfThisFace) || slicingTriangularPrism || isUniformTriangularDuoprism )
                 {
                 	// Disallow fractional lengths for these puzzles.
                 	length = ceilLength;
@@ -443,7 +446,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 	sliceThickness = fullThickness / length;
                 	
                 	// We need the sliver hack for these because the slicer can't handle it otherwise.
-                	if( isSimplex )
+                	if( isSimplex || isTetrahedralPrism )
                 		sliceThickness *= sliceMultiplierSimplex;
                 	else
                 		sliceThickness *= sliceMultiplier;
@@ -456,8 +459,6 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 }
                 else
                 {
-	                boolean isPrismOfThisFace = Math.abs(-1. - faceOffsets[iFace]) < 1e-6;
-	
 	                // Fractional lengths are basically a hack for pentagons
 	                // and higher gons
 	                // so that the middle edge width can be controlled
@@ -483,13 +484,6 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 	                	// Warning! edit with caution (sliver removal heuristic is tuned to this).
 	                	sliceThickness *= sliceMultiplier;
 	                }
-
-	                /*
-	               		But for triangular prism prism,
-	         			1/4 of full is the nice one for 3
-	              		STILL TBD
-						sliceThickness = fullThickness/4;
-	                */
 	
 	                nNearCuts = ceilLength / 2; // (n-1)/2 if odd, n/2 if even
 	                nFarCuts = face2OppositeFace[iFace]==-1 ? 0 :
