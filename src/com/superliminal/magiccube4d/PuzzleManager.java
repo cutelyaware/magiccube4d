@@ -27,9 +27,15 @@ public class PuzzleManager
     public int puzzleState[] = null;
     public Color faceColors[];
     
+    /**
+     * Reinitializes the puzzleState array of color indices
+     * and fires a puzzle change event.
+     */
     public void resetPuzzleState() {
-    	if(puzzleDescription != null)
-    		puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());
+    	if(puzzleDescription == null)
+    		return;
+		puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());
+		firePuzzleChanged();
     }
 
     //
@@ -61,11 +67,11 @@ public class PuzzleManager
 
 
     // Listener support
-    public static interface PuzzleListener { public void puzzleChanged(Object cbdata); }
+    public static interface PuzzleListener { public void puzzleChanged(); }
     private Set<PuzzleListener> puzzleListeners = new HashSet<PuzzleListener>();
     public void addPuzzleListener(PuzzleListener tl) { puzzleListeners.add(tl); }
     public void removePuzzleListener(PuzzleListener tl) { puzzleListeners.remove(tl); }
-    protected void firePuzzleChanged(Object cbdata) { for(PuzzleListener pl : puzzleListeners) pl.puzzleChanged(cbdata); }
+    protected void firePuzzleChanged() { for(PuzzleListener pl : puzzleListeners) pl.puzzleChanged(); }
     
     static String prettyLength(double length) {
         boolean integralLength = length == (int)length;
@@ -91,8 +97,8 @@ public class PuzzleManager
             	if( newPuzzle != null ) {
             		succeeded = true;
                 	puzzleDescription = newPuzzle;
-            		resetPuzzleState();
             		faceColors = ColorUtils.generateVisuallyDistinctColors(puzzleDescription.nFaces(), .7f, .1f);
+            		resetPuzzleState();
             	}
             	return null;
     		}
@@ -104,7 +110,7 @@ public class PuzzleManager
 			public void done() {
 				if(succeeded) statusLabel.setText(schlafli + "  length = " + finalLengthString);
 				super.done();
-				if(succeeded) firePuzzleChanged(null);
+				if(succeeded) firePuzzleChanged();
 			}
     	};
     	if(inBackground)

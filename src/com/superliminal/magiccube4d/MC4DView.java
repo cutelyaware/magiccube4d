@@ -255,7 +255,7 @@ public class MC4DView extends Component {
         //
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
 			@Override
-			public void puzzleChanged(Object cbdata) {
+			public void puzzleChanged() {
 				updateViewFactors(); // affects puzzle size
 			}
 		});

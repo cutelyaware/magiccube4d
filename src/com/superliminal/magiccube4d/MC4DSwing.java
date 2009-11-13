@@ -350,16 +350,13 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 System.exit(0);
             }
         },
-        // Resets the current puzzle and calls a callback when finished 
-        // if one is supplied in the action event.
         reset = new AbstractAction("Reset") {
             public void actionPerformed(final ActionEvent ae) {
                 scrambleState = SCRAMBLE_NONE; // do first to avoid issue 64 (fanfare on reset).
                 cancel.doit(ae);
-                puzzleManager.resetPuzzleState();
+                puzzleManager.resetPuzzleState(); // also fires puzzle change event.
                 statusLabel.setText("");
                 view.repaint();
-                puzzleManager.firePuzzleChanged( ae.getSource() );
             }
         },
         read = new AbstractAction("Read") {
@@ -479,83 +476,52 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 super("Scramble " + scramblechens);
                 this.scramblechenfrengensen = scramblechens;
             }
-            // This becomes a little crazy but bear with me...
-            // This scramble action runs in the background using a ProgressManager to keep the progress bar updated
-            // during long scrambles of big puzzles. Problem is that it needs to first reset the puzzle
-            // which itself wants to run in the background. If both are allowed to run in background threads
-            // then there is a race condition in which the scramble thread might (read "probably will") complete
-            // before the reset thread which means that the scramble moves will be erased by the reset.
-            // The solution I used to serialize these background threads is to send the scramble callback in the reset 
-            // action event which then gets called by MC4DSwing's puzzle listener after the reset is finished.
-            // Chaining of background tasks like this is risky but it seems to work well. If ever it becomes
-            // suspect, try changing the reset method to not run in the background (change it's progress manager
-            // flag) then unpackage the call method to perform it's work directly after the reset finishes.
             public void doit(ActionEvent e) {
-                progressBar.setVisible(true);
-                reset.actionPerformed(new ActionEvent(new PuzzleManager.PuzzleListener(){
-					@Override
-					public void puzzleChanged(Object cbdata) { // will be called by the reset action when it completes.
-						scrambleState = SCRAMBLE_NONE; // do first to avoid issue 62 (fanfare on scramble).
-		                progressBar.setVisible(true);
-		                new ProgressManager(progressBar) {
-							@Override
-							protected Void doInBackground() throws Exception {
-				                int previous_face = -1;
-				                int totalTwistsNeededToFullyScramble = 
-				                		puzzleManager.puzzleDescription.nFaces() // needed twists is proportional to nFaces
-				                		* (int)puzzleManager.puzzleDescription.getEdgeLength() // and to number of slices
-				                		* 2; // and to a fudge factor that brings the 3^4 close to the original 40 twists.
-				                int scrambleTwists = scramblechenfrengensen == -1 ? totalTwistsNeededToFullyScramble : scramblechenfrengensen;
-								Random rand = new Random();
-								init("Scrambling", scrambleTwists);
-				                for(int s = 0; s < scrambleTwists; s++) {
-				                    // select a random grip that is unrelated to the last one (if any)
-				                    int iGrip, iFace, order;
-				                    do {
-				                    	iGrip = puzzleManager.getRandomGrip();
-				                        iFace = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
-				                        order = puzzleManager.puzzleDescription.getGripSymmetryOrders()[iGrip];
-				                    }
-				                    while (
-				                        order < 2 || // don't use 360 degree twists
-				                        iFace == previous_face || // mixing it up
-				                        (previous_face!=-1 && puzzleManager.puzzleDescription.getFace2OppositeFace()[previous_face] == iFace));
-				                    previous_face = iFace;
-				                    int gripSlices = puzzleManager.puzzleDescription.getNumSlicesForGrip(iGrip);
-				                    int slicemask = 1<<rand.nextInt(gripSlices);
-				                    int dir = rand.nextBoolean() ? -1 : 1;
-				                    // apply the twist to the puzzle state.
-				                    puzzleManager.puzzleDescription.applyTwistToState(
-				                    		puzzleManager.puzzleState,
-				                            iGrip,
-				                            dir,
-				                            slicemask);
-				                    // and save it in the history.
-				                    MagicCube.Stickerspec ss = new MagicCube.Stickerspec();
-				                    ss.id_within_puzzle = iGrip; // slamming new id. do we need to set the other members?
-				                    ss.face = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
-				                    hist.apply(ss, dir, slicemask);
-				                    updateProgress(s);
-				                	//System.out.println("Adding scramble twist grip: " + iGrip + " dir: " + dir + " slicemask: " + slicemask);
-				                }
-				
-								// TODO Auto-generated method stub
-								return null;
-							} // end doInBackground
-
-							@Override
-							public void done() {
-				                hist.mark(History.MARK_SCRAMBLE_BOUNDARY);
-				                view.repaint();
-				                boolean fully = scramblechenfrengensen == -1;
-				                scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL;
-				                statusLabel.setText(fully ? "Fully Scrambled" : scramblechenfrengensen + " Random Twist" + (scramblechenfrengensen==1?"":"s"));
-	                            updateTwistsLabel();
-	                            super.done();
-							}
-				        }.execute();
-					}
-				}, 0, "callback"));
+				scrambleState = SCRAMBLE_NONE; // do first to avoid issue 62 (fanfare on scramble).
+                reset.actionPerformed(e);
+                int previous_face = -1;
+                int totalTwistsNeededToFullyScramble = 
+                		puzzleManager.puzzleDescription.nFaces() // needed twists is proportional to nFaces
+                		* (int)puzzleManager.puzzleDescription.getEdgeLength() // and to number of slices
+                		* 2; // and to a fudge factor that brings the 3^4 close to the original 40 twists.
+                int scrambleTwists = scramblechenfrengensen == -1 ? totalTwistsNeededToFullyScramble : scramblechenfrengensen;
+				Random rand = new Random();
+                for(int s = 0; s < scrambleTwists; s++) {
+                    // select a random grip that is unrelated to the last one (if any)
+                    int iGrip, iFace, order;
+                    do {
+                    	iGrip = puzzleManager.getRandomGrip();
+                        iFace = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
+                        order = puzzleManager.puzzleDescription.getGripSymmetryOrders()[iGrip];
+                    }
+                    while (
+                        order < 2 || // don't use 360 degree twists
+                        iFace == previous_face || // mixing it up
+                        (previous_face!=-1 && puzzleManager.puzzleDescription.getFace2OppositeFace()[previous_face] == iFace));
+                    previous_face = iFace;
+                    int gripSlices = puzzleManager.puzzleDescription.getNumSlicesForGrip(iGrip);
+                    int slicemask = 1<<rand.nextInt(gripSlices);
+                    int dir = rand.nextBoolean() ? -1 : 1;
+                    // apply the twist to the puzzle state.
+                    puzzleManager.puzzleDescription.applyTwistToState(
+                    		puzzleManager.puzzleState,
+                            iGrip,
+                            dir,
+                            slicemask);
+                    // and save it in the history.
+                    MagicCube.Stickerspec ss = new MagicCube.Stickerspec();
+                    ss.id_within_puzzle = iGrip; // slamming new id. do we need to set the other members?
+                    ss.face = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
+                    hist.apply(ss, dir, slicemask);
+                	//System.out.println("Adding scramble twist grip: " + iGrip + " dir: " + dir + " slicemask: " + slicemask);
+				   
+	                hist.mark(History.MARK_SCRAMBLE_BOUNDARY);
+	                view.repaint();
+	                boolean fully = scramblechenfrengensen == -1;
+	                scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL;
+	                statusLabel.setText(fully ? "Fully Scrambled" : scramblechenfrengensen + " Random Twist" + (scramblechenfrengensen==1?"":"s"));
+                    updateTwistsLabel();
+                }
             }
         }
         JMenuItem scrambleItem = null;
@@ -646,13 +612,13 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
         Container contents = getContentPane();
         contents.setLayout(new BorderLayout());
-        contents.add(macroControlsContainer, "West"); // I'd prefer west except AWT drop-down menus screw it up.
+        contents.add(macroControlsContainer, "West");
         contents.add(viewcontainer, "Center");
         contents.add(statusBar, "South");
 
         puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
-	    	public void puzzleChanged(Object cbdata) {
+	    	public void puzzleChanged() {
 	    		initMacroControls(); // to properly enable/disable the buttons
 	    		progressBar.setVisible(false);
                 hist.clear((int)puzzleManager.puzzleDescription.getEdgeLength());
@@ -661,8 +627,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 Color[] userColors = findColors(puzzleManager.puzzleDescription.nFaces(), MagicCube.FACE_COLORS_FILE);
         		if(userColors != null)
         			puzzleManager.faceColors = userColors;
-        		if(cbdata != null && cbdata instanceof PuzzleManager.PuzzleListener)
-        			((PuzzleManager.PuzzleListener)cbdata).puzzleChanged(null);
                 view.repaint();
 	    	}
 	    });
