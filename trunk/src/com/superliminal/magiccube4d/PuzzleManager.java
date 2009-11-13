@@ -77,7 +77,7 @@ public class PuzzleManager
     }
 
 
-    public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground, final Object cbdata) {
+    public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground) {
     	statusLabel.setText("");
         final String finalLengthString = " " + prettyLength(Double.parseDouble(lengthString));
     	ProgressManager builder = new ProgressManager(progressView) {
@@ -104,7 +104,7 @@ public class PuzzleManager
 			public void done() {
 				if(succeeded) statusLabel.setText(schlafli + "  length = " + finalLengthString);
 				super.done();
-				if(succeeded) firePuzzleChanged(cbdata);
+				if(succeeded) firePuzzleChanged(null);
 			}
     	};
     	if(inBackground)
@@ -119,7 +119,7 @@ public class PuzzleManager
         if (verboseLevel >= 1) System.out.println("in PuzzleManager ctor");
         if (initialSchlafli != null)
         {
-            initPuzzle(initialSchlafli, ""+initialLength, progressView, new JLabel(), false, null);
+            initPuzzle(initialSchlafli, ""+initialLength, progressView, new JLabel(), false);
         }
         if (verboseLevel >= 1) System.out.println("out PuzzleManager ctor");
     }

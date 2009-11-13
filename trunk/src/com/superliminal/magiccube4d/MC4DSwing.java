@@ -356,9 +356,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             public void actionPerformed(final ActionEvent ae) {
                 scrambleState = SCRAMBLE_NONE; // do first to avoid issue 64 (fanfare on reset).
                 cancel.doit(ae);
-                progressBar.setVisible(true);
-                final double length = puzzleManager.puzzleDescription.getEdgeLength();
-                puzzleManager.initPuzzle(puzzleManager.puzzleDescription.getSchlafliProduct(), ""+length, progressBar, statusLabel, true, ae.getSource());
+                puzzleManager.resetPuzzleState();
+                view.repaint();
+                puzzleManager.firePuzzleChanged( ae.getSource() );
             }
         },
         read = new AbstractAction("Read") {
@@ -733,7 +733,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                         }
                 		progressView.setVisible(true);
                 		System.out.println(newSchlafli + " " + newLengthString);
-                    	puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true, null);
+                    	puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true);
                     	hist.clear((int)Double.parseDouble(newLengthString));
                     	updateTwistsLabel();
                     	scrambleState = SCRAMBLE_NONE;
@@ -869,7 +869,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     // int numTwists = Integer.parseInt(firstline[3]);
                     String schlafli = firstline[4];
                     initialLength = Double.parseDouble(firstline[5]);
-                    puzzleManager.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false, null);
+                    puzzleManager.initPuzzle(schlafli, ""+initialLength, progressBar, statusLabel, false);
                     iLength = (int)Math.round(initialLength);
                     hist = new History(iLength);
                     String title = MagicCube.TITLE;
