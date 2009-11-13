@@ -357,6 +357,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 scrambleState = SCRAMBLE_NONE; // do first to avoid issue 64 (fanfare on reset).
                 cancel.doit(ae);
                 puzzleManager.resetPuzzleState();
+                statusLabel.setText("");
                 view.repaint();
                 puzzleManager.firePuzzleChanged( ae.getSource() );
             }
