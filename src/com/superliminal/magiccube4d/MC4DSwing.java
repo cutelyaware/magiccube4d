@@ -514,16 +514,15 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     ss.face = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
                     hist.apply(ss, dir, slicemask);
                 	//System.out.println("Adding scramble twist grip: " + iGrip + " dir: " + dir + " slicemask: " + slicemask);
-				   
-	                hist.mark(History.MARK_SCRAMBLE_BOUNDARY);
-	                view.repaint();
-	                boolean fully = scramblechenfrengensen == -1;
-	                scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL;
-	                statusLabel.setText(fully ? "Fully Scrambled" : scramblechenfrengensen + " Random Twist" + (scramblechenfrengensen==1?"":"s"));
-                    updateTwistsLabel();
-                }
+                }				   
+                hist.mark(History.MARK_SCRAMBLE_BOUNDARY);
+                boolean fully = scramblechenfrengensen == -1;
+                scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL;
+                statusLabel.setText(fully ? "Fully Scrambled" : scramblechenfrengensen + " Random Twist" + (scramblechenfrengensen==1?"":"s"));
+                updateTwistsLabel();
+                view.repaint();
             }
-        }
+        } // end class Scrambler
         JMenuItem scrambleItem = null;
         Scrambler scrambler = null;
         for(int i=1; i<=8; i++) {
