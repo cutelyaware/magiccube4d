@@ -578,7 +578,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 	"<html><center>" + 
 	                	MagicCube.TITLE + 
 	                    " Version " + MagicCube.PUZZLE_MAJOR_VERSION + minorVersion +
-	                    "<br>Copyright 2005 by Melinda Green, Don Hatch" +
+	                    "<br>Copyright 2005 by Melinda Green and Don Hatch" +
 	                    "<br>with invaluable help from Jay Berkenbilt and Roice Nelson." +
 	                    "<br>http://superliminal.com/cube/cube.htm" +
                     "</center></html>");
