@@ -12,6 +12,7 @@ import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.io.File;
+import java.net.URISyntaxException;
 
 /**
  * A collection of generally useful Swing utility methods.
@@ -127,6 +128,16 @@ public class StaticUtils {
     
     public static String getHomeDir() {
     	return FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
+    }
+    
+    public static String getBinDir() {
+		try {
+			String here = new File(StaticUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).toString();
+			return here.endsWith(".jar") ? here.substring(0, here.lastIndexOf(File.separator)) : here;
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		return null;
     }
 
     /**

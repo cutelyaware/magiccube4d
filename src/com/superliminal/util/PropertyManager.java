@@ -1,8 +1,5 @@
 package com.superliminal.util;
 
-import javax.swing.filechooser.FileSystemView;
-
-
 import java.util.*;
 import java.io.*;
 import java.awt.*;
@@ -36,20 +33,20 @@ import java.net.*;
  *               the default properties such as branding logos, colors, etc. A vendor property
  *               file must be specified as a URL in an environment variable with the key
  *               "vendorprops". e.g.  vendorprops=http://newcorp.com/analyer/resources/vendor.prop.
- *               the values specified in this file will take precidence over the analyzer defaults.
- *               Note that images and other file resources refered to by that file must be
+ *               the values specified in this file will take precedence over the analyzer defaults.
+ *               Note that images and other file resources referred to by that file must be
  *               begin with the '/' character and will then be looked for relative to the
  *               directory containing the vendor property file.
  *               e.g. given the vendor prop file path above and the property setting:
  *                     main.logo.small=/newcorp.gif
  *               will resolve to:
- *                     newcorp.com/analyer/resources/newcorp.gif
+ *                     newcorp.com/analyzer/resources/newcorp.gif
  *               Also, quoted values will have their quotes stripped. This is in case a user
  *               wants to create a path or other property that begins with '/'.
  *
  *               Another special properties object in the chain is "userprefs" which is for end
- *               user preferences which are stored in a file on the user's local machine in their home directory.
- *               Under Windows this tends to be "C:\Documents and Settings\[username]\Desktop".
+ *               user preferences which are stored in a file on the user's local machine
+ *               in the same directory as the .jar or .class file being run.
  *               Properties that are set into this object are immediately persisted to the file
  *               for retrieval in the current and future sessions.
  *
@@ -86,14 +83,17 @@ public class PropertyManager extends Properties {
     }
     
 	// NOTE: Wants to be passed in but needs to be set during static initialization,
-	// therefore it probably needs to be environment variable.
+	// therefore it probably needs to be environment or registry variable.
     private final static String PRODUCT_NAME = "mc4d"; 
 
     /**
      * Applications should load any user-specific property overrides directly into this object 
      * and then call setProperty whenever a user action needs to change one. 
      */
-    public final static PropertyManager userprefs = new LocalProps(new File(FileSystemView.getFileSystemView().getHomeDirectory(), PRODUCT_NAME+".props"));
+    public final static PropertyManager userprefs = new LocalProps(new File(StaticUtils.getBinDir(), PRODUCT_NAME+".props"));
+    static {
+		System.out.println("Launch dir: " + StaticUtils.getBinDir());
+    }
     
     /**
      * Stores all system properties. These take precedence over user preferences 
@@ -242,6 +242,8 @@ public class PropertyManager extends Properties {
                 this.store(new FileOutputStream(localPropFile), PRODUCT_NAME + " User Preferences");
             } catch (IOException e) {
                 storeFailed = true; // so as to only give fail msg once
+                if(!localPropFile.canWrite())
+                	System.err.println("Can't write");
                 System.err.println("PropertyManager.LocalProps: Could not store local prop file '" + localPropFile.getAbsolutePath() + "'");
                 e.printStackTrace();
             }
