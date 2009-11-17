@@ -1266,7 +1266,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         {
             return face2OppositeFace;
         }
-        public int[/*nStickers*/] applyTwistToState(int state[/*nStickers*/],
+        public void applyTwistToState(int state[/*nStickers*/],
                                                     int gripIndex,
                                                     int dir,
                                                     int slicemask)
@@ -1303,7 +1303,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                     newState[iSticker] = state[iSticker];
             }
             VecMath.copyvec(state, newState);
-            return newState;
+            newState = null;
         } // applyTwistToState
 
 
