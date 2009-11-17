@@ -626,7 +626,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 Color[] userColors = findColors(puzzleManager.puzzleDescription.nFaces(), MagicCube.FACE_COLORS_FILE);
         		if(userColors != null)
         			puzzleManager.faceColors = userColors;
-                view.repaint();
+        		if(view != null)
+        			view.repaint();
 	    	}
 	    });
         puzzleManager.setHighlighter(normalHighlighter);
@@ -727,11 +728,23 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             });
         }
     }
+    
+    // TODO: All this state is part of the hackish way to keep macro buttons properly enabled below.
+    // Maybe the macro controls should listen for puzzle change events or something would be better?
+    private final PreferencesEditor preferencesEditor = new PreferencesEditor();
+    private final JTabbedPane tabs = new JTabbedPane();
+    private final ChangeListener tabListener = new ChangeListener() {
+		@Override
+		public void stateChanged(ChangeEvent ce) {
+			PropertyManager.userprefs.setProperty("lasttab", ""+tabs.getSelectedIndex());
+		}
+    };
 
     private void initMacroControls() {
-        final JTabbedPane tabs = new JTabbedPane();
         String schlafli = puzzleManager != null && puzzleManager.puzzleDescription != null ? puzzleManager.puzzleDescription.getSchlafliProduct() : null;
-        tabs.add("Preferences", new PreferencesEditor());
+        tabs.removeChangeListener(tabListener); // so as not to pick up tab change events due to adding tabs.
+        tabs.removeAll();
+        tabs.add("Preferences", preferencesEditor);
         tabs.add("Macros", new MacroControls(macroMgr, schlafli, new MacroControls.Listener() {
             public void apply(Macro macro, boolean reverse) {
                 lastMacro = macro;
@@ -745,13 +758,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 initMacroMenu();
             }
         }));
-        tabs.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent ce) {
-				PropertyManager.userprefs.setProperty("lasttab", ""+tabs.getSelectedIndex());
-			}
-        });
         tabs.setSelectedIndex(PropertyManager.getInt("lasttab", 0));
+        tabs.addChangeListener(tabListener);
         macroControlsContainer.removeAll();
         macroControlsContainer.add(tabs);
         macroControlsContainer.validate();

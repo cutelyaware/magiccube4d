@@ -78,6 +78,7 @@ public class PropertyManager extends Properties {
     @Override
 	public synchronized Object setProperty(String key, String value) {
         Object previousValue = super.setProperty(key, value);
+        //System.out.println("setting " + key + " to " + value);
         top.firePropertyChange(key, value);
         return previousValue;
     }
@@ -331,7 +332,8 @@ public class PropertyManager extends Properties {
      * @return integer value of top.getProperty(key) or default if not found or parsed.
      */
     public static int getInt(String key, int def) {
-        try { return Integer.parseInt(top.getProperty(key)); }
+    	String str = top.getProperty(key);
+        try { return Integer.parseInt(str); }
         catch(NumberFormatException nfe) {}
         return def;
     }

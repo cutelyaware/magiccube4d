@@ -148,7 +148,7 @@ interface PuzzleDescription {
     * Apply a move to an array of colors (face indices)
     * representing the current puzzle state.
     */
-    public int[/*nStickers*/] applyTwistToState(int state[/*nStickers*/],
+    public void applyTwistToState(int state[/*nStickers*/],
                                                 int gripIndex,
                                                 int dir,
                                                 int slicemask);

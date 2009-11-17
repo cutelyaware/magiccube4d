@@ -317,6 +317,8 @@ public class MC4DView extends Component {
     	// This is what corrects the view scale for changes in puzzle and puzzle geometry.
     	// To remove this correction, just set polys2pixelSF = minpix.
         polys2pixelsSF = minpix/(1.25f*radius3d);
+        
+        repaint(); // Needed when a puzzle is read via Ctrl-O.
     } // end updateViewFactors
     
 
