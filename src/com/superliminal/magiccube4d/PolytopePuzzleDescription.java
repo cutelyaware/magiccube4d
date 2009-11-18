@@ -478,10 +478,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 	                 && ceilLength % 2 == 0
 	                 && !isPrismOfThisFace)
 	                {
-	                	//System.out.println( "going to have slivers" );
 	                	needSliverRemoval = true;
-	                	
-	                	// Warning! edit with caution (sliver removal heuristic is tuned to this).
 	                	sliceThickness *= sliceMultiplier;
 	                }
 	
@@ -1114,6 +1111,27 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         			gripDim = 2;
         		else
         		{
+        			/* NOTE
+        			There is a fundamental problem with the approach in this block, which 
+        			is that the number-of-colors isn't a discriminating enough property to 
+        			classify piece types.  There will be situations on some puzzles where 
+        			different piece types have the same number of colors (simplex puzzles), 
+        			and situations where we want those different piece types to do different 
+        			things even though they have the same number of colors (tetrahedral prism).  
+        			Another example is the 600 cell, where vertexes will have 20C pieces!
+        			 
+        			A better long term solution will be to have some step at puzzle build 
+        			time where the various piece types are matched up with grip types in 
+        			some other fashion.  One thought is to check incidences with the parent 
+        			polytope.  Pieces touching vertices would get marked as such, pieces 
+        			touching edges would get marked as such, etc., irrespective of 
+        			number-of-colors (of course, pieces touching vertices also touch edges, 
+        			but we would always choose the lowest-dimension element we were incident with).
+        			
+        			This looks to be ok for the 4.0 puzzles we are supporting, but we'll have
+        			to address this to push out some of the upcoming puzzles.
+        			*/
+        			
 		        	int cubie = getSticker2Cubie()[stickerIndex];
 		        	int numColors = getNumColorsForCubie( cubie );
 		        	gripDim = nDims() - numColors;
