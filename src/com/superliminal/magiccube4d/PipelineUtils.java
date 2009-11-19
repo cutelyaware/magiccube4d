@@ -240,8 +240,11 @@ public class PipelineUtils
                 if (volume < 0.f) // only draw *back* cells; cull front ones
                 {
                     // append references to this sticker's polys into drawList
-                    for (int iPolyThisSticker = 0; iPolyThisSticker < thisStickerInds.length; ++iPolyThisSticker)
-                        drawList[nBackFacing++] = frame.drawListBuffer[iSticker][iPolyThisSticker]; // = {iSticker,iPolyThisSticker}
+                    for (int iPolyThisSticker = 0; iPolyThisSticker < thisStickerInds.length; ++iPolyThisSticker) {
+                        if(iSticker >= frame.drawListBuffer.length || iPolyThisSticker >= frame.drawListBuffer[iSticker].length || nBackFacing >= drawList.length)
+                        	return;
+                    	drawList[nBackFacing++] = frame.drawListBuffer[iSticker][iPolyThisSticker]; // = {iSticker,iPolyThisSticker}
+                    }
                 }
             }
             drawListSize = nBackFacing;
@@ -323,6 +326,8 @@ public class PipelineUtils
                 if (brightness < 0)
                     brightness = 0;
                 //brightness = 1.f; // uncomment to make it all max intensity
+                if(i0i1[0] >= frame.brightnesses.length || i0i1[1] >= frame.brightnesses[i0i1[0]].length)
+                	return;
                 frame.brightnesses[i0i1[0]][i0i1[1]] = brightness;
                 //System.out.println("brightness = "+brightness);
             }
@@ -757,7 +762,7 @@ public class PipelineUtils
             //System.out.println("drawListSize="+drawListSize);
             for (int iItem = 0; iItem < drawListSize; ++iItem)
             {
-            	if(drawList == null || iItem >= drawList.length)
+            	if(drawList == null || iItem >= drawList.length || drawList[iItem].length < 1)
             		return;
                 int iSticker = drawList[iItem][0];
                 int iPolyThisSticker = drawList[iItem][1];
