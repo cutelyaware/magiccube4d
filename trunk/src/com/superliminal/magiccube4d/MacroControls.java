@@ -39,13 +39,15 @@ public class MacroControls extends JPanel {
     private Macro selected;
     private final static Font SYMBOL_FONT = new Font("Dialog", Font.PLAIN, 12);
 
-    public MacroControls(final MacroManager mgr, String schlafli, final Listener app) {
+    public MacroControls() {}
+
+    public void init( final MacroManager mgr, String schlafli, final Listener app ) {
         this.mgr = mgr;
         this.schlafli = schlafli;
         this.app = app;
         init(false);
     }
-
+    
     private void init(boolean changed) {
 
         removeAll();
@@ -166,7 +168,8 @@ public class MacroControls extends JPanel {
 
     public static void main(String[] args) {
         MacroManager mm = new MacroManager("C:\\Java\\MC4D\\MC4D.macros");
-        MacroControls mc = new MacroControls(mm, "{4,3,3}", new MacroControls.Listener() {
+        MacroControls mc = new MacroControls();
+        mc.init(mm, "{4,3,3}", new MacroControls.Listener() {
             public void apply(Macro macro, boolean reverse) {
                 System.out.println("Applying " + macro.getName() + (reverse ? " reversed" : " forward"));
             }

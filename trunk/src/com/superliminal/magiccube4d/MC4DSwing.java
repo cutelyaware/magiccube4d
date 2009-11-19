@@ -739,25 +739,35 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 			PropertyManager.userprefs.setProperty("lasttab", ""+tabs.getSelectedIndex());
 		}
     };
-
+    private final MacroControls macroControls = new MacroControls();
+    private final MacroControls.Listener macroControlsListener = new MacroControls.Listener() {
+        public void apply(Macro macro, boolean reverse) {
+            lastMacro = macro;
+            final int mask = reverse ? ActionEvent.CTRL_MASK : 0;
+            // A fake event so action will pick up correct direction.
+            // A bit of a hack but sometimes a girl's gotta do what a girl's gotta do!
+            ActionEvent ae = new ActionEvent(this, 0, "apply", mask) { public int getID() { return mask; } };
+            last.doit(ae);
+        }
+        public void changed() {
+            initMacroMenu();
+        }
+	};
+ 
+	// TODO: Move the full tab building into a separate method perhaps?
     private void initMacroControls() {
         String schlafli = puzzleManager != null && puzzleManager.puzzleDescription != null ? puzzleManager.puzzleDescription.getSchlafliProduct() : null;
+        
+        macroControls.init(macroMgr, schlafli, macroControlsListener);
+        
+        // If we've already setup the tabs, we're done.
+        if( tabs.getComponentCount() > 0 )
+        	return;
+        
         tabs.removeChangeListener(tabListener); // so as not to pick up tab change events due to adding tabs.
         tabs.removeAll();
         tabs.add("Preferences", preferencesEditor);
-        tabs.add("Macros", new MacroControls(macroMgr, schlafli, new MacroControls.Listener() {
-            public void apply(Macro macro, boolean reverse) {
-                lastMacro = macro;
-                final int mask = reverse ? ActionEvent.CTRL_MASK : 0;
-                // A fake event so action will pick up correct direction.
-                // A bit of a hack but sometimes a girl's gotta do what a girl's gotta do!
-                ActionEvent ae = new ActionEvent(this, 0, "apply", mask) { public int getID() { return mask; } };
-                last.doit(ae);
-            }
-            public void changed() {
-                initMacroMenu();
-            }
-        }));
+        tabs.add("Macros", macroControls);
         tabs.setSelectedIndex(PropertyManager.getInt("lasttab", 0));
         tabs.addChangeListener(tabListener);
         macroControlsContainer.removeAll();
