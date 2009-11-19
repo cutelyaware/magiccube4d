@@ -255,7 +255,9 @@ public class MC4DView extends Component {
         //
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
 			@Override
-			public void puzzleChanged() {
+			public void puzzleChanged( boolean newPuzzle ) {
+				if( newPuzzle )
+					rotationHandler.set4dView(MagicCube.NICE_VIEW);
 				updateViewFactors(); // affects puzzle size
 			}
 		});

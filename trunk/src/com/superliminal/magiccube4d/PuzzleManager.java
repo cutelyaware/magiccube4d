@@ -28,14 +28,17 @@ public class PuzzleManager
     public Color faceColors[];
     
     /**
-     * Reinitializes the puzzleState array of color indices
-     * and fires a puzzle change event.
+     * Reinitializes the puzzleState array of color indices.
+     * First version fires a puzzle change event.
      */
     public void resetPuzzleState() {
+    	resetPuzzleStateNoEvent();
+		firePuzzleChanged( false );
+    }
+    public void resetPuzzleStateNoEvent() {
     	if(puzzleDescription == null)
     		return;
 		puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());
-		firePuzzleChanged();
     }
 
     //
@@ -67,11 +70,11 @@ public class PuzzleManager
 
 
     // Listener support
-    public static interface PuzzleListener { public void puzzleChanged(); }
+    public static interface PuzzleListener { public void puzzleChanged( boolean newPuzzle ); }
     private Set<PuzzleListener> puzzleListeners = new HashSet<PuzzleListener>();
     public void addPuzzleListener(PuzzleListener tl) { puzzleListeners.add(tl); }
     public void removePuzzleListener(PuzzleListener tl) { puzzleListeners.remove(tl); }
-    protected void firePuzzleChanged() { for(PuzzleListener pl : puzzleListeners) pl.puzzleChanged(); }
+    protected void firePuzzleChanged( boolean newPuzzle ) { for(PuzzleListener pl : puzzleListeners) pl.puzzleChanged( newPuzzle ); }
     
     static String prettyLength(double length) {
         boolean integralLength = length == (int)length;
@@ -98,7 +101,7 @@ public class PuzzleManager
             		succeeded = true;
                 	puzzleDescription = newPuzzle;
             		faceColors = ColorUtils.generateVisuallyDistinctColors(puzzleDescription.nFaces(), .7f, .1f);
-            		resetPuzzleState();
+            		resetPuzzleStateNoEvent();
             	}
             	return null;
     		}
@@ -110,7 +113,7 @@ public class PuzzleManager
 			public void done() {
 				if(succeeded) statusLabel.setText(schlafli + "  length = " + finalLengthString);
 				super.done();
-				if(succeeded) firePuzzleChanged();
+				if(succeeded) firePuzzleChanged( true );
 			}
     	};
     	if(inBackground)
