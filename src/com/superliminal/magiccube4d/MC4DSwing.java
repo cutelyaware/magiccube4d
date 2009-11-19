@@ -702,6 +702,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     	hist.clear((int)Double.parseDouble(newLengthString));
                     	updateTwistsLabel();
                     	scrambleState = SCRAMBLE_NONE;
+                    	rotations.set4dView(MagicCube.NICE_VIEW);
                     	view.repaint();
                     }
                 });
