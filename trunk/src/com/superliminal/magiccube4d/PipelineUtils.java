@@ -757,10 +757,12 @@ public class PipelineUtils
             //System.out.println("drawListSize="+drawListSize);
             for (int iItem = 0; iItem < drawListSize; ++iItem)
             {
+            	if(drawList == null || iItem >= drawList.length)
+            		return;
                 int iSticker = drawList[iItem][0];
                 int iPolyThisSticker = drawList[iItem][1];
                 if(iSticker >= stickerInds.length || iPolyThisSticker >= stickerInds[iSticker].length || iSticker>=puzzleState.length)
-                	continue; // shouldn't happen but does when switching puzzles.
+                	return; // shouldn't happen but does when switching puzzles.
                 int poly[] = stickerInds[iSticker][iPolyThisSticker];
                 float brightness = brightnesses[iSticker][iPolyThisSticker];
                 int colorOfSticker = puzzleState[iSticker];
@@ -773,6 +775,8 @@ public class PipelineUtils
                 }
                 for (int i = 0; i < poly.length; ++i)
                 {
+                	if(poly[i] >= verts.length)
+                		return;
                     float vert[] = verts[poly[i]];
                     xs[i] = (int)vert[0];
                     ys[i] = (int)vert[1];
