@@ -617,7 +617,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
         puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
-	    	public void puzzleChanged() {
+	    	public void puzzleChanged( boolean newPuzzle ) {	    		
 	    		initMacroControls(); // to properly enable/disable the buttons
 	    		progressBar.setVisible(false);
                 hist.clear((int)puzzleManager.puzzleDescription.getEdgeLength());
@@ -702,7 +702,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     	hist.clear((int)Double.parseDouble(newLengthString));
                     	updateTwistsLabel();
                     	scrambleState = SCRAMBLE_NONE;
-                    	rotations.set4dView(MagicCube.NICE_VIEW);
                     	view.repaint();
                     }
                 });
