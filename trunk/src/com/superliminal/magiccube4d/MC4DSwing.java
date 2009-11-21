@@ -794,7 +794,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                                 Macro.reverse(moves);
                             statusLabel.setText("Applying macro '" + lastMacro.getName() + "'");
                             hist.mark(History.MARK_MACRO_OPEN);
-                            view.animate(moves, true);
+                            view.animate(moves, true, true);
                             view.append(History.MARK_MACRO_CLOSE);
                         }
                         applyingMacro = 0;

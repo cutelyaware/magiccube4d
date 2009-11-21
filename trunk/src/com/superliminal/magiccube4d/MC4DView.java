@@ -72,9 +72,9 @@ public class MC4DView extends Component {
     /**
      * Performs a sequence of moves and optionally applies each to the history as they finished.
      */
-    public void animate(MagicCube.TwistData moves[], boolean applyToHist) {
+    public void animate(MagicCube.TwistData moves[], boolean applyToHist, boolean macroMove) {
         for(int i=0; i<moves.length; i++)
-            animate(moves[i], applyToHist);
+            animate(moves[i], applyToHist, macroMove);
     }
     
     public void animate(History hist, boolean applyToHist) {
