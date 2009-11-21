@@ -621,7 +621,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 	    		initMacroControls(); // to properly enable/disable the buttons
 	    		progressBar.setVisible(false);
                 hist.clear((int)puzzleManager.puzzleDescription.getEdgeLength());
-                scrambleState = SCRAMBLE_NONE; // probably redundant but shouldn't hurt.
                 updateTwistsLabel();
                 Color[] userColors = findColors(puzzleManager.puzzleDescription.nFaces(), MagicCube.FACE_COLORS_FILE);
         		if(userColors != null)
