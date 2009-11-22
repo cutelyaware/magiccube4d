@@ -161,7 +161,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     String filepath = logFileChooser.getSelectedFile().getAbsolutePath();
                     PropertyManager.userprefs.setProperty("logfile", filepath);
                     initPuzzle(filepath);
-                    statusLabel.setText("Read log file " + filepath);
                 }
             }
         },
@@ -835,12 +834,15 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         if(log != null) { // read the log file, possibly reinitializing length and history.
             File logfile = new File(log);
             if(logfile.exists()) {
+            	boolean parsingError = false;
                 try {
                     BufferedReader reader = new BufferedReader(new FileReader(logfile));
                     String firstlineStr = reader.readLine();
+                    if(firstlineStr == null)
+                    	throw new IOException( "Empty log file." );
                     String firstline[] = firstlineStr.split(" ");
                     if(firstline.length != 6 || !MagicCube.MAGIC_NUMBER.equals(firstline[0]))
-                        throw new IOException();
+                        throw new IOException( "Unexpected log file format." );
                     int readversion = Integer.parseInt(firstline[1]);
                     if(readversion != MagicCube.LOG_FILE_VERSION) {
                         statusLabel.setText("Incompatible log file version " + readversion);
@@ -863,8 +865,14 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                      	System.out.println("Error reading puzzle history");
                     setTitle(title);
                 } catch (Exception e) {
-                    statusLabel.setText("Failed to parse log file '" + log + "'");
+                	e.printStackTrace();
+                	parsingError = true;
                 }
+                
+                if( parsingError )
+                	statusLabel.setText("Failed to parse log file '" + log + "'");
+                else
+                	statusLabel.setText("Read log file '" + log + "'");
             }
             else
                 statusLabel.setText("Couldn't find log file '" + log + "'");
