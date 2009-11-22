@@ -47,6 +47,8 @@ public class MacroManager implements PuzzleManager.Highlighter {
         	// Read header info.
         	// XXX - It'd be nice to get info about failures here out to the UI.
             String firstlineStr = reader.readLine();
+            if(firstlineStr == null)
+            	throw new IOException();
             String firstline[] = firstlineStr.split( " " );
             if( firstline.length != 2 || !MagicCube.MAGIC_NUMBER.equals( firstline[0] ) )
                 throw new IOException();
