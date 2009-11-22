@@ -48,13 +48,13 @@ public class MacroManager implements PuzzleManager.Highlighter {
         	// XXX - It'd be nice to get info about failures here out to the UI.
             String firstlineStr = reader.readLine();
             if(firstlineStr == null)
-            	throw new IOException();
+            	throw new IOException( "Empty macro file." );
             String firstline[] = firstlineStr.split( " " );
             if( firstline.length != 2 || !MagicCube.MAGIC_NUMBER.equals( firstline[0] ) )
-                throw new IOException();
+                throw new IOException( "Unexpected macro file format." );
             int readversion = Integer.parseInt(firstline[1]);
             if( readversion != MagicCube.MACRO_FILE_VERSION ) 
-            	throw new IOException();
+            	throw new IOException( "Unhandled macro file version." );
             
             Macro aMacro;
             while((aMacro = Macro.read(reader)) != null)
