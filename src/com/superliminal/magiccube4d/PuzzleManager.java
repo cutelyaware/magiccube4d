@@ -253,7 +253,7 @@ public class PuzzleManager
     }
     private Highlighter highlighter;
     
-    public boolean updateStickerHighlighting(int mouseX, int mouseY, int slicemask, boolean isControlDown )
+	public boolean updateStickerHighlighting(int mouseX, int mouseY, int slicemask, boolean isControlDown )
     {
     	PipelineUtils.PickInfo pick = PipelineUtils.getAllPickInfo(
         		mouseX, mouseY,
@@ -279,6 +279,10 @@ public class PuzzleManager
         highlit = newHighlit;
         return changed;
     }
+	
+	public void clearStickerHighlighting() {
+		highlit = false;
+	}
     
     // Checks whether or not it is ok to handle a mouse click.
     // All the logic of this is really in the highlighters.

@@ -199,16 +199,21 @@ public class MC4DView extends Component {
                 rotationHandler.stopSpinning();
                 lastDrag = arg0.getPoint();
                 lastDragTime = arg0.getWhen();
+                puzzleManager.clearStickerHighlighting();
                 FPSTimer.stop();
             }
             @Override
-			public void mouseReleased(MouseEvent arg0) {
-                long timedelta = arg0.getWhen() - lastDragTime;
+			public void mouseReleased(MouseEvent me) {
+                long timedelta = me.getWhen() - lastDragTime;
                 lastDrag = null;
                 if(timedelta > 0) {
                 	rotationHandler.stopSpinning(); // stop any spin if last point wasn't in motion
                     repaint();
                 }
+                if(isInMotion())
+                    puzzleManager.clearStickerHighlighting();
+                else
+                	puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown());
             }
             @Override
 			public void mouseEntered(MouseEvent e) {
@@ -236,7 +241,7 @@ public class MC4DView extends Component {
                 
                 lastDrag = me.getPoint();
                 lastDragTime = me.getWhen();
-                puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown());
+                //puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown());
                 repaint();
             }
             @Override
@@ -244,7 +249,7 @@ public class MC4DView extends Component {
                 super.mouseMoved(me);
                 if (puzzleManager != null )
                 {
-                    if(puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown()));
+                    if(!isInMotion() && puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown()));
                     	repaint();
                     return;
                 }
