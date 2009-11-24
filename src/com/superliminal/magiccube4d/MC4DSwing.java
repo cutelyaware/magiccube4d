@@ -984,7 +984,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         });
     } // end initPuzzle
     
-    
+    /**
+     * A FloatSlider that synchronizes it's value with a given property.
+     */
     public static class PropSlider extends FloatSlider {
 		public PropSlider(final String propname, final Component dependent, double dflt, double min, double max) {
 			super(JSlider.HORIZONTAL, PropertyManager.getFloat(propname, (float)dflt), min, max);
@@ -999,6 +1001,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 		}
     }
     
+    /**
+     * A JCheckBox that synchronizes it's value with a given property.
+     */
     public static class PropCheckBox extends JCheckBox {
     	public PropCheckBox(String title, final String propname, boolean dflt, final Component dependent) {
     		super(title, PropertyManager.getBoolean(propname, dflt));
@@ -1009,6 +1014,27 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 					dependent.repaint();
 				}
     		});
+    	}
+    }
+    
+    /**
+     * A JRadioButton that synchronizes it's value with a given property.
+     */
+    public static class PropRadioButton extends JRadioButton {
+    	public PropRadioButton(String title, final String propname, boolean dflt, final boolean invert, final Component dependent) {
+            super(title);
+            boolean on = PropertyManager.getBoolean(propname, dflt);
+			if(invert) on = !on;
+            setSelected(on);
+            addActionListener(new ActionListener() {
+    			@Override
+    			public void actionPerformed(ActionEvent e) {
+    				boolean on = isSelected();
+    				if(invert) on = !on;
+    				PropertyManager.userprefs.setProperty(propname, ""+on);
+    				dependent.repaint();
+    			}
+            });
     	}
     }
 
@@ -1034,31 +1060,13 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         	
         	removeAll();
             
-        	// TODO: implement PropRadioButton class for these and quick move buttons
-            final JRadioButton 
-	        	ctrlRotateByFace  = new JRadioButton("by Face"),
-	        	ctrlRotateByCubie = new JRadioButton("by Cubie");
+        	final JRadioButton 
+	        	ctrlRotateByFace  = new PropRadioButton("by Face", "ctrlrotbyface", true, false, repainter),
+	        	ctrlRotateByCubie = new PropRadioButton("by Cubie", "ctrlrotbyface", false, true, repainter);
             ButtonGroup ctrlRotateGroup = new ButtonGroup();
             ctrlRotateGroup.add(ctrlRotateByFace);
             ctrlRotateGroup.add(ctrlRotateByCubie);
-            if(PropertyManager.getBoolean("ctrlrotbyface", true))
-            	ctrlRotateByFace.setSelected(true);
-            else
-            	ctrlRotateByCubie.setSelected(true);
-            ctrlRotateByFace.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					boolean byFace = ctrlRotateByFace.isSelected();
-					PropertyManager.userprefs.setProperty("ctrlrotbyface", ""+byFace);
-				}
-            });
-            ctrlRotateByCubie.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					boolean byCubie = ctrlRotateByCubie.isSelected();
-					PropertyManager.userprefs.setProperty("ctrlrotbyface", ""+!byCubie);
-				}
-            });
+            
             JLabel ctrlClickLabel = new JLabel("Ctrl-Click Rotates:");
             JPanel rotateMode = new JPanel();
             rotateMode.setLayout(new BoxLayout(rotateMode, BoxLayout.X_AXIS));
@@ -1118,29 +1126,13 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             quick.setAlignmentX(Component.LEFT_ALIGNMENT);
             general.add(quickMode);
             final JRadioButton 
-	        	allMoves  = new JRadioButton("All Moves"),
-	        	justMacros = new JRadioButton("Just Macros");
+	        	allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter),
+	        	justMacros = new PropRadioButton("Just Macros", "quickmacros", true, false, repainter);
 			allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
 			justMacros.setEnabled(PropertyManager.getBoolean("quickmoves", false));
 	        ButtonGroup quickGroup = new ButtonGroup();
 	        quickGroup.add(allMoves);
 	        quickGroup.add(justMacros);
-	        if(PropertyManager.getBoolean("quickmacros", false))
-	        	justMacros.setSelected(true);
-	        else
-	        	allMoves.setSelected(true);
-	        justMacros.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					PropertyManager.userprefs.setProperty("quickmacros", ""+justMacros.isSelected());
-				}
-	        });
-	        allMoves.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					PropertyManager.userprefs.setProperty("quickmacros", ""+!allMoves.isSelected());
-				}
-	        });
 	        quick.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -1158,26 +1150,12 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
             // background controls
             ColorButton skyColor = new ColorButton("Sky", "sky.color", MagicCube.SKY, null, true);
-            final JCheckBox drawGround = new JCheckBox("Draw Ground", PropertyManager.getBoolean("ground", true));
-            final ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND, null, true);
-            drawGround.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    boolean drawground = drawGround.isSelected();
-                    PropertyManager.userprefs.setProperty("ground", ""+drawground);
-                    view.repaint();
-                }
-            });
+            ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND, null, true);
+            JCheckBox drawGround = new PropCheckBox("Draw Ground", "ground", true, repainter);
             
             // outlining controls
-            final JCheckBox drawOutlines = new JCheckBox("Draw Outlines", PropertyManager.getBoolean("outlines", false));
-            final ColorButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK, null, true);
-            drawOutlines.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
-                    boolean drawoutlines = drawOutlines.isSelected();
-                    PropertyManager.userprefs.setProperty("outlines", ""+drawoutlines);
-                    view.repaint();
-                }
-            });
+            JCheckBox drawOutlines = new PropCheckBox("Draw Outlines", "outlines", false, repainter);
+            ColorButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK, null, true);
             
             JPanel colors = new JPanel(new SpringLayout());
             colors.add(new JLabel());
