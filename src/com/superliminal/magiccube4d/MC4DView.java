@@ -241,7 +241,6 @@ public class MC4DView extends Component {
                 
                 lastDrag = me.getPoint();
                 lastDragTime = me.getWhen();
-                //puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown());
                 repaint();
             }
             @Override
