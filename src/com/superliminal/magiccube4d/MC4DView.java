@@ -73,8 +73,8 @@ public class MC4DView extends Component {
      * Performs a sequence of moves and optionally applies each to the history as they finished.
      */
     public void animate(MagicCube.TwistData moves[], boolean applyToHist, boolean macroMove) {
-        for(int i=0; i<moves.length; i++)
-            animate(moves[i], applyToHist, macroMove);
+        for(MagicCube.TwistData move : moves)
+            animate(move, applyToHist, macroMove);
     }
     
     public void animate(History hist, boolean applyToHist) {
@@ -311,8 +311,7 @@ public class MC4DView extends Component {
             int iSticker = item[0];
             int iPolyWithinSticker = item[1];
             int poly[] = stickerInds[iSticker][iPolyWithinSticker];
-            for(int j=0; j<poly.length; j++) {
-            	int vertIndex = poly[j];
+            for(int vertIndex : poly) {
         		float dist = Vec_h._NORMSQRD3(frame.verts[vertIndex]);
         		radius3d = Math.max(dist, radius3d);    	
             }
