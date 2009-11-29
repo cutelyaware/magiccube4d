@@ -373,7 +373,7 @@ public class MC4DView extends Component {
 			animationQueue.finishedTwist(); // end animation
 			repaint();
 		}
-        if( rotationHandler.continueSpin() && lastDrag == null) { // keep spinning
+        if(lastDrag == null && rotationHandler.continueSpin()) { // keep spinning
             repaint();
         }
         
@@ -402,8 +402,8 @@ public class MC4DView extends Component {
                 	PropertyManager.getFloat("stickershrink", MagicCube.STICKERSHRINK),
         			rotationHandler, 
                     PropertyManager.getFloat("eyew", MagicCube.EYEW),
-                    MagicCube.EYEZ,
-                    polys2pixelsSF * PropertyManager.getFloat("scale", 1),
+                    MagicCube.EYEZ * PropertyManager.getFloat("scale", 1),
+                    polys2pixelsSF,
                     xOff,
                     yOff,
                     MagicCube.SUNVEC,
