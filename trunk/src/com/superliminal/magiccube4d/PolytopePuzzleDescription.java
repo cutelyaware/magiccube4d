@@ -186,6 +186,13 @@ import com.donhatchsw.util.*; // XXX get rid
 import com.superliminal.util.PropertyManager;
 
 public class PolytopePuzzleDescription implements PuzzleDescription {
+    
+    // Warning! edit with caution (sliver removal heuristic is tuned to these values).
+    // If you edit, you should rerun the module test at a minimum.
+    private final static double SLICE_MULTIPLIER = 0.99999;
+    private final static double SLICE_MULTIPLIER_SIMPLEX = 0.995; // Special case because too close to 1 affecting drawing and too far from 1 was affecting grip detection.
+    private final static double SLIVER_VOLUME_PERCENT = 15; // Cull stickers with volumes < this % of average.
+    
     private CSG.SPolytope originalPolytope;
     private CSG.SPolytope slicedPolytope;
     
@@ -426,13 +433,6 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 
                 boolean isPrismOfThisFace = Math.abs(-1. - faceOffsets[iFace]) < 1e-6;
                 
-                // Warning! edit with caution (sliver removal heuristic is tuned to these values).
-                // If you edit, you should rerun the module test at a minimum.
-            	// NOTES: In the simplex case, making this too close to 1 was affecting drawing
-            	// 		  and making it too far from 1 was affecting grip detection. Argh!
-                final double sliceMultiplier = 0.99999;
-                final double sliceMultiplierSimplex = 0.995;
-                
                 // Special case the simplex puzzles and triangular duoprisms.
                 boolean isSimplex = schlafliProduct.equals( "{3,3,3}" );
                 boolean isTetrahedralPrism = schlafliProduct.indexOf("{3,3}") != -1;
@@ -447,9 +447,9 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 	
                 	// We need the sliver hack for these because the slicer can't handle it otherwise.
                 	if( isSimplex || isTetrahedralPrism )
-                		sliceThickness *= sliceMultiplierSimplex;
+                		sliceThickness *= SLICE_MULTIPLIER_SIMPLEX;
                 	else
-                		sliceThickness *= sliceMultiplier;
+                		sliceThickness *= SLICE_MULTIPLIER;
                 	needSliverRemoval = true;
                 	
                 	// There are no opposite faces for the simplex,
@@ -479,7 +479,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 	                 && !isPrismOfThisFace)
 	                {
 	                	needSliverRemoval = true;
-	                	sliceThickness *= sliceMultiplier;
+	                	sliceThickness *= SLICE_MULTIPLIER;
 	                }
 	
 	                nNearCuts = ceilLength / 2; // (n-1)/2 if odd, n/2 if even
@@ -557,9 +557,9 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 	        
 	        // Calculate a volume cutoff for slivers.
 	        // Note: we needed to make this depend on the full volume of the puzzle.
-	        // We'll make our cutoff 20% of the average volume of a sticker.
+	        // We'll make our cutoff a small percentage of the average volume of a sticker.
 	        double fullVolume = Math.abs( slicedPolytope.volume() );
-	        double cutoff = ( fullVolume / facets.length ) * .15;
+	        double cutoff = ( fullVolume / facets.length ) * SLIVER_VOLUME_PERCENT/100;
 	        //System.out.println( "sliver cutoff = " + cutoff );
 	
 	        int nValidFacets = 0;
