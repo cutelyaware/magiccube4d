@@ -467,24 +467,71 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         //editmenu.add(solveitem); // commented out until we reimplement true solves.
         JMenu scramblemenu = new JMenu("Scramble");
         
-        // Scrambling
-        //
         class Scrambler extends ProbableAction {
             private int scramblechenfrengensen;
             public Scrambler(int scramblechens) {
                 super("Scramble " + scramblechens);
                 this.scramblechenfrengensen = scramblechens;
             }
+            
+            /*
+             * Npieces = number of pieces in the puzzle (including 1-colored pieces)
+             * Nfaces = number of faces in the puzzle
+             * Nstickers = number of stickers in the puzzle
+             * N1Cpieces = number of 1-colored pieces in the puzzle
+             * d = dimension of the puzzle
+             * 
+             * ln(x) = natural logarithm of x
+             * log4(x) = base 4 logarithm of x = ln(x)/ln(4) = ln(x)/1.386
+             * 
+             * AveNumTwists = (Npieces*Nfaces/(Nstickers - N1Cpieces)) * (0.577+ln(Npieces))
+             * 
+             * Number of Twists to Scramble (round to nearest integer) =
+             * 
+             * AveNumTwists * (d-1+log4(Nfaces/(2*d)))
+             */
+
+            /*
+             * Npieces = number of pieces in the puzzle (including 1-colored pieces)
+             * Nfaces = number of faces in the puzzle
+             * Nstickers = number of stickers in the puzzle
+             * N1Cpieces = number of 1-colored pieces in the puzzle
+             * d = dimension of the puzzle
+             * 
+             * ln(x) = natural logarithm of x
+             * log4(x) = base 4 logarithm of x = ln(x)/ln(4) = ln(x)/1.386
+             * 
+             * AveNumTwists = (Npieces*Nfaces/(Nstickers - N1Cpieces)) * (0.577+ln(Npieces))
+             * 
+             * Number of Twists to Scramble (round to nearest integer) =
+             * 
+             * AveNumTwists * (d-1+log4(Nfaces/(2*d)))
+             */
+
+            public int goldilocks(int nPieces, int nFaces, int nStickers, int n1CPieces, int d) {
+                double dpieces = nPieces, dfaces = nFaces, dstickers = nStickers, d1cpieces = n1CPieces;
+                double aveNumTwists = (dpieces * dfaces / ((double)dstickers - d1cpieces)) * (0.577 + Math.log(dpieces));
+                return (int)Math.round(aveNumTwists * (d - 1 + log4(dfaces / (2.0 * d))));
+            }
+            
+            private double log4(double x) {
+                return Math.log(x) / Math.log(4);
+            }
+
             public void doit(ActionEvent e) {
 				scrambleState = SCRAMBLE_NONE; // do first to avoid issue 62 (fanfare on scramble).
                 reset.actionPerformed(e);
                 int previous_face = -1;
-                int totalTwistsNeededToFullyScramble = 
-                		puzzleManager.puzzleDescription.nFaces() // needed twists is proportional to nFaces
-                		* (int)puzzleManager.puzzleDescription.getEdgeLength() // and to number of slices
-                		* 2; // and to a fudge factor that brings the 3^4 close to the original 40 twists.
+                int totalTwistsNeededToFullyScramble = goldilocks(
+                        puzzleManager.puzzleDescription.nCubies(),
+                        puzzleManager.puzzleDescription.nFaces(),
+                        puzzleManager.puzzleDescription.nStickers(),
+                        puzzleManager.puzzleDescription.getNumCubiesWithNumColors(1),
+                        MagicCube.NDIMS);
                 int scrambleTwists = scramblechenfrengensen == -1 ? totalTwistsNeededToFullyScramble : scramblechenfrengensen;
-				Random rand = new Random();
+				if(scramblechenfrengensen == -1)
+				    System.out.println("Performing " + scrambleTwists + " scrambling twists");
+                Random rand = new Random();
                 for(int s = 0; s < scrambleTwists; s++) {
                     // select a random grip that is unrelated to the last one (if any)
                     int iGrip, iFace, order;
