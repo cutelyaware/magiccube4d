@@ -118,6 +118,14 @@ interface PuzzleDescription {
     * This can be used to highlight all the stickers on a given cubie.
     */
     public int[/*nStickers*/] getSticker2Cubie();
+
+    public int getNumColorsForCubie( int cubie );
+    
+    /**
+     * Answers the question, how many cubies have exactly n colors?
+     * TODO: Implement this in a base class using the concrete methods of the derived classes.
+     */
+    public int getNumCubiesWithNumColors(int n_colors);
     
     /**
     * Get a table mapping face to opposite face (if any).

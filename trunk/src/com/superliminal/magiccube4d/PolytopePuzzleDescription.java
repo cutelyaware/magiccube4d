@@ -182,6 +182,9 @@ package com.superliminal.magiccube4d;
 */
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.donhatchsw.util.*; // XXX get rid
 import com.superliminal.util.PropertyManager;
 
@@ -1068,7 +1071,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             return gripSymmetryOrders;
         }
         
-        private int getNumColorsForCubie( int cubie )
+        public int getNumColorsForCubie( int cubie )
         {
         	if( numColorsForCubie != null )
         		return numColorsForCubie.get( cubie );
@@ -1088,10 +1091,32 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         	return numColorsForCubie.get( cubie );
         }
         
+        /**
+         * Answers the question, how many cubies have exactly n colors?
+         */
+        public int getNumCubiesWithNumColors(int n_colors) {
+            if(numCubiesForNumColors == null) {
+                numCubiesForNumColors = new HashMap<Integer,Integer>();
+                for( int s=0; s<nStickers(); s++ )
+                {
+                    int c = getSticker2Cubie()[s];
+                    int num_colors_for_c = getNumColorsForCubie(c);
+                    Integer temp = numCubiesForNumColors.get( num_colors_for_c );
+                    if( temp == null )
+                        numCubiesForNumColors.put( num_colors_for_c, 1 );
+                    else
+                        numCubiesForNumColors.put( num_colors_for_c, temp+1 );
+                }
+            }
+            Integer n = numCubiesForNumColors.get(n_colors);
+            return n == null ? 0 : n.intValue();
+        }
+        
         // Map from cubie id to num colors.
         // See notes when sticker2cubie values are calculated,
         // for why this needs to be a map.
-        private java.util.HashMap<Integer,Integer> numColorsForCubie;
+        private Map<Integer,Integer> numColorsForCubie;
+        private Map<Integer,Integer> numCubiesForNumColors; // The inverse of the above.
         
         public int getClosestGrip( float pickCoords[/*4*/] )
         {
