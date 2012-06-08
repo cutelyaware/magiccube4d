@@ -22,8 +22,6 @@ import com.superliminal.util.SpringUtilities;
 import com.superliminal.util.StaticUtils;
 import com.superliminal.util.ResourceUtils;
 
-import de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel;
-
 /**
  * The main desktop application.
  * The main method here creates and shows an instance of this class.
@@ -1294,7 +1292,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             public void run() {
                 System.out.println("version " + System.getProperty("java.version"));
                 PropertyManager.loadProps(args, PropertyManager.top);
-                try { UIManager.setLookAndFeel(new SyntheticaStandardLookAndFeel()); } 
+                try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } 
                 catch (Exception e) { e.printStackTrace(); }
                 final JFrame frame = new MC4DSwing();
                 configureNormal(frame);
