@@ -1,0 +1,1 @@
+This is probably not [The wiki you are looking for](http://wiki.superliminal.com/wiki/MagicCube4D).
