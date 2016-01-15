@@ -56,12 +56,14 @@ public class ColorButton extends JButton {
         this.prefKey = prefKey;
         setColor(PropertyManager.getColor(prefKey, def));
         addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent arg0) {
                 final Color oldColor = PropertyManager.getColor(prefKey, def);
                 if(oldColor != null)
                     tcc.setColor(oldColor);
                 JColorChooser.createDialog(ColorButton.this, "Select Color", true, tcc,
                     new ActionListener() {
+                        @Override
                         public void actionPerformed(ActionEvent arg0) {
                             //System.out.println("ok");
                             if(!continuous && changer != null)
@@ -69,6 +71,7 @@ public class ColorButton extends JButton {
                         }
                     },
                     new ActionListener() {
+                        @Override
                         public void actionPerformed(ActionEvent arg0) {
                             //System.out.println("cancel");
                             setColor(oldColor);
@@ -81,6 +84,7 @@ public class ColorButton extends JButton {
         });
 
         tcc.getSelectionModel().addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(ChangeEvent e) {
                 Color newColor = tcc.getColor();
                 //System.out.println("state changed " + newColor);
@@ -114,6 +118,7 @@ public class ColorButton extends JButton {
     public static void main(String args[]) {
         JFrame frame = new StaticUtils.QuickFrame("ColorButton Test");
         frame.getContentPane().add(new ColorButton("test", "testcolor", new Color(255, 0, 0, 64), new ColorChangeListener() {
+            @Override
             public void colorChanged(Color newColor) {
                 System.out.println("new color " + newColor);
             }

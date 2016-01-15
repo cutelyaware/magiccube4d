@@ -43,6 +43,7 @@ public abstract class ProgressManager extends SwingWorker<Void, Void> {
         this.max = max;
         setProgress(0);
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 progressView.setIndeterminate(indeterminate);
                 progressView.setString(string);

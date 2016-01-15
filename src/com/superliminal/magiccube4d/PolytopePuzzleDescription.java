@@ -977,49 +977,61 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     // BEGIN GENERICPUZZLEDESCRIPTION INTERFACE METHODS
     //
 
+    @Override
     public String getSchlafliProduct()
     {
         return schlafliProduct;
     }
+    @Override
     public double getEdgeLength() {
         return edgeLength;
     }
+    @Override
     public String getFullPuzzleString() {
         return schlafliProduct + " " + edgeLength;
     }
+    @Override
     public int nDims()
     {
         return slicedPolytope.p.fullDim;
     }
+    @Override
     public int nVerts()
     {
         return vertsMinusStickerCenters.length;
     }
+    @Override
     public int nFaces()
     {
         return originalPolytope.p.facets.length;
     }
+    @Override
     public int nCubies()
     {
         return _nCubies;
     }
+    @Override
     public int nStickers()
     {
         return slicedPolytope.p.facets.length;
     }
+    @Override
     public int nGrips()
     {
         return grip2face.length;
     }
+    @Override
     public float circumRadius()
     {
         return _circumRadius;
     }
+    @Override
     public float inRadius()
     {
         return _inRadius;
     }
 
+    @Override
     public void computeStickerVertsAtRest(float verts[/* nVerts */][/* nDims */],
         float faceShrink,
         float stickerShrink)
@@ -1039,6 +1051,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         }
     }
 
+    @Override
     public float[][] getStandardStickerVertsAtRest()
     {
         // Return the cached values if we've already calculated them.
@@ -1054,28 +1067,33 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     }
     private float[][] standardStickerVertsAtRest;
 
+    @Override
     public int[/* nStickers */][/* nPolygonsThisSticker */][/* nVertsThisPolygon */]
         getStickerInds()
     {
         return stickerInds;
     }
+    @Override
     public void computeGripVertsAtRest(float verts[/* nVerts */][/* nDims */],
         float faceShrink,
         float stickerShrink)
     {
         throw new RuntimeException("unimplemented");
     }
+    @Override
     public int[/* nGrips */][/* nPolygonsThisGrip */][/* nVertsThisPolygon */]
         getGripInds()
     {
         throw new RuntimeException("unimplemented");
     }
+    @Override
     public int[/* nGrips */]
         getGripSymmetryOrders()
     {
         return gripSymmetryOrders;
     }
 
+    @Override
     public int getNumColorsForCubie(int cubie)
     {
         if(numColorsForCubie != null)
@@ -1099,6 +1117,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     /**
      * Answers the question, how many cubies have exactly n colors?
      */
+    @Override
     public int getNumCubiesWithNumColors(int n_colors) {
         if(numCubiesForNumColors == null) {
             numCubiesForNumColors = new HashMap<Integer, Integer>();
@@ -1123,11 +1142,13 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     private Map<Integer, Integer> numColorsForCubie;
     private Map<Integer, Integer> numCubiesForNumColors; // The inverse of the above.
 
+    @Override
     public int getClosestGrip(float pickCoords[/* 4 */])
     {
         return getClosestGrip(pickCoords, -1, -1, false);
     }
 
+    @Override
     public int getClosestGrip(float pickCoords[/* 4 */], int faceIndex, int stickerIndex, boolean is2x2x2Cell)
     {
         boolean faceValid = -1 != faceIndex;
@@ -1200,6 +1221,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         Assert(-1 != bestIndex);
         return bestIndex;
     }
+    @Override
     public float[/* nDims */] getClosestNicePointToRotateToCenter(float pickCoords[])
     {
         int bestIndex = -1;
@@ -1216,6 +1238,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         }
         return nicePointsToRotateToCenter[bestIndex];
     }
+    @Override
     public void
         computeStickerVertsPartiallyTwisted(
             float verts[/* nVerts */][/* nDims */],
@@ -1266,6 +1289,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 verts[iVert] = restVerts[iVert];
         }
     } // getStickerVertsPartiallyTwisted
+    @Override
     public int[/* nStickers */] getSticker2Face()
     {
         // Make sure caller didn't mess it up from last time!!
@@ -1273,16 +1297,19 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             throw new RuntimeException("PolytopePuzzleDescription.getSticker2Face: caller modified previously returned sticker2face! BAD! BAD! BAD!");
         return sticker2face;
     }
+    @Override
     public int[/* nStickers */] getSticker2Cubie()
     {
         return sticker2cubie;
     }
 
+    @Override
     public int[/* nGrips */] getGrip2Face()
     {
         return grip2face;
     }
 
+    @Override
     public int getNumSlicesForGrip(int gripIndex)
     {
         if(gripIndex < 0 || gripIndex >= nGrips())
@@ -1295,6 +1322,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         return numSlices;
     }
 
+    @Override
     public float[/* nDims */] getFaceCenter(int faceIndex)
     {
         if(faceIndex < 0 || faceIndex >= nFaces())
@@ -1303,6 +1331,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         return faceCenters[faceIndex];
     }
 
+    @Override
     public float[/* nDims */] getGripCoords(int gripIndex)
     {
         if(gripIndex < 0 || gripIndex >= nGrips())
@@ -1311,10 +1340,12 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         return gripCentersF[gripIndex];
     }
 
+    @Override
     public int[/* nFaces */] getFace2OppositeFace()
     {
         return face2OppositeFace;
     }
+    @Override
     public void applyTwistToState(int state[/* nStickers */],
         int gripIndex,
         int dir,

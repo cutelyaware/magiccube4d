@@ -70,6 +70,7 @@ public class MacroControls extends JPanel {
             final JRadioButton rb = new JRadioButton();
             rb.setSelected(macro == selected);
             rb.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     selected = macro;
                     moveUp.setEnabled(selected != macros[0]);
@@ -80,6 +81,7 @@ public class MacroControls extends JPanel {
             grid.add(rb);
             JButton forward = new JButton(macro.getName());
             forward.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     rb.doClick();
                     app.apply(macro, false);
@@ -93,6 +95,7 @@ public class MacroControls extends JPanel {
             grid.add(forward);
             JButton reverse = new JButton("Reversed");
             reverse.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     rb.doClick();
                     app.apply(macro, true);
@@ -108,6 +111,7 @@ public class MacroControls extends JPanel {
         JScrollPane gridScroll = new JScrollPane(tmp);
 
         moveUp.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 if(selected == null)
                     return;
@@ -116,6 +120,7 @@ public class MacroControls extends JPanel {
             }
         });
         moveDn.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 if(selected == null)
                     return;
@@ -124,6 +129,7 @@ public class MacroControls extends JPanel {
             }
         });
         rename.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 if(selected == null)
                     return;
@@ -135,6 +141,7 @@ public class MacroControls extends JPanel {
             }
         });
         delete.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 if(selected == null)
                     return;
@@ -166,9 +173,11 @@ public class MacroControls extends JPanel {
         MacroManager mm = new MacroManager("C:\\Java\\MC4D\\MC4D.macros");
         MacroControls mc = new MacroControls();
         mc.init(mm, "{4,3,3}", new MacroControls.Listener() {
+            @Override
             public void apply(Macro macro, boolean reverse) {
                 System.out.println("Applying " + macro.getName() + (reverse ? " reversed" : " forward"));
             }
+            @Override
             public void changed() {
                 System.out.println("Macros changed");
             }

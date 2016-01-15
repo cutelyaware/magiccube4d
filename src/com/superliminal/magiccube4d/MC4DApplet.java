@@ -36,6 +36,7 @@ public class MC4DApplet extends Applet {
             hist.read(new PushbackReader(new StringReader(ResourceUtils.readFileFromURL(histurl))));
         final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist);
         view.addStickerListener(new MC4DView.StickerListener() {
+            @Override
             public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
             }

@@ -286,6 +286,7 @@ public class MC4DView extends Component {
             }
         }, new String[]{"eyew", "faceshrink", "stickershrink"});
         this.addComponentListener(new ComponentAdapter() {
+            @Override
             public void componentResized(ComponentEvent e) { // affects xOff & yOff
                 updateViewFactors();
             }
@@ -540,6 +541,7 @@ public class MC4DView extends Component {
         JFrame frame = new StaticUtils.QuickFrame("test");
         final MC4DView view = new MC4DView(new PuzzleManager(SCHLAFLI, LENGTH, new JProgressBar()), new RotationHandler(), new History(LENGTH));
         view.addStickerListener(new MC4DView.StickerListener() {
+            @Override
             public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
                 view.animate(twisted, true);
             }

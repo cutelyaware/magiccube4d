@@ -144,6 +144,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             super(name);
         }
         public abstract void doit(ActionEvent ae);
+        @Override
         public final void actionPerformed(ActionEvent ae) {
             if(view.isAnimating())
                 return;
@@ -345,11 +346,13 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     //
     private Action
         quit = new AbstractAction("Quit") {
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 System.exit(0);
             }
         },
         reset = new AbstractAction("Reset") {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
                 scrambleState = SCRAMBLE_NONE; // do first to avoid issue 64 (fanfare on reset).
                 cancel.doit(ae);
@@ -359,6 +362,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             }
         },
         read = new AbstractAction("Read") {
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 if(macroFileChooser.showOpenDialog(MC4DSwing.this) != JFileChooser.APPROVE_OPTION)
                     return;
@@ -380,6 +384,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             }
         },
         write = new AbstractAction("Write") {
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 try {
                     macroMgr.write();
@@ -392,6 +397,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             }
         },
         writeas = new AbstractAction("Write As") {
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 if(macroFileChooser.showSaveDialog(MC4DSwing.this) != JFileChooser.APPROVE_OPTION)
                     return;
@@ -514,7 +520,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
             public int goldilocks(int nPieces, int nFaces, int nStickers, int n1CPieces, int d) {
                 double dpieces = nPieces, dfaces = nFaces, dstickers = nStickers, d1cpieces = n1CPieces;
-                double aveNumTwists = (dpieces * dfaces / ((double) dstickers - d1cpieces)) * (0.577 + Math.log(dpieces));
+                double aveNumTwists = (dpieces * dfaces / (dstickers - d1cpieces)) * (0.577 + Math.log(dpieces));
                 return (int) Math.round(aveNumTwists * (d - 1 + log4(dfaces / (2.0 * d))));
             }
 
@@ -522,6 +528,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 return Math.log(x) / Math.log(4);
             }
 
+            @Override
             public void doit(ActionEvent e) {
                 scrambleState = SCRAMBLE_NONE; // do first to avoid issue 62 (fanfare on scramble).
                 reset.actionPerformed(e);
@@ -610,6 +617,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         //
         JMenu helpmenu = new JMenu("Help");
         helpmenu.add(new JMenuItem("About...")).addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent arg0) {
 
                 // Get the minor version from our resource.
@@ -665,6 +673,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
         puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
+            @Override
             public void puzzleChanged(boolean newPuzzle) {
                 initMacroControls(); // to properly enable/disable the buttons
                 progressBar.setVisible(false);
@@ -715,6 +724,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             {
                 final String lengthString = lengthStrings[j];
                 submenu.add(new JMenuItem(schlafli == null ? name : "   " + lengthString + "  ")).addActionListener(new ActionListener() {
+                    @Override
                     public void actionPerformed(ActionEvent ae)
                     {
                         String newSchlafli = schlafli;
@@ -768,6 +778,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             final Macro macro = macros[i];
             JMenuItem applyitem = apply.add(new JMenuItem(macro.getName()));
             applyitem.addActionListener(new ProbableAction(macro.getName()) {
+                @Override
                 public void doit(ActionEvent ae) {
                     lastMacro = macro;
                     last.doit(ae);
@@ -788,18 +799,21 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     };
     private final MacroControls macroControls = new MacroControls();
     private final MacroControls.Listener macroControlsListener = new MacroControls.Listener() {
+        @Override
         public void apply(Macro macro, boolean reverse) {
             lastMacro = macro;
             final int mask = reverse ? ActionEvent.CTRL_MASK : 0;
             // A fake event so action will pick up correct direction.
             // A bit of a hack but sometimes a girl's gotta do what a girl's gotta do!
             ActionEvent ae = new ActionEvent(this, 0, "apply", mask) {
+                @Override
                 public int getID() {
                     return mask;
                 }
             };
             last.doit(ae);
         }
+        @Override
         public void changed() {
             initMacroMenu();
         }
@@ -826,6 +840,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         macroControlsContainer.validate();
     }
 
+    @Override
     public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
         if(macroMgr.isOpen()) {
             if(macroMgr.recording()) {
@@ -961,6 +976,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         viewcontainer.add(view, "Center");
 
         hist.addHistoryListener(new History.HistoryListener() {
+            @Override
             public void currentChanged() {
                 saveitem.setEnabled(true);
                 undoitem.setEnabled(hist.countMoves(false) > 0);
@@ -1006,6 +1022,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             lastMacro = macros[macros.length - 1];
 
         view.addKeyListener(new KeyAdapter() {
+            @Override
             public void keyTyped(KeyEvent arg0) {
                 char c = arg0.getKeyChar();
                 //System.out.println(c);
@@ -1043,9 +1060,10 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
      */
     public static class PropSlider extends FloatSlider {
         public PropSlider(final String propname, final Component dependent, double dflt, double min, double max) {
-            super(JSlider.HORIZONTAL, PropertyManager.getFloat(propname, (float) dflt), min, max);
+            super(SwingConstants.HORIZONTAL, PropertyManager.getFloat(propname, (float) dflt), min, max);
             setPreferredSize(new Dimension(200, 20));
             addChangeListener(new ChangeListener() {
+                @Override
                 public void stateChanged(ChangeEvent e) {
                     PropertyManager.userprefs.setProperty(propname, "" + (float) getFloatValue());
                     //System.out.println(propname + ": " + (float)getFloatValue());
@@ -1130,6 +1148,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
             final JCheckBox mute = new JCheckBox("Mute Sound Effects", PropertyManager.getBoolean("muted", false));
             mute.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent ae) {
                     boolean muted = mute.isSelected();
                     PropertyManager.userprefs.setProperty("muted", "" + muted);
@@ -1220,6 +1239,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
             JButton reset = new JButton("Reset To Defaults");
             reset.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent ae) {
                     // TODO: make this work. Problem is syncing the view with the reset prefs
                     // without losing the user's history state. Possible if view gets all prefs
@@ -1299,6 +1319,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
      */
     public static void main(final String args[]) {
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 System.out.println("version " + System.getProperty("java.version"));
                 PropertyManager.loadProps(args, PropertyManager.top);
@@ -1311,12 +1332,14 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 final JFrame frame = new MC4DSwing();
                 configureNormal(frame);
                 frame.addComponentListener(new ComponentAdapter() {
+                    @Override
                     public void componentResized(ComponentEvent ce) {
                         if(frame.getExtendedState() != Frame.NORMAL)
                             return;
                         PropertyManager.userprefs.setProperty("window.width", "" + frame.getWidth());
                         PropertyManager.userprefs.setProperty("window.height", "" + frame.getHeight());
                     }
+                    @Override
                     public void componentMoved(ComponentEvent ce) {
                         if(frame.getExtendedState() != Frame.NORMAL)
                             return;
@@ -1326,6 +1349,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 });
                 frame.setExtendedState(PropertyManager.getInt("window.state", frame.getExtendedState()));
                 frame.addWindowStateListener(new WindowStateListener() {
+                    @Override
                     public void windowStateChanged(WindowEvent we) {
                         int state = frame.getExtendedState();
                         state &= ~Frame.ICONIFIED; // disallows saving in iconified state

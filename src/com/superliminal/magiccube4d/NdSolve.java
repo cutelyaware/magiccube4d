@@ -653,7 +653,7 @@ public class NdSolve {
         } // twist90s
 
         public static Object twist90s(int n, int d, Object puz, java.util.ArrayList<int[]> movesList) {
-            return twist90s(n, d, puz, (int[][]) movesList.toArray(new int[0][]));
+            return twist90s(n, d, puz, movesList.toArray(new int[0][]));
         } // twist90s
 
         public static int[] randomTwist90(int n, int d,
@@ -1124,7 +1124,7 @@ public class NdSolve {
                     .println("    solution =" + Arrays.toString(solution));
             if(debugLevel >= 1)
                 System.out.println("out SolveStuff.solve");
-            return (int[][]) solution.toArray(new int[0][846372622]); // if they
+            return solution.toArray(new int[0][846372622]); // if they
                                                                       // can
                                                                       // be
                                                                       // retarded
@@ -1185,8 +1185,8 @@ public class NdSolve {
                 Character letter = (Character) Arrays.get(puz, index);
                 if(letter.charValue() != ' ') {
                     Assert(letterToFaceCenterCubieCoords.containsKey(letter));
-                    int contribution[] = (int[]) letterToFaceCenterCubieCoords
-                        .get(letter);
+                    int contribution[] = letterToFaceCenterCubieCoords
+                            .get(letter);
                     int cubieCenterIndex[] = Arrays.clamp(index, 1, n);
                     int temp[] = (int[]) Arrays.get(answer, cubieCenterIndex);
                     temp = Arrays.plus(temp, contribution);
@@ -1211,8 +1211,8 @@ public class NdSolve {
                     int cubieCenterIndex[] = Arrays.clamp(index, 1, n);
                     int whereCubieCenterWantsToBe[] = (int[]) Arrays.get(
                         answer, cubieCenterIndex);
-                    int contribution[] = (int[]) letterToFaceCenterCubieCoords
-                        .get(letter);
+                    int contribution[] = letterToFaceCenterCubieCoords
+                            .get(letter);
                     contribution = Arrays.plus(contribution, contribution); // so
                                                                             // at
                                                                             // least
@@ -4612,7 +4612,7 @@ public class NdSolve {
 
                                     int cycle[][] = {};
                                     while(Arrays.get(scratch, index) != null) {
-                                        cycle = (int[][]) Arrays.append(cycle,
+                                        cycle = Arrays.append(cycle,
                                             index);
                                         Arrays.set(scratch, index, null);
                                         index = (int[]) Arrays.get(
@@ -4911,7 +4911,7 @@ public class NdSolve {
                 Character c = new Character(s.charAt(i));
                 if(!colorCounts.containsKey(c))
                     colorCounts.put(c, new int[]{0});
-                ((int[]) colorCounts.get(c))[0]++;
+                colorCounts.get(c)[0]++;
             }
             int nColors = colorCounts.size();
             if(debugLevel >= 2)
@@ -5050,7 +5050,7 @@ public class NdSolve {
             for(java.util.Iterator<Character> it = counts.keySet().iterator(); it
                 .hasNext();) {
                 Object key = it.next();
-                int count = ((int[]) counts.get(key))[0];
+                int count = counts.get(key)[0];
                 if(count != desiredCount)
                     return false;
             }
@@ -6198,7 +6198,7 @@ class Arrays {
     // all the time...
     //
     public static int[] insert(int array[], int index, int itemToInsert) {
-        return (int[]) insert(array, index, (Object) new Integer(itemToInsert));
+        return (int[]) insert(array, index, new Integer(itemToInsert));
     }
 
     public static int[][] insert(int array[][], int index, int itemToInsert[]) {
@@ -6216,7 +6216,7 @@ class Arrays {
     }
 
     public static int[] append(int array[], int itemToAppend) {
-        return (int[]) append(array, (Object) new Integer(itemToAppend));
+        return (int[]) append(array, new Integer(itemToAppend));
     }
 
     public static int[][] append(int array[][], int itemToAppend[]) {

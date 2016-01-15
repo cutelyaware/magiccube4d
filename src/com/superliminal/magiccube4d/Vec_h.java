@@ -155,7 +155,7 @@ public class Vec_h
 
     public static void _MXV4(float af[], int ai[][], float af1[])
     {
-        strip_outer_parens_4((af[0] = (float) ai[0][0] * af1[0] + (float) ai[0][1] * af1[1] + (float) ai[0][2] * af1[2] + (float) ai[0][3] * af1[3]) - (af[1] = (float) ai[1][0] * af1[0] + (float) ai[1][1] * af1[1] + (float) ai[1][2] * af1[2] + (float) ai[1][3] * af1[3]) - (af[2] = (float) ai[2][0] * af1[0] + (float) ai[2][1] * af1[1] + (float) ai[2][2] * af1[2] + (float) ai[2][3] * af1[3]) - (af[3] = (float) ai[3][0] * af1[0] + (float) ai[3][1] * af1[1] + (float) ai[3][2] * af1[2] + (float) ai[3][3] * af1[3]));
+        strip_outer_parens_4((af[0] = ai[0][0] * af1[0] + ai[0][1] * af1[1] + ai[0][2] * af1[2] + ai[0][3] * af1[3]) - (af[1] = ai[1][0] * af1[0] + ai[1][1] * af1[1] + ai[1][2] * af1[2] + ai[1][3] * af1[3]) - (af[2] = ai[2][0] * af1[0] + ai[2][1] * af1[1] + ai[2][2] * af1[2] + ai[2][3] * af1[3]) - (af[3] = ai[3][0] * af1[0] + ai[3][1] * af1[1] + ai[3][2] * af1[2] + ai[3][3] * af1[3]));
     }
 
     public static void _MXV4(int ai[], int ai1[][], int ai2[])
@@ -186,7 +186,7 @@ public class Vec_h
 
     public static void _VXM4(float af[], float af1[], int ai[][])
     {
-        strip_outer_parens_4((af[0] = af1[0] * (float) ai[0][0] + af1[1] * (float) ai[1][0] + af1[2] * (float) ai[2][0] + af1[3] * (float) ai[3][0]) - (af[1] = af1[0] * (float) ai[0][1] + af1[1] * (float) ai[1][1] + af1[2] * (float) ai[2][1] + af1[3] * (float) ai[3][1]) - (af[2] = af1[0] * (float) ai[0][2] + af1[1] * (float) ai[1][2] + af1[2] * (float) ai[2][2] + af1[3] * (float) ai[3][2]) - (af[3] = af1[0] * (float) ai[0][3] + af1[1] * (float) ai[1][3] + af1[2] * (float) ai[2][3] + af1[3] * (float) ai[3][3]));
+        strip_outer_parens_4((af[0] = af1[0] * ai[0][0] + af1[1] * ai[1][0] + af1[2] * ai[2][0] + af1[3] * ai[3][0]) - (af[1] = af1[0] * ai[0][1] + af1[1] * ai[1][1] + af1[2] * ai[2][1] + af1[3] * ai[3][1]) - (af[2] = af1[0] * ai[0][2] + af1[1] * ai[1][2] + af1[2] * ai[2][2] + af1[3] * ai[3][2]) - (af[3] = af1[0] * ai[0][3] + af1[1] * ai[1][3] + af1[2] * ai[2][3] + af1[3] * ai[3][3]));
     }
 
     public static void _SET4(float af[], float af1[])
@@ -231,10 +231,10 @@ public class Vec_h
 
     public static void _MXM4(float af[][], float af1[][], int ai[][])
     {
-        strip_outer_parens_4((af[0][0] = af1[0][0] * (float) ai[0][0] + af1[0][1] * (float) ai[1][0] + af1[0][2] * (float) ai[2][0] + af1[0][3] * (float) ai[3][0]) - (af[0][1] = af1[0][0] * (float) ai[0][1] + af1[0][1] * (float) ai[1][1] + af1[0][2] * (float) ai[2][1] + af1[0][3] * (float) ai[3][1]) - (af[0][2] = af1[0][0] * (float) ai[0][2] + af1[0][1] * (float) ai[1][2] + af1[0][2] * (float) ai[2][2] + af1[0][3] * (float) ai[3][2]) - (af[0][3] = af1[0][0] * (float) ai[0][3] + af1[0][1] * (float) ai[1][3] + af1[0][2] * (float) ai[2][3] + af1[0][3] * (float) ai[3][3]));
-        strip_outer_parens_4((af[1][0] = af1[1][0] * (float) ai[0][0] + af1[1][1] * (float) ai[1][0] + af1[1][2] * (float) ai[2][0] + af1[1][3] * (float) ai[3][0]) - (af[1][1] = af1[1][0] * (float) ai[0][1] + af1[1][1] * (float) ai[1][1] + af1[1][2] * (float) ai[2][1] + af1[1][3] * (float) ai[3][1]) - (af[1][2] = af1[1][0] * (float) ai[0][2] + af1[1][1] * (float) ai[1][2] + af1[1][2] * (float) ai[2][2] + af1[1][3] * (float) ai[3][2]) - (af[1][3] = af1[1][0] * (float) ai[0][3] + af1[1][1] * (float) ai[1][3] + af1[1][2] * (float) ai[2][3] + af1[1][3] * (float) ai[3][3]));
-        strip_outer_parens_4((af[2][0] = af1[2][0] * (float) ai[0][0] + af1[2][1] * (float) ai[1][0] + af1[2][2] * (float) ai[2][0] + af1[2][3] * (float) ai[3][0]) - (af[2][1] = af1[2][0] * (float) ai[0][1] + af1[2][1] * (float) ai[1][1] + af1[2][2] * (float) ai[2][1] + af1[2][3] * (float) ai[3][1]) - (af[2][2] = af1[2][0] * (float) ai[0][2] + af1[2][1] * (float) ai[1][2] + af1[2][2] * (float) ai[2][2] + af1[2][3] * (float) ai[3][2]) - (af[2][3] = af1[2][0] * (float) ai[0][3] + af1[2][1] * (float) ai[1][3] + af1[2][2] * (float) ai[2][3] + af1[2][3] * (float) ai[3][3]));
-        strip_outer_parens_4((af[3][0] = af1[3][0] * (float) ai[0][0] + af1[3][1] * (float) ai[1][0] + af1[3][2] * (float) ai[2][0] + af1[3][3] * (float) ai[3][0]) - (af[3][1] = af1[3][0] * (float) ai[0][1] + af1[3][1] * (float) ai[1][1] + af1[3][2] * (float) ai[2][1] + af1[3][3] * (float) ai[3][1]) - (af[3][2] = af1[3][0] * (float) ai[0][2] + af1[3][1] * (float) ai[1][2] + af1[3][2] * (float) ai[2][2] + af1[3][3] * (float) ai[3][2]) - (af[3][3] = af1[3][0] * (float) ai[0][3] + af1[3][1] * (float) ai[1][3] + af1[3][2] * (float) ai[2][3] + af1[3][3] * (float) ai[3][3]));
+        strip_outer_parens_4((af[0][0] = af1[0][0] * ai[0][0] + af1[0][1] * ai[1][0] + af1[0][2] * ai[2][0] + af1[0][3] * ai[3][0]) - (af[0][1] = af1[0][0] * ai[0][1] + af1[0][1] * ai[1][1] + af1[0][2] * ai[2][1] + af1[0][3] * ai[3][1]) - (af[0][2] = af1[0][0] * ai[0][2] + af1[0][1] * ai[1][2] + af1[0][2] * ai[2][2] + af1[0][3] * ai[3][2]) - (af[0][3] = af1[0][0] * ai[0][3] + af1[0][1] * ai[1][3] + af1[0][2] * ai[2][3] + af1[0][3] * ai[3][3]));
+        strip_outer_parens_4((af[1][0] = af1[1][0] * ai[0][0] + af1[1][1] * ai[1][0] + af1[1][2] * ai[2][0] + af1[1][3] * ai[3][0]) - (af[1][1] = af1[1][0] * ai[0][1] + af1[1][1] * ai[1][1] + af1[1][2] * ai[2][1] + af1[1][3] * ai[3][1]) - (af[1][2] = af1[1][0] * ai[0][2] + af1[1][1] * ai[1][2] + af1[1][2] * ai[2][2] + af1[1][3] * ai[3][2]) - (af[1][3] = af1[1][0] * ai[0][3] + af1[1][1] * ai[1][3] + af1[1][2] * ai[2][3] + af1[1][3] * ai[3][3]));
+        strip_outer_parens_4((af[2][0] = af1[2][0] * ai[0][0] + af1[2][1] * ai[1][0] + af1[2][2] * ai[2][0] + af1[2][3] * ai[3][0]) - (af[2][1] = af1[2][0] * ai[0][1] + af1[2][1] * ai[1][1] + af1[2][2] * ai[2][1] + af1[2][3] * ai[3][1]) - (af[2][2] = af1[2][0] * ai[0][2] + af1[2][1] * ai[1][2] + af1[2][2] * ai[2][2] + af1[2][3] * ai[3][2]) - (af[2][3] = af1[2][0] * ai[0][3] + af1[2][1] * ai[1][3] + af1[2][2] * ai[2][3] + af1[2][3] * ai[3][3]));
+        strip_outer_parens_4((af[3][0] = af1[3][0] * ai[0][0] + af1[3][1] * ai[1][0] + af1[3][2] * ai[2][0] + af1[3][3] * ai[3][0]) - (af[3][1] = af1[3][0] * ai[0][1] + af1[3][1] * ai[1][1] + af1[3][2] * ai[2][1] + af1[3][3] * ai[3][1]) - (af[3][2] = af1[3][0] * ai[0][2] + af1[3][1] * ai[1][2] + af1[3][2] * ai[2][2] + af1[3][3] * ai[3][2]) - (af[3][3] = af1[3][0] * ai[0][3] + af1[3][1] * ai[1][3] + af1[3][2] * ai[2][3] + af1[3][3] * ai[3][3]));
     }
 
     public static void _MXM4(float af[][], float af1[][], float af2[][])
@@ -367,13 +367,13 @@ public class Vec_h
 
     public static void _M4XM3(float af[][], int ai[][], float af1[][])
     {
-        strip_outer_parens_3((af[0][0] = (float) ai[0][0] * af1[0][0] + (float) ai[0][1] * af1[1][0] + (float) ai[0][2] * af1[2][0]) - (af[0][1] = (float) ai[0][0] * af1[0][1] + (float) ai[0][1] * af1[1][1] + (float) ai[0][2] * af1[2][1]) - (af[0][2] = (float) ai[0][0] * af1[0][2] + (float) ai[0][1] * af1[1][2] + (float) ai[0][2] * af1[2][2]));
+        strip_outer_parens_3((af[0][0] = ai[0][0] * af1[0][0] + ai[0][1] * af1[1][0] + ai[0][2] * af1[2][0]) - (af[0][1] = ai[0][0] * af1[0][1] + ai[0][1] * af1[1][1] + ai[0][2] * af1[2][1]) - (af[0][2] = ai[0][0] * af1[0][2] + ai[0][1] * af1[1][2] + ai[0][2] * af1[2][2]));
         af[0][3] = ai[0][3];
-        strip_outer_parens_3((af[1][0] = (float) ai[1][0] * af1[0][0] + (float) ai[1][1] * af1[1][0] + (float) ai[1][2] * af1[2][0]) - (af[1][1] = (float) ai[1][0] * af1[0][1] + (float) ai[1][1] * af1[1][1] + (float) ai[1][2] * af1[2][1]) - (af[1][2] = (float) ai[1][0] * af1[0][2] + (float) ai[1][1] * af1[1][2] + (float) ai[1][2] * af1[2][2]));
+        strip_outer_parens_3((af[1][0] = ai[1][0] * af1[0][0] + ai[1][1] * af1[1][0] + ai[1][2] * af1[2][0]) - (af[1][1] = ai[1][0] * af1[0][1] + ai[1][1] * af1[1][1] + ai[1][2] * af1[2][1]) - (af[1][2] = ai[1][0] * af1[0][2] + ai[1][1] * af1[1][2] + ai[1][2] * af1[2][2]));
         af[1][3] = ai[1][3];
-        strip_outer_parens_3((af[2][0] = (float) ai[2][0] * af1[0][0] + (float) ai[2][1] * af1[1][0] + (float) ai[2][2] * af1[2][0]) - (af[2][1] = (float) ai[2][0] * af1[0][1] + (float) ai[2][1] * af1[1][1] + (float) ai[2][2] * af1[2][1]) - (af[2][2] = (float) ai[2][0] * af1[0][2] + (float) ai[2][1] * af1[1][2] + (float) ai[2][2] * af1[2][2]));
+        strip_outer_parens_3((af[2][0] = ai[2][0] * af1[0][0] + ai[2][1] * af1[1][0] + ai[2][2] * af1[2][0]) - (af[2][1] = ai[2][0] * af1[0][1] + ai[2][1] * af1[1][1] + ai[2][2] * af1[2][1]) - (af[2][2] = ai[2][0] * af1[0][2] + ai[2][1] * af1[1][2] + ai[2][2] * af1[2][2]));
         af[2][3] = ai[2][3];
-        strip_outer_parens_3((af[3][0] = (float) ai[3][0] * af1[0][0] + (float) ai[3][1] * af1[1][0] + (float) ai[3][2] * af1[2][0]) - (af[3][1] = (float) ai[3][0] * af1[0][1] + (float) ai[3][1] * af1[1][1] + (float) ai[3][2] * af1[2][1]) - (af[3][2] = (float) ai[3][0] * af1[0][2] + (float) ai[3][1] * af1[1][2] + (float) ai[3][2] * af1[2][2]));
+        strip_outer_parens_3((af[3][0] = ai[3][0] * af1[0][0] + ai[3][1] * af1[1][0] + ai[3][2] * af1[2][0]) - (af[3][1] = ai[3][0] * af1[0][1] + ai[3][1] * af1[1][1] + ai[3][2] * af1[2][1]) - (af[3][2] = ai[3][0] * af1[0][2] + ai[3][1] * af1[1][2] + ai[3][2] * af1[2][2]));
         af[3][3] = ai[3][3];
     }
 
