@@ -1,4 +1,5 @@
 package com.superliminal.magiccube4d;
+
 import com.donhatchsw.util.VecMath;
 
 /**
@@ -6,12 +7,13 @@ import com.donhatchsw.util.VecMath;
  * to support the MagicCube4D application.
  * 
  * Copyright 2005 - Superliminal Software
+ * 
  * @author Don Hatch
  */
 public class Math4d
 {
     private Math4d() {} // disallows instantiation
-    
+
     private static int _assertionFailed(String s, String s1, int i)
     {
         throw new RuntimeException("Assertion failed at " + s1 + "(" + i + "): " + s);
@@ -26,7 +28,7 @@ public class Math4d
         float af5[][] = new float[3][3];
         float af6[][] = new float[4][4];
         if((af[0] == 0.0F ? 0 : 1) + (af[1] == 0.0F ? 0 : 1) + (af[2] == 0.0F ? 0 : 1) + (af[3] == 0.0F ? 0 : 1) != 1) {
-        	System.err.println("FAIL in Math4d.get4RotMatrix: " + af[0] + "," + af[1] + "," + af[2] + "," + af[3]);
+            System.err.println("FAIL in Math4d.get4RotMatrix: " + af[0] + "," + af[1] + "," + af[2] + "," + af[3]);
             _assertionFailed("(center[0]!=0 ? 1 : 0) + (center[1]!=0 ? 1 : 0) + (center[2]!=0 ? 1 : 0) + (center[3]!=0 ? 1 : 0) == 1", "Math4d.prejava", 40);
         }
         int i;
@@ -73,8 +75,7 @@ public class Math4d
             ai[i][i] = 0;
             ai[3][i] = j;
             ai[i][3] = -j;
-        } else
-        if(j > 0)
+        } else if(j > 0)
         {
             ai[3][3] = -1;
             ai[2][2] = -1;
@@ -98,72 +99,72 @@ public class Math4d
         }
         for(int i = 0; i < 3; i++)
         {
-            float f1 = (float)Math.sqrt(Vec_h._NORMSQRD3(af1[i]));
+            float f1 = (float) Math.sqrt(Vec_h._NORMSQRD3(af1[i]));
             Vec_h._VDS3(af1[i], af1[i], f1);
         }
 
         Vec_h._TRANSPOSE3(af2, af1);
-        af3[0][0] = (float)Math.cos(f);
-        af3[0][1] = (float)Math.sin(f);
+        af3[0][0] = (float) Math.cos(f);
+        af3[0][1] = (float) Math.sin(f);
         Vec_h._XV2(af3[1], af3[0]);
         Vec_h._M2XM3r(af1, af3, af1);
         Vec_h._MXM3r(af1, af2, af1);
     }
 
     // Returns true if the two vector magnitudes are close.
-    private static boolean magsClose( double v1[], double v2[] )
+    private static boolean magsClose(double v1[], double v2[])
     {
-    	double mag1 = VecMath.norm( v1 );
-    	double mag2 = VecMath.norm( v2 );
-    	return Math.abs( mag2 - mag1 ) < .01;
+        double mag1 = VecMath.norm(v1);
+        double mag2 = VecMath.norm(v2);
+        return Math.abs(mag2 - mag1) < .01;
     }
-    
-    public static boolean get4dMatThatRotatesThese4ToThose4( 
-    		double these0[], double these1[], double these2[], double these3[],
-    		double those0[], double those1[], double those2[], double those3[], 
-    		double mat[][] )
+
+    public static boolean get4dMatThatRotatesThese4ToThose4(
+        double these0[], double these1[], double these2[], double these3[],
+        double those0[], double those1[], double those2[], double those3[],
+        double mat[][])
     {
-    	// All the inputs should be isometric relative to each other,
-    	// so we do a bunch of distance checks at the beginning.
-    	// If any of these fail, we can't do the rotation.
-    	if( !magsClose( these0, those0 ) ||
-    		!magsClose( these1, those1 ) ||
-    		!magsClose( these2, those2 ) ||
-    		!magsClose( these3, those3 ) )
-    		return false;
-    	
-    	if( !magsClose( VecMath.vmv( these1, these0 ), VecMath.vmv( those1, those0 ) ) ||
-			!magsClose( VecMath.vmv( these2, these0 ), VecMath.vmv( those2, those0 ) ) ||
-			!magsClose( VecMath.vmv( these3, these0 ), VecMath.vmv( those3, those0 ) ) ||
-			!magsClose( VecMath.vmv( these2, these1 ), VecMath.vmv( those2, those1 ) ) ||
-    		!magsClose( VecMath.vmv( these3, these1 ), VecMath.vmv( those3, those1 ) ) ||
-    		!magsClose( VecMath.vmv( these3, these2 ), VecMath.vmv( those3, those2 ) ) )
-    		return false;	
-    	
-    	//
-    	// Now we are going to use VecMath.makeRowTiePointMat.
-    	// In general, this function does not return a rotation matrix, 
-    	// but given the checks above and those in the MacroManager, we'll be good.
-    	//
-    	
-    	double inTiePoints[][] = new double[5][4];
-    	inTiePoints[0] = these0;
-    	inTiePoints[1] = these1;
-    	inTiePoints[2] = these2;
-    	inTiePoints[3] = these3;
-    	inTiePoints[4] = VecMath.zerovec( 4 );	// Since the origin does not move during a rotation.
-    	
-    	double outTiePoints[][] = new double[5][4];
-    	outTiePoints[0] = those0;
-    	outTiePoints[1] = those1;
-    	outTiePoints[2] = those2;
-    	outTiePoints[3] = those3;
-    	outTiePoints[4] = VecMath.zerovec( 4 );
-    	
-    	double temp[][] = VecMath.makeRowTiePointMat( inTiePoints, outTiePoints );
-    	
-    	// Turn into a 4x4 matrix.
-    	VecMath.copymat( mat, temp );
-    	return true;
+        // All the inputs should be isometric relative to each other,
+        // so we do a bunch of distance checks at the beginning.
+        // If any of these fail, we can't do the rotation.
+        if(!magsClose(these0, those0) ||
+            !magsClose(these1, those1) ||
+            !magsClose(these2, those2) ||
+            !magsClose(these3, those3))
+            return false;
+
+        if(!magsClose(VecMath.vmv(these1, these0), VecMath.vmv(those1, those0)) ||
+            !magsClose(VecMath.vmv(these2, these0), VecMath.vmv(those2, those0)) ||
+            !magsClose(VecMath.vmv(these3, these0), VecMath.vmv(those3, those0)) ||
+            !magsClose(VecMath.vmv(these2, these1), VecMath.vmv(those2, those1)) ||
+            !magsClose(VecMath.vmv(these3, these1), VecMath.vmv(those3, those1)) ||
+            !magsClose(VecMath.vmv(these3, these2), VecMath.vmv(those3, those2)))
+            return false;
+
+        //
+        // Now we are going to use VecMath.makeRowTiePointMat.
+        // In general, this function does not return a rotation matrix, 
+        // but given the checks above and those in the MacroManager, we'll be good.
+        //
+
+        double inTiePoints[][] = new double[5][4];
+        inTiePoints[0] = these0;
+        inTiePoints[1] = these1;
+        inTiePoints[2] = these2;
+        inTiePoints[3] = these3;
+        inTiePoints[4] = VecMath.zerovec(4); // Since the origin does not move during a rotation.
+
+        double outTiePoints[][] = new double[5][4];
+        outTiePoints[0] = those0;
+        outTiePoints[1] = those1;
+        outTiePoints[2] = those2;
+        outTiePoints[3] = those3;
+        outTiePoints[4] = VecMath.zerovec(4);
+
+        double temp[][] = VecMath.makeRowTiePointMat(inTiePoints, outTiePoints);
+
+        // Turn into a 4x4 matrix.
+        VecMath.copymat(mat, temp);
+        return true;
     }
 }

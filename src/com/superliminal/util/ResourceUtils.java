@@ -1,23 +1,23 @@
 package com.superliminal.util;
+
 import java.net.*;
 import java.io.*;
-
 
 
 /**
  * Contains static I/O methods for dealing with resources.
  * 
  * Copyright 2005 - Superliminal Software
+ * 
  * @author Melinda Green
  */
 public class ResourceUtils {
-    private ResourceUtils() {
-    }
+    private ResourceUtils() {}
 
     /**
      * @param name is either a fully qualified url path or a relative file path.
      * @return URL version of name if a fully qualified url path otherwise a url
-     * relative to name and expected to be found in the classpath.
+     *         relative to name and expected to be found in the classpath.
      */
     public static URL getResource(String name) {
         if(name == null)
@@ -29,55 +29,53 @@ public class ResourceUtils {
             }
             else
                 url = new URL(name);
-        }
-        catch(Exception e){
+        } catch(Exception e) {
             System.err.println("ResourceUtils.getResource: can't load resource: " + name);
         }
         return url;
     }
-    
+
     public static String readFileFromURL(URL url) {
         StringBuffer fBuf = new StringBuffer();
         String lastLine = null;
         try {
-            InputStream in=url.openStream (); // Open a stream to the file using the URL.
-            BufferedReader bis = new BufferedReader (new InputStreamReader (in));
+            InputStream in = url.openStream(); // Open a stream to the file using the URL.
+            BufferedReader bis = new BufferedReader(new InputStreamReader(in));
             String line;
-            while ( (line = bis.readLine ()) != null) {
+            while((line = bis.readLine()) != null) {
                 if(lastLine == null)
-                	lastLine = line;
+                    lastLine = line;
                 else
-                	fBuf.append(System.getProperty("line.separator"));
+                    fBuf.append(System.getProperty("line.separator"));
                 fBuf.append(line);
             }
-            in.close ();
-        }
-        catch (IOException e) {
+            in.close();
+        } catch(IOException e) {
             e.printStackTrace();
             return null;
         }
         return fBuf.toString();
     }
-    
+
     public static String readRelativeFile(String fname) {
-    	URL fileurl = getResource(fname);
-    	if(fileurl == null) {
-    		return null;
-    	}
-    	return readFileFromURL(fileurl);
+        URL fileurl = getResource(fname);
+        if(fileurl == null) {
+            return null;
+        }
+        return readFileFromURL(fileurl);
     }
-    
+
     public static void main(String[] args) {
-    	URL fileurl = getResource("facecolors.txt");
-    	if(fileurl == null) {
-    		System.out.println("File not found");
-    		return;
-    	}
-    	String contents = readFileFromURL(fileurl);
-    	if(contents == null) {
-    		System.out.println("Couldn't read from file");
-    		return;
-    	}
-    	System.out.println("Contents: " + contents);
+        URL fileurl = getResource("facecolors.txt");
+        if(fileurl == null) {
+            System.out.println("File not found");
+            return;
+        }
+        String contents = readFileFromURL(fileurl);
+        if(contents == null) {
+            System.out.println("Couldn't read from file");
+            return;
+        }
+        System.out.println("Contents: " + contents);
     }
 }

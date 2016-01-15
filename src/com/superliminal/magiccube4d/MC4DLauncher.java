@@ -1,4 +1,5 @@
 package com.superliminal.magiccube4d;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -12,15 +13,15 @@ import java.net.URISyntaxException;
  * @author Melinda Green
  */
 public class MC4DLauncher {
-	public static void main(String args[]) throws IOException, URISyntaxException{
-		String thisjar = new File(MC4DLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).toString();
-		if(thisjar.endsWith(".jar")) {
-			System.out.println("Jar: " + thisjar);
-			Runtime.getRuntime().exec("java -Xms128m -Xmx512m -cp " + thisjar + " " + MC4DSwing.class.getCanonicalName());
-		}
-		else {
-			System.out.println("Path: " + thisjar);
-			MC4DSwing.main(args);
-		}
-	}
+    public static void main(String args[]) throws IOException, URISyntaxException {
+        String thisjar = new File(MC4DLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).toString();
+        if(thisjar.endsWith(".jar")) {
+            System.out.println("Jar: " + thisjar);
+            Runtime.getRuntime().exec("java -Xms128m -Xmx512m -cp " + thisjar + " " + MC4DSwing.class.getCanonicalName());
+        }
+        else {
+            System.out.println("Path: " + thisjar);
+            MC4DSwing.main(args);
+        }
+    }
 }

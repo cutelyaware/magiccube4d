@@ -13,7 +13,7 @@ import javax.swing.*;
 
 /**
  * Facility for creating, managing, and drawing a current puzzle.
- * Meant to be a model object shared between the UI (controller) 
+ * Meant to be a model object shared between the UI (controller)
  * and the rendering code (view).
  * 
  * TODO: Perhaps the drawing part should be moved to another service?
@@ -21,24 +21,24 @@ import javax.swing.*;
  */
 public class PuzzleManager
 {
-	public static int verboseLevel = 0; // set to something else to debug
+    public static int verboseLevel = 0; // set to something else to debug
 
     public PuzzleDescription puzzleDescription = null;
     public int puzzleState[] = null;
     public Color faceColors[];
-    
+
     /**
      * Reinitializes the puzzleState array of color indices.
      * First version fires a puzzle change event.
      */
     public void resetPuzzleState() {
-    	resetPuzzleStateNoEvent();
-		firePuzzleChanged( false );
+        resetPuzzleStateNoEvent();
+        firePuzzleChanged(false);
     }
     public void resetPuzzleStateNoEvent() {
-    	if(puzzleDescription == null)
-    		return;
-		puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());
+        if(puzzleDescription == null)
+            return;
+        puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());
     }
 
     //
@@ -57,7 +57,7 @@ public class PuzzleManager
     public int iTwistGrip; // of twist in progress, if any
     public int twistDir; // of twist in progress, if any
     public int twistSliceMask; // of twist in progress, if any
-    
+
     private int iStickerUnderMouse = -1; // The sticker that the mouse is currently hovering over.
     private boolean highlit = false; // Whether it should be highlighted.
 
@@ -66,71 +66,86 @@ public class PuzzleManager
     //
     PipelineUtils.AnimFrame untwistedFrame = new PipelineUtils.AnimFrame();
     private PipelineUtils.AnimFrame twistingFrame = new PipelineUtils.AnimFrame();
-    { twistingFrame = untwistedFrame; } // XXX HACK for now, avoid any issue about clicking in the wrong one or something
+    {
+        twistingFrame = untwistedFrame;
+    } // XXX HACK for now, avoid any issue about clicking in the wrong one or something
 
 
     // Listener support
-    public static interface PuzzleListener { public void puzzleChanged( boolean newPuzzle ); }
-    private Set<PuzzleListener> puzzleListeners = new HashSet<PuzzleListener>();
-    public void addPuzzleListener(PuzzleListener tl) { puzzleListeners.add(tl); }
-    public void removePuzzleListener(PuzzleListener tl) { puzzleListeners.remove(tl); }
-    protected void firePuzzleChanged( boolean newPuzzle ) { for(PuzzleListener pl : puzzleListeners) pl.puzzleChanged( newPuzzle ); }
-    
-    static String prettyLength(double length) {
-        boolean integralLength = length == (int)length;
-        return integralLength ? ""+(int)length : ""+length;
+    public static interface PuzzleListener {
+        public void puzzleChanged(boolean newPuzzle);
     }
-    
+    private Set<PuzzleListener> puzzleListeners = new HashSet<PuzzleListener>();
+    public void addPuzzleListener(PuzzleListener tl) {
+        puzzleListeners.add(tl);
+    }
+    public void removePuzzleListener(PuzzleListener tl) {
+        puzzleListeners.remove(tl);
+    }
+    protected void firePuzzleChanged(boolean newPuzzle) {
+        for(PuzzleListener pl : puzzleListeners)
+            pl.puzzleChanged(newPuzzle);
+    }
+
+    static String prettyLength(double length) {
+        boolean integralLength = length == (int) length;
+        return integralLength ? "" + (int) length : "" + length;
+    }
+
     public String getPrettyLength() {
-    	return prettyLength(puzzleDescription.getEdgeLength());
+        return prettyLength(puzzleDescription.getEdgeLength());
     }
 
 
     public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground) {
-    	statusLabel.setText("");
+        statusLabel.setText("");
         final String finalLengthString = " " + prettyLength(Double.parseDouble(lengthString));
-    	ProgressManager builder = new ProgressManager(progressView) {
-    		private boolean succeeded = false;
+        ProgressManager builder = new ProgressManager(progressView) {
+            private boolean succeeded = false;
             /*
              * Main task. Executed in background thread.
              */
             @Override
             public Void doInBackground() {
-            	PuzzleDescription newPuzzle = buildPuzzle(schlafli, finalLengthString, this);
-            	if( newPuzzle != null ) {
-            		succeeded = true;
-                	puzzleDescription = newPuzzle;
-            		faceColors = ColorUtils.generateVisuallyDistinctColors(puzzleDescription.nFaces(), .7f, .1f);
-            		resetPuzzleStateNoEvent();
-            	}
-            	return null;
-    		}
+                PuzzleDescription newPuzzle = buildPuzzle(schlafli, finalLengthString, this);
+                if(newPuzzle != null) {
+                    succeeded = true;
+                    puzzleDescription = newPuzzle;
+                    faceColors = ColorUtils.generateVisuallyDistinctColors(puzzleDescription.nFaces(), .7f, .1f);
+                    resetPuzzleStateNoEvent();
+                }
+                return null;
+            }
 
             /*
              * Executed on graphics thread.
              */
-			@Override
-			public void done() {
-				if(succeeded) statusLabel.setText(schlafli + "  length = " + finalLengthString);
-				super.done();
-				if(succeeded) firePuzzleChanged( true );
-			}
-    	};
-    	if(inBackground)
-    		builder.execute();
-    	else
-    		builder.run();
+            @Override
+            public void done() {
+                if(succeeded)
+                    statusLabel.setText(schlafli + "  length = " + finalLengthString);
+                super.done();
+                if(succeeded)
+                    firePuzzleChanged(true);
+            }
+        };
+        if(inBackground)
+            builder.execute();
+        else
+            builder.run();
     }
 
-    public PuzzleManager(String initialSchlafli, double initialLength, JProgressBar progressView )
+    public PuzzleManager(String initialSchlafli, double initialLength, JProgressBar progressView)
     {
         super();
-        if (verboseLevel >= 1) System.out.println("in PuzzleManager ctor");
-        if (initialSchlafli != null)
+        if(verboseLevel >= 1)
+            System.out.println("in PuzzleManager ctor");
+        if(initialSchlafli != null)
         {
-            initPuzzle(initialSchlafli, ""+initialLength, progressView, new JLabel(), false);
+            initPuzzle(initialSchlafli, "" + initialLength, progressView, new JLabel(), false);
         }
-        if (verboseLevel >= 1) System.out.println("out PuzzleManager ctor");
+        if(verboseLevel >= 1)
+            System.out.println("out PuzzleManager ctor");
     }
 
     public boolean isAnimating()
@@ -138,42 +153,43 @@ public class PuzzleManager
         return iRotation < nRotation
             || iTwist < nTwist;
     }
-    
+
     // XXX - Should we move this to an interface method on the generic puzzle,
     //		 and implement inside there?
     public boolean isSolved()
     {
-		 int nFaces = puzzleDescription.nFaces();
-		 int faceState[] = new int[nFaces];
-		 VecMath.fillvec( faceState, -1 );
-		
-		 // Cycle through all the stickers.
-		 for( int s=0; s<puzzleState.length; s++ )
-		 {
-			 int faceIndex = puzzleDescription.getSticker2Face()[s];
-			 if( faceState[faceIndex] == -1 )
-			 {
-				 faceState[faceIndex] = puzzleState[s];
-				 continue;
-			 }
+        int nFaces = puzzleDescription.nFaces();
+        int faceState[] = new int[nFaces];
+        VecMath.fillvec(faceState, -1);
 
-			 // Check for multiple colors on a single face.
-			 if( puzzleState[s] != faceState[faceIndex] )
-				 return false;
-		 }
-		
-		 // Our faceState vector should have no -1s in it.
-		 // Perhaps we should assert this.
-		 //System.out.println( "Pristine Puzzle" );
-		 return true;
+        // Cycle through all the stickers.
+        for(int s = 0; s < puzzleState.length; s++)
+        {
+            int faceIndex = puzzleDescription.getSticker2Face()[s];
+            if(faceState[faceIndex] == -1)
+            {
+                faceState[faceIndex] = puzzleState[s];
+                continue;
+            }
+
+            // Check for multiple colors on a single face.
+            if(puzzleState[s] != faceState[faceIndex])
+                return false;
+        }
+
+        // Our faceState vector should have no -1s in it.
+        // Perhaps we should assert this.
+        //System.out.println( "Pristine Puzzle" );
+        return true;
     }
 
     private static PuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
         double len;
-        try { len = Double.parseDouble(lengthString); }
-        catch (java.lang.NumberFormatException e)
+        try {
+            len = Double.parseDouble(lengthString);
+        } catch(java.lang.NumberFormatException e)
         {
-            System.err.println(lengthString+ " is not a number");
+            System.err.println(lengthString + " is not a number");
             return null;
         }
 
@@ -181,21 +197,20 @@ public class PuzzleManager
         try
         {
             newPuzzle = new PolytopePuzzleDescription(schlafli, len, progressView);
-        }
-        catch (Throwable t)
+        } catch(Throwable t)
         {
             //t.printStacktrace();
             String explanation = t.toString();
             // yes, this is lame... AND the user
             // can't even cut and paste it to mail it to me
-            if (explanation.equals("java.lang.Error: Assertion failed"))
+            if(explanation.equals("java.lang.Error: Assertion failed"))
             {
                 java.io.StringWriter sw = new java.io.StringWriter();
                 t.printStackTrace(new java.io.PrintWriter(sw));
                 explanation = "\n" + sw.toString();
             }
             t.printStackTrace();
-            System.out.println("Something went very wrong when trying to build your invention \""+schlafli+"  "+lengthString+"\":\n"+explanation);
+            System.out.println("Something went very wrong when trying to build your invention \"" + schlafli + "  " + lengthString + "\":\n" + explanation);
 //            JOptionPane.showMessageDialog(null,
 //                "Something went very wrong when trying to build your invention \""+schlafli+"  "+lengthString+"\":\n"+explanation,
 //                "Your Invention Sucks",
@@ -204,18 +219,18 @@ public class PuzzleManager
         }
 
         int nDims = newPuzzle.nDims();
-        if (nDims != 4)
+        if(nDims != 4)
         {
             JOptionPane.showMessageDialog(null,
-                "Re: Your invention \""+schlafli+"  "+lengthString+"\"\n"+
-                "\n"+
-                "That is a truly BRILLIANT "+nDims+"-dimensional invention.\n"+
-                "It has:\n"+
-                "        "+newPuzzle.nFaces()+" faces\n"+
-                "        "+newPuzzle.nStickers()+" stickers\n"+
-                "        "+newPuzzle.nCubies()+" visible cubie"+(newPuzzle.nCubies()==1?"":"s")+"\n"+
-                "        "+newPuzzle.nVerts()+" sticker vertices\n"+
-                "However, we are only accepting 4-dimensional inventions at this time.",
+                "Re: Your invention \"" + schlafli + "  " + lengthString + "\"\n" +
+                    "\n" +
+                    "That is a truly BRILLIANT " + nDims + "-dimensional invention.\n" +
+                    "It has:\n" +
+                    "        " + newPuzzle.nFaces() + " faces\n" +
+                    "        " + newPuzzle.nStickers() + " stickers\n" +
+                    "        " + newPuzzle.nCubies() + " visible cubie" + (newPuzzle.nCubies() == 1 ? "" : "s") + "\n" +
+                    "        " + newPuzzle.nVerts() + " sticker vertices\n" +
+                    "However, we are only accepting 4-dimensional inventions at this time.",
                 "Invention Rejection Form Letter",
                 JOptionPane.ERROR_MESSAGE);
             // XXX Lame, should try to get back in the loop and prompt again instead
@@ -226,18 +241,18 @@ public class PuzzleManager
 
     // XXX unscientific rounding-- and it's too fast for small angles!
     // Really we'd like to bound the max acceleration.
-    public int calculateNTwists( double totalRotationAngle, double twistFactor )
+    public int calculateNTwists(double totalRotationAngle, double twistFactor)
     {
-    	int nTwists = (int)(totalRotationAngle/(Math.PI/2) * 11 * twistFactor);
-    	
-    	// We should always do at least one,
-    	// or small angle twists can get missed!
-    	if( nTwists == 0 )
-    		return 1;
-    	else
-    		return nTwists;
+        int nTwists = (int) (totalRotationAngle / (Math.PI / 2) * 11 * twistFactor);
+
+        // We should always do at least one,
+        // or small angle twists can get missed!
+        if(nTwists == 0)
+            return 1;
+        else
+            return nTwists;
     }
-    
+
 
     /**
      * Application-supplied callback that can be set to specify when a hovered sticker should be highlighted
@@ -245,75 +260,75 @@ public class PuzzleManager
      */
     public interface Highlighter
     {
-    	public boolean shouldHighlightSticker( PuzzleDescription puzzle, 
-    			int stickerIndex, int gripIndex, int slicemask, int x, int y, boolean isControlDown );
+        public boolean shouldHighlightSticker(PuzzleDescription puzzle,
+            int stickerIndex, int gripIndex, int slicemask, int x, int y, boolean isControlDown);
     }
     public void setHighlighter(Highlighter highlighter) {
-    	this.highlighter = highlighter;
+        this.highlighter = highlighter;
     }
     private Highlighter highlighter;
-    
-	public boolean updateStickerHighlighting(int mouseX, int mouseY, int slicemask, boolean isControlDown )
+
+    public boolean updateStickerHighlighting(int mouseX, int mouseY, int slicemask, boolean isControlDown)
     {
-    	PipelineUtils.PickInfo pick = PipelineUtils.getAllPickInfo(
-        		mouseX, mouseY,
-        		untwistedFrame,
-        		puzzleDescription );
-    	int pickedSticker = pick == null ? -1 : pick.stickerIndex;
-    	boolean newHighlit = true;
-    	
-        if( pickedSticker >= 0 && highlighter != null) {
-        	// Let the supplied highlighter decide.
-        	if( ! highlighter.shouldHighlightSticker( puzzleDescription, 
-        			pickedSticker, pick.gripIndex, slicemask, mouseX, mouseY, isControlDown ) )
-        	{
-        		newHighlit = false;
-        	}
+        PipelineUtils.PickInfo pick = PipelineUtils.getAllPickInfo(
+            mouseX, mouseY,
+            untwistedFrame,
+            puzzleDescription);
+        int pickedSticker = pick == null ? -1 : pick.stickerIndex;
+        boolean newHighlit = true;
+
+        if(pickedSticker >= 0 && highlighter != null) {
+            // Let the supplied highlighter decide.
+            if(!highlighter.shouldHighlightSticker(puzzleDescription,
+                pickedSticker, pick.gripIndex, slicemask, mouseX, mouseY, isControlDown))
+            {
+                newHighlit = false;
+            }
         }
-        
+
         boolean changed = pickedSticker != iStickerUnderMouse || newHighlit != highlit;
         if(pickedSticker >= 0 && changed && newHighlit) {
-        	Audio.play(Audio.Sound.HIGHLIGHT); // hovering over a newly highlighted sticker
+            Audio.play(Audio.Sound.HIGHLIGHT); // hovering over a newly highlighted sticker
         }
         iStickerUnderMouse = pickedSticker;
         highlit = newHighlit;
         return changed;
     }
-	
-	public void clearStickerHighlighting() {
-		highlit = false;
-	}
-    
+
+    public void clearStickerHighlighting() {
+        highlit = false;
+    }
+
     // Checks whether or not it is ok to handle a mouse click.
     // All the logic of this is really in the highlighters.
     public boolean canMouseClick()
     {
-    	return highlit;
+        return highlit;
     }
-    
+
     // scratch space for speed. note: not threadsafe.
     private static ViewRotationInfo scratch = new ViewRotationInfo();
-    
-    public boolean canRotateToCenter( int x, int y, RotationHandler rotationHandler ) 
+
+    public boolean canRotateToCenter(int x, int y, RotationHandler rotationHandler)
     {
-    	return getViewRotationInfo(x, y, rotationHandler, scratch);
+        return getViewRotationInfo(x, y, rotationHandler, scratch);
     }
 
     private static class ViewRotationInfo
     {
-    	public double totalRotationAngle;
-    	public double[] nicePointOnScreen;
-    	public double[] minusWAxis;
+        public double totalRotationAngle;
+        public double[] nicePointOnScreen;
+        public double[] minusWAxis;
     }
-    
-    private boolean getViewRotationInfo( int x, int y, RotationHandler rotationHandler, ViewRotationInfo info )
+
+    private boolean getViewRotationInfo(int x, int y, RotationHandler rotationHandler, ViewRotationInfo info)
     {
         float nicePoint[] = PipelineUtils.pickPointToRotateToCenter(
-        	x, y, this.untwistedFrame, this.puzzleDescription, RotationHandler.getSnapSetting() );
-        
-        if( nicePoint == null )
-        	return false;
-    	
+            x, y, this.untwistedFrame, this.puzzleDescription, RotationHandler.getSnapSetting());
+
+        if(nicePoint == null)
+            return false;
+
         //
         // Initiate a rotation
         // that takes the nice point to the center
@@ -321,53 +336,55 @@ public class PuzzleManager
         // 
 
         double nicePointD[] = new double[4];
-        for (int i = 0; i < 4; ++i)
+        for(int i = 0; i < 4; ++i)
             nicePointD[i] = nicePoint[i];
 
-        double nicePointOnScreen[] = VecMath.vxm( nicePointD, rotationHandler.current4dView() );
+        double nicePointOnScreen[] = VecMath.vxm(nicePointD, rotationHandler.current4dView());
         VecMath.normalize(nicePointOnScreen, nicePointOnScreen); // if it's not already
-        double minusWAxis[] = {0,0,0,-1};
+        double minusWAxis[] = {0, 0, 0, -1};
         double totalRotationAngle = VecMath.angleBetweenUnitVectors(
-                            nicePointOnScreen,
-                            minusWAxis);
-        
+            nicePointOnScreen,
+            minusWAxis);
+
         info.nicePointOnScreen = nicePointOnScreen;
         info.minusWAxis = minusWAxis;
         info.totalRotationAngle = totalRotationAngle;
-        
+
         // Does this do anything?
         return totalRotationAngle > 1e-6;
     }
-    
-    public void mouseClickedAction( MouseEvent e,
-    		RotationHandler rotationHandler,
-    		float twistFactor,
-    		int slicemask,
-    		Component view )
-    {        
-        /* Uncomment to debug the pick
-        {
-            int hit[] = PipelineUtils.pick(e.getX(), e.getY(), untwistedFrame, puzzleDescription);
-            if (hit != null)
-            {
-                int iSticker = hit[0];
-                int iFace = puzzleDescription.getSticker2Face()[iSticker];
-                int iCubie = puzzleDescription.getSticker2Cubie()[iSticker];
-                System.err.println("    Hit sticker "+iSticker+"(polygon "+hit[1]+")");
-                System.err.println("        face "+iFace);
-                System.err.println("        cubie "+iCubie);
-            }
-        } */
+
+    public void mouseClickedAction(MouseEvent e,
+        RotationHandler rotationHandler,
+        float twistFactor,
+        int slicemask,
+        Component view)
+    {
+        /*
+         * Uncomment to debug the pick
+         * {
+         * int hit[] = PipelineUtils.pick(e.getX(), e.getY(), untwistedFrame, puzzleDescription);
+         * if (hit != null)
+         * {
+         * int iSticker = hit[0];
+         * int iFace = puzzleDescription.getSticker2Face()[iSticker];
+         * int iCubie = puzzleDescription.getSticker2Cubie()[iSticker];
+         * System.err.println("    Hit sticker "+iSticker+"(polygon "+hit[1]+")");
+         * System.err.println("        face "+iFace);
+         * System.err.println("        cubie "+iCubie);
+         * }
+         * }
+         */
 
         ViewRotationInfo rotInfo = new ViewRotationInfo();
-        if( !getViewRotationInfo( e.getX(), e.getY(), rotationHandler, rotInfo ) )
+        if(!getViewRotationInfo(e.getX(), e.getY(), rotationHandler, rotInfo))
         {
-        	 System.out.println( "missed or invalid" );
-        	 return;
+            System.out.println("missed or invalid");
+            return;
         }
 
         boolean rightClick = SwingUtilities.isRightMouseButton(e);
-        nRotation = calculateNTwists( rotInfo.totalRotationAngle, twistFactor );
+        nRotation = calculateNTwists(rotInfo.totalRotationAngle, twistFactor);
         // XXX ARGH! we'd like the speed to vary as the user changes the slider,
         // XXX but the above essentially locks in the speed for this rotation
         iRotation = 0; // we are iRotation frames into nRotation
@@ -375,13 +392,13 @@ public class PuzzleManager
         rotationTo = rightClick ? rotInfo.nicePointOnScreen : rotInfo.minusWAxis;
         view.repaint();
 
-        if (iRotation == nRotation)
+        if(iRotation == nRotation)
         {
             // Already in the center
             System.err.println("Can't rotate that.\n");
         }
 
-    	Audio.loop(Audio.Sound.TWISTING);            
+        Audio.loop(Audio.Sound.TWISTING);
     }
 
 
@@ -402,47 +419,52 @@ public class PuzzleManager
         Component view)
     {
         // steal PolygonManager's stuff-- this should be an interface but that's not allowed here apparently
-        abstract class InterpFunc { public abstract float func(float f); }
+        abstract class InterpFunc {
+            public abstract float func(float f);
+        }
         InterpFunc sine_interp = new InterpFunc() {
             @Override
-			public float func(float x) { return (float)(Math.sin((x - .5) * Math.PI) + 1) / 2; }
+            public float func(float x) {
+                return (float) (Math.sin((x - .5) * Math.PI) + 1) / 2;
+            }
         };
         /*
-        InterpFunc linear_interp = new InterpFunc() {
-            public float func(float x) { return x; }
-        };*/
+         * InterpFunc linear_interp = new InterpFunc() {
+         * public float func(float x) { return x; }
+         * };
+         */
         InterpFunc interp = sine_interp;
         //InterpFunc interp = linear_interp;
 
         double[][] viewMat4d = rotationHandler.current4dView();
-        if (iRotation < nRotation)
+        if(iRotation < nRotation)
         {
             //
             // 4d rotation in progress
             //
             double copy[][] = new double[4][4];
-            for (int i = 0; i < 4; ++i)
-            for (int j = 0; j < 4; ++j)
-            	copy[i][j] = viewMat4d[i][j];
+            for(int i = 0; i < 4; ++i)
+                for(int j = 0; j < 4; ++j)
+                    copy[i][j] = viewMat4d[i][j];
 
-            double incFrac = interp.func((iRotation+1)/(float)nRotation)
-                           - interp.func(iRotation/(float)nRotation);
+            double incFrac = interp.func((iRotation + 1) / (float) nRotation)
+                - interp.func(iRotation / (float) nRotation);
             double incmatD[][] = VecMath.makeRowRotMatThatSlerps(rotationFrom, rotationTo, incFrac);
             copy = VecMath.mxm(copy, incmatD);
             VecMath.gramschmidt(copy, copy);
 
-            for (int i = 0; i < 4; ++i)
-            for (int j = 0; j < 4; ++j)
-                viewMat4d[i][j] = copy[i][j];
-            
+            for(int i = 0; i < 4; ++i)
+                for(int j = 0; j < 4; ++j)
+                    viewMat4d[i][j] = copy[i][j];
+
             //System.out.println("    "+iRotation+"/"+nRotation+" -> "+(iRotation+1)+"/"+nRotation+"");
             iRotation++;
             if(iRotation == nRotation) {
-            	Audio.stop(Audio.Sound.TWISTING);
-            	Audio.play(Audio.Sound.SNAP);
+                Audio.stop(Audio.Sound.TWISTING);
+                Audio.play(Audio.Sound.SNAP);
             }
             if(view != null)
-            	view.repaint(); // make sure we keep drawing while there's more to do
+                view.repaint(); // make sure we keep drawing while there's more to do
         }
 
         int iGripOfTwist = -1;
@@ -451,7 +473,7 @@ public class PuzzleManager
         float fracIntoTwist = 0.f;
         PipelineUtils.AnimFrame frameToDrawInto = untwistedFrame;
 
-        if (iTwist < nTwist)
+        if(iTwist < nTwist)
         {
             //
             // Twist in progress (and maybe a 4d rot too at the same time)
@@ -462,11 +484,11 @@ public class PuzzleManager
             itwistDir = twistDir;
             islicemask = twistSliceMask;
 
-            fracIntoTwist = interp.func((iTwist+1)/(float)nTwist);
+            fracIntoTwist = interp.func((iTwist + 1) / (float) nTwist);
             //System.out.println("    "+iTwist+"/"+nTwist+" -> "+(iTwist+1)+"/"+nTwist+"");
 
             if(view != null)
-            	view.repaint(); // make sure we keep drawing while there's more to do
+                view.repaint(); // make sure we keep drawing while there's more to do
         }
 
         // old params... but I don't think it was doing it right
@@ -474,7 +496,7 @@ public class PuzzleManager
         //float groundOffset = -1.f;
 
         // XXX why is this a bit diff from old?  well I don't think it was being done right for one thing
-        float[] groundNormal = showShadows ? new float[] {0,1,.05f} : null;
+        float[] groundNormal = showShadows ? new float[]{0, 1, .05f} : null;
         float groundOffset = -1.f;
 
         // XXX I don't seem to be quite the same as the original... unless I correct it here
@@ -482,8 +504,8 @@ public class PuzzleManager
         //float scaleFudge3d = 1.f;
         float scaleFudge2d = 4.7f;
 
-        float viewMat4df[][] = VecMath.doubleToFloat( viewMat4d );
-        
+        float viewMat4df[][] = VecMath.doubleToFloat(viewMat4d);
+
         // XXX probably doing this more than necessary... when it's a rest frame that hasn't changed
         PipelineUtils.computeFrame(
             frameToDrawInto,
@@ -500,140 +522,138 @@ public class PuzzleManager
             VecMath.mxs(viewMat4df, scaleFudge4d),
             eyeW,
             eyeZ,
-            new float[][]{{scaleFudge2d*viewScale, 0},
-                          {0, -scaleFudge2d*viewScale},           
-                          {xOff, yOff}},
+            new float[][]{{scaleFudge2d * viewScale, 0},
+                {0, -scaleFudge2d * viewScale},
+                {xOff, yOff}},
             VecMath.normalize(towardsSunVec),
             groundNormal,
             groundOffset,
             do3dStepsOnly
-        );
-        
+            );
+
         return frameToDrawInto;
     } // end computeFrame
-    
 
-	public void paintFrame(
-		Graphics g,
-		PipelineUtils.AnimFrame frame,
-		boolean showShadows,
+
+    public void paintFrame(
+        Graphics g,
+        PipelineUtils.AnimFrame frame,
+        boolean showShadows,
         Color ground,
         boolean highlightByCubie,
         Color outlineColor,
         float twistFactor)
     {
         PipelineUtils.paintFrame(
-        		g,
-                frame,
-                puzzleDescription,
-                puzzleState,
-                showShadows,
-                ground,
-                faceColors,
-                highlit ? iStickerUnderMouse :-1,
-                highlightByCubie,
-                outlineColor);
+            g,
+            frame,
+            puzzleDescription,
+            puzzleState,
+            showShadows,
+            ground,
+            faceColors,
+            highlit ? iStickerUnderMouse : -1,
+            highlightByCubie,
+            outlineColor);
 
-        if (iTwist < nTwist)
+        if(iTwist < nTwist)
         {
-        	if(iTwist == 0) {
-        		Audio.loop(Audio.Sound.TWISTING);
-        	}
+            if(iTwist == 0) {
+                Audio.loop(Audio.Sound.TWISTING);
+            }
             iTwist++;
-            if (iTwist == nTwist)
+            if(iTwist == nTwist)
             {
                 // End of twist animation-- apply the twist to the state.
                 puzzleDescription.applyTwistToState(
-                            puzzleState,
-                            iTwistGrip,
-                            twistDir,
-                            twistSliceMask);
-            	Audio.stop(Audio.Sound.TWISTING);
-        		Audio.play(Audio.Sound.SNAP);
+                    puzzleState,
+                    iTwistGrip,
+                    twistDir,
+                    twistSliceMask);
+                Audio.stop(Audio.Sound.TWISTING);
+                Audio.play(Audio.Sound.SNAP);
             }
         }
     } // end paintFrame
-    
 
-	private Random rand = new Random();
-	
-	public int getRandomGrip()
-	{
-		// Get a random sticker.
-		int iSticker, iGrip;
-		iSticker = rand.nextInt(puzzleDescription.nStickers());
-		
-		// Get the grip(s) for this sticker and pick a random one of those.
+
+    private Random rand = new Random();
+
+    public int getRandomGrip()
+    {
+        // Get a random sticker.
+        int iSticker, iGrip;
+        iSticker = rand.nextInt(puzzleDescription.nStickers());
+
+        // Get the grip(s) for this sticker and pick a random one of those.
         int grips[] = PipelineUtils.getGripsForSticker(iSticker, puzzleDescription);
-        if( grips.length == 1 )
-        	iGrip = grips[0];
+        if(grips.length == 1)
+            iGrip = grips[0];
         else
         {
-        	int idx = rand.nextInt( grips.length );
-        	iGrip = grips[idx];
+            int idx = rand.nextInt(grips.length);
+            iGrip = grips[idx];
         }
-        
+
         return iGrip;
-	}
-	
-	
-	//
-	// Everything from here down is just for testing/example purposes.
-	// though the scramble methods are public since they could be useful.
-	// 
-	
+    }
+
+
+    //
+    // Everything from here down is just for testing/example purposes.
+    // though the scramble methods are public since they could be useful.
+    // 
+
     public void scramble(int nTwists) {
-    	if(puzzleDescription == null)
-    		return;
-    	resetPuzzleState();
+        if(puzzleDescription == null)
+            return;
+        resetPuzzleState();
         int previous_face = -1;
         int[] grip2face = puzzleDescription.getGrip2Face();
         int[] orders = puzzleDescription.getGripSymmetryOrders();
         int[] face2opposite = puzzleDescription.getFace2OppositeFace();
-    	for(int s = 0; s < nTwists; s++) {
+        for(int s = 0; s < nTwists; s++) {
             // select a random grip that is unrelated to the last one (if any)
             int iGrip, iFace, order;
             do {
                 iGrip = getRandomGrip();
                 iFace = grip2face[iGrip];
                 order = orders[iGrip];
-            }
-            while (
-                order < 2 || // don't use 360 degree twists
-                iFace == previous_face || // mixing it up
-                (previous_face!=-1 && face2opposite[previous_face] == iFace));
+            } while(order < 2 || // don't use 360 degree twists
+            iFace == previous_face || // mixing it up
+            (previous_face != -1 && face2opposite[previous_face] == iFace));
             previous_face = iFace;
             int gripSlices = puzzleDescription.getNumSlicesForGrip(iGrip);
-            int slicemask = 1<<rand.nextInt(gripSlices);
+            int slicemask = 1 << rand.nextInt(gripSlices);
             int dir = rand.nextBoolean() ? -1 : 1;
             // apply the twist to the puzzle state.
             puzzleDescription.applyTwistToState(puzzleState, iGrip, dir, slicemask);
         }
     }
-    
+
     public void scrambleFully() {
-    	if(puzzleDescription == null)
-    		return;
-        int totalTwistsNeededToFullyScramble = 
-        		puzzleDescription.nFaces() // needed twists is proportional to nFaces
-        		* (int)puzzleDescription.getEdgeLength() // and to number of slices
-        		* 2; // and to a fudge factor that brings the 3^4 close to the original 40 twists.
+        if(puzzleDescription == null)
+            return;
+        int totalTwistsNeededToFullyScramble =
+            puzzleDescription.nFaces() // needed twists is proportional to nFaces
+                * (int) puzzleDescription.getEdgeLength() // and to number of slices
+                * 2; // and to a fudge factor that brings the 3^4 close to the original 40 twists.
         scramble(totalTwistsNeededToFullyScramble + rand.nextInt(10)); // add a few random twists so parity is unpredictable.
     }
-    
+
     public static void main(String[] args) {
-    	PuzzleManager puzzleManager = new PuzzleManager("{3,3,3}", 2, new JProgressBar());
-    	long start = System.currentTimeMillis();
+        PuzzleManager puzzleManager = new PuzzleManager("{3,3,3}", 2, new JProgressBar());
+        long start = System.currentTimeMillis();
         int tries = 1000000, solved = 0;
-        for(int i=0; i<tries; i++) {
-        	puzzleManager.scrambleFully();
-        	if(puzzleManager.isSolved()) {
-        		solved++;
-        		System.out.println(""+solved + " so far out of " + i);
-        	}
+        for(int i = 0; i < tries; i++) {
+            puzzleManager.scrambleFully();
+            if(puzzleManager.isSolved()) {
+                solved++;
+                System.out.println("" + solved + " so far out of " + i);
+            }
         }
-        System.out.println(solved == 0 ? "none in " + tries + " scrambles are solved" : ""+solved + " in " + tries + "(1 in " + tries/(float)solved + ") scrambles are solved.");
-        System.out.println("Total seconds: " + (System.currentTimeMillis() - start)/1000);
+        System.out.println(solved == 0 ? "none in " + tries + " scrambles are solved" : "" + solved + " in " + tries + "(1 in " + tries / (float) solved + ") scrambles are solved.");
+        System.out.println("Total seconds: " + (System.currentTimeMillis() - start) / 1000);
     }
 
 } // class PuzzleManager

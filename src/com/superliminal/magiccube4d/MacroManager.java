@@ -9,19 +9,20 @@ import com.donhatchsw.util.VecMath;
  * Contains a list of macros and manages their construction, saving, storing, and serving.
  * Construction proceeds in phases.
  * <ol>
- *     <li>open a new macro,
- *     <li>add reference stickers one at a time,
- *     <li>record twists one at a time,
- *     <li>name and close the macro.
+ * <li>open a new macro,
+ * <li>add reference stickers one at a time,
+ * <li>record twists one at a time,
+ * <li>name and close the macro.
  * </ol>
  * Two public properties are exposed specifying these phases:
  * <ol>
- *     <li>"isOpen" is true between calls to open and close, false otherwise.
- *     <li>"recording" is true while open but only after all reference stickers have been specified.
+ * <li>"isOpen" is true between calls to open and close, false otherwise.
+ * <li>"recording" is true while open but only after all reference stickers have been specified.
  * </ol>
  * <br>
- *
+ * 
  * Created July 15, 2006
+ * 
  * @author Melinda Green
  */
 public class MacroManager implements PuzzleManager.Highlighter {
@@ -37,52 +38,59 @@ public class MacroManager implements PuzzleManager.Highlighter {
     public MacroManager(String absPath) {
         filePath = absPath;
         BufferedReader reader;
-        try { reader = new BufferedReader(new FileReader(absPath)); }
-        catch (FileNotFoundException fnfe) {
+        try {
+            reader = new BufferedReader(new FileReader(absPath));
+        } catch(FileNotFoundException fnfe) {
             return; // no problem as the user may not have saved any macros yet.
         }
         // the file does exist so read the macros from it.
-        try 
+        try
         {
-        	// Read header info.
-        	// XXX - It'd be nice to get info about failures here out to the UI.
+            // Read header info.
+            // XXX - It'd be nice to get info about failures here out to the UI.
             String firstlineStr = reader.readLine();
             if(firstlineStr == null)
-            	throw new IOException( "Empty macro file." );
-            String firstline[] = firstlineStr.split( " " );
-            if( firstline.length != 2 || !MagicCube.MAGIC_NUMBER.equals( firstline[0] ) )
-                throw new IOException( "Unexpected macro file format." );
+                throw new IOException("Empty macro file.");
+            String firstline[] = firstlineStr.split(" ");
+            if(firstline.length != 2 || !MagicCube.MAGIC_NUMBER.equals(firstline[0]))
+                throw new IOException("Unexpected macro file format.");
             int readversion = Integer.parseInt(firstline[1]);
-            if( readversion != MagicCube.MACRO_FILE_VERSION ) 
-            	throw new IOException( "Unhandled macro file version." );
-            
+            if(readversion != MagicCube.MACRO_FILE_VERSION)
+                throw new IOException("Unhandled macro file version.");
+
             Macro aMacro;
             while((aMacro = Macro.read(reader)) != null)
                 macros.add(aMacro);
-        	reader.close(); 
+            reader.close();
+        } catch(IOException e) {
+            e.printStackTrace();
         }
-        catch (IOException e) { e.printStackTrace(); }
     }
 
-    public String getFilePath() { return filePath; }
-    public void setFilePath(String newPath) { filePath = newPath; }
+    public String getFilePath() {
+        return filePath;
+    }
+    public void setFilePath(String newPath) {
+        filePath = newPath;
+    }
 
     /**
      * Writes the contained list of macros to the current file path.
+     * 
      * @throws IOException
      */
     public void write() throws IOException {
         Writer writer = new FileWriter(filePath);
-        
+
         writer.write(
-                MagicCube.MAGIC_NUMBER + " " +
-                MagicCube.MACRO_FILE_VERSION + 
-                System.getProperty( "line.separator" ) );     
-        
-        for (int i = 0; i < macros.size(); ++i)
+            MagicCube.MAGIC_NUMBER + " " +
+                MagicCube.MACRO_FILE_VERSION +
+                System.getProperty("line.separator"));
+
+        for(int i = 0; i < macros.size(); ++i)
         {
             Macro aMacro = macros.get(i);
-            aMacro.write( writer );
+            aMacro.write(writer);
         }
         writer.close();
     }
@@ -90,17 +98,23 @@ public class MacroManager implements PuzzleManager.Highlighter {
     /**
      * @return true if the list of reference stickers is not complete, false otherwise.
      */
-    public boolean isOpen() { return refStickers != null; }
+    public boolean isOpen() {
+        return refStickers != null;
+    }
 
     /**
      * @return true if the list of reference stickers is complete and macro is not yet closed, false otherwise.
      */
-    public boolean recording() { return isOpen() && curMacro != null; }
+    public boolean recording() {
+        return isOpen() && curMacro != null;
+    }
 
     /**
      * @return the number of currently captured reference stickers for the currently open macro.
      */
-    public int numRefs() { return nrefs; }
+    public int numRefs() {
+        return nrefs;
+    }
 
     /**
      * @return the currently contained list of macros.
@@ -113,17 +127,18 @@ public class MacroManager implements PuzzleManager.Highlighter {
      * Begins the creation or application of a macro.
      */
     public void open() {
-        assert( ! isOpen());
+        assert (!isOpen());
         refStickers = new MagicCube.Stickerspec[Macro.MAXREFS];
         nrefs = 0;
     }
 
     /**
      * Names and saves a completed macro.
+     * 
      * @return the new macro.
      */
     public Macro close(String name) {
-        assert(recording());
+        assert (recording());
         Macro newMacro = curMacro;
         newMacro.setName(name);
         cancel();
@@ -135,6 +150,7 @@ public class MacroManager implements PuzzleManager.Highlighter {
      * Returns just the captured reference stickers and aborts the ability to define a macro.
      * This is meant to be use as a convinient way to collect reference stickers for application to
      * an existing macro.
+     * 
      * @return list of all stickers added since opening.
      */
     public MagicCube.Stickerspec[] close() {
@@ -152,86 +168,86 @@ public class MacroManager implements PuzzleManager.Highlighter {
         refStickers = null;
         nrefs = 0;
     }
-    
+
     @Override
-	public boolean shouldHighlightSticker( PuzzleDescription puzzle, 
-			int stickerIndex, int gripIndex, int slicemask, int x, int y, boolean isControlDown )
-	{	
-		// Macros are currently grip based, though that may change in the future.
-		MagicCube.Stickerspec grip = new MagicCube.Stickerspec();
-		grip.id_within_puzzle = gripIndex;
-		
-		return refDeterminesUniqueOrientation( puzzle, grip ) ;
-	}
-    
-    private boolean colinear( double p1[], double p2[], double p3[] )
+    public boolean shouldHighlightSticker(PuzzleDescription puzzle,
+        int stickerIndex, int gripIndex, int slicemask, int x, int y, boolean isControlDown)
     {
-    	double v1[] = VecMath.normalize( VecMath.vmv( p2, p1 ) );
-    	double v2[] = VecMath.normalize( VecMath.vmv( p3, p1 ) );
-    	double a = VecMath.angleBetweenUnitVectors( v1, v2 );
-    	double eps = 1e-6;
-    	return Math.abs( a ) < eps || Math.abs( Math.PI - a ) < eps;
+        // Macros are currently grip based, though that may change in the future.
+        MagicCube.Stickerspec grip = new MagicCube.Stickerspec();
+        grip.id_within_puzzle = gripIndex;
+
+        return refDeterminesUniqueOrientation(puzzle, grip);
     }
-    
-    private boolean refDeterminesUniqueOrientation( PuzzleDescription puzzle, MagicCube.Stickerspec ref )
+
+    private boolean colinear(double p1[], double p2[], double p3[])
+    {
+        double v1[] = VecMath.normalize(VecMath.vmv(p2, p1));
+        double v2[] = VecMath.normalize(VecMath.vmv(p3, p1));
+        double a = VecMath.angleBetweenUnitVectors(v1, v2);
+        double eps = 1e-6;
+        return Math.abs(a) < eps || Math.abs(Math.PI - a) < eps;
+    }
+
+    private boolean refDeterminesUniqueOrientation(PuzzleDescription puzzle, MagicCube.Stickerspec ref)
     {
         // We need to make sure the refs will determine a unique orientation.
         // There are a number of click patterns which will fail to do so.
-    	
+
         // Make sure the same ref isn't used twice.
-        for( int i=0; i<nrefs; i++ )
+        for(int i = 0; i < nrefs; i++)
         {
-        	if( refStickers[i].id_within_puzzle == ref.id_within_puzzle )
-        		return false;
+            if(refStickers[i].id_within_puzzle == ref.id_within_puzzle)
+                return false;
         }
-        
+
         // Disallow 3 refs that are colinear with each other.
-        if( nrefs == 2 )
+        if(nrefs == 2)
         {
-        	if( colinear(
-        		Macro.getMacroRefCoords( refStickers[0], puzzle ),
-        		Macro.getMacroRefCoords( refStickers[1], puzzle ),
-        		Macro.getMacroRefCoords( ref, puzzle ) ) )
-        			return false;
+            if(colinear(
+                Macro.getMacroRefCoords(refStickers[0], puzzle),
+                Macro.getMacroRefCoords(refStickers[1], puzzle),
+                Macro.getMacroRefCoords(ref, puzzle)))
+                return false;
         }
-        
-		// Disallow refs coincident with the implicit face center.
-		if( nrefs > 0 )
-		{
-			if( VecMath.equals( 
-					Macro.getMacroRefFaceCoords( refStickers[0], puzzle ), 
-					Macro.getMacroRefCoords( ref, puzzle ), 1e-6 ) )
-				return false;
-		}
-        
+
+        // Disallow refs coincident with the implicit face center.
+        if(nrefs > 0)
+        {
+            if(VecMath.equals(
+                Macro.getMacroRefFaceCoords(refStickers[0], puzzle),
+                Macro.getMacroRefCoords(ref, puzzle), 1e-6))
+                return false;
+        }
+
         // Disallow refs that are colinear with the implicit face center.
-        for( int i=0; i<nrefs; i++ )
+        for(int i = 0; i < nrefs; i++)
         {
-        	if( colinear(
-        		Macro.getMacroRefFaceCoords( refStickers[0], puzzle ),
-        		Macro.getMacroRefCoords( refStickers[i], puzzle ),
-        		Macro.getMacroRefCoords( ref, puzzle ) ) )
-        			return false;
+            if(colinear(
+                Macro.getMacroRefFaceCoords(refStickers[0], puzzle),
+                Macro.getMacroRefCoords(refStickers[i], puzzle),
+                Macro.getMacroRefCoords(ref, puzzle)))
+                return false;
         }
-        
+
         return true;
     }
-    
+
     /**
      * Adds a reference sticker to the currently open macro.
      * Returns false if the ref won't determine a unique orientation.
      */
-    public boolean addRef( PuzzleDescription puzzle, MagicCube.Stickerspec sticker ) {
-        assert(nrefs<Macro.MAXREFS);
-        
-        if( !refDeterminesUniqueOrientation( puzzle, sticker ) )
-        	return false;
+    public boolean addRef(PuzzleDescription puzzle, MagicCube.Stickerspec sticker) {
+        assert (nrefs < Macro.MAXREFS);
+
+        if(!refDeterminesUniqueOrientation(puzzle, sticker))
+            return false;
 
         refStickers[nrefs++] = sticker;
         if(nrefs == Macro.MAXREFS) {
-            curMacro = new Macro( puzzle.getFullPuzzleString(), refStickers );
+            curMacro = new Macro(puzzle.getFullPuzzleString(), refStickers);
         }
-        
+
         return true;
     }
 
@@ -239,7 +255,7 @@ public class MacroManager implements PuzzleManager.Highlighter {
      * Adds a move to the currently recording macro.
      */
     public void addTwist(MagicCube.TwistData twisted) {
-        assert(recording());
+        assert (recording());
         curMacro.addMove(twisted);
     }
 

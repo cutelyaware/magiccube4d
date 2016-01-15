@@ -19,29 +19,28 @@ import javax.swing.event.ChangeListener;
  * value will still be retrievable with getFloatValue().
  * 
  * Copyright 2005 - Superliminal Software
+ * 
  * @author Melinda Green & Don Hatch
  */
 @SuppressWarnings("serial")
 public class FloatSlider extends JSlider {
     private double curFloat, minFloat, maxFloat;
     private boolean isLogScale;
-    
+
     @Override
     protected void fireStateChanged() {
-        int 
-            ival = FloatSlider.super.getValue(),
-            min = FloatSlider.super.getMinimum(),
-            max = FloatSlider.super.getMaximum();
-        double dval = transformRange(false,      min,      max,  ival,
-                                     isLogScale, minFloat, maxFloat);
+        int ival = FloatSlider.super.getValue(), min = FloatSlider.super.getMinimum(), max = FloatSlider.super.getMaximum();
+        double dval = transformRange(false, min, max, ival,
+            isLogScale, minFloat, maxFloat);
         // It's important to finish setting the float value before users get notified 
         // about the change otherwise they'll get the old value when they ask.
-        setFloatValue(dval);  
+        setFloatValue(dval);
         super.fireStateChanged();
     }
 
     /**
      * constructs a FloatSlider using a given number of slider positions.
+     * 
      * @param orientation - SwingConstants.VERTICAL or SwingConstants.HORIZONTAL.
      * @param cur - real valued initial value.
      * @param min - real valued range minimum.
@@ -69,11 +68,9 @@ public class FloatSlider extends JSlider {
      */
     protected int rangeValue(double dval) {
         dval = clamp(dval, minFloat, maxFloat);
-        int 
-            min = super.getMinimum(),
-            max = super.getMaximum();
+        int min = super.getMinimum(), max = super.getMaximum();
         //System.out.println("setting: dval="+dval+" -> ival="+ival);
-        return (int)Math.round(transformRange(isLogScale, minFloat, maxFloat, dval, false, min, max));
+        return (int) Math.round(transformRange(isLogScale, minFloat, maxFloat, dval, false, min, max));
     }
 
     public double getFloatMinimum() {
@@ -108,29 +105,29 @@ public class FloatSlider extends JSlider {
     private static double clamp(double x, double a, double b)
     {
         return x <= a ? a :
-               x >= b ? b : x;
+            x >= b ? b : x;
     }
     // linear interpolation
     private static double lerp(double a, double b, double t)
     {
-        return a + (b-a) * t;
+        return a + (b - a) * t;
     }
     // geometric interpolation
     private static double gerp(double a, double b, double t)
     {
-        return a * Math.pow(b/a, t);
+        return a * Math.pow(b / a, t);
     }
     // interpolate between A and B (linearly or geometrically)
     // by the fraction that x is between a and b (linearly or geometrically)
     private static double transformRange(boolean isLog, double a, double b, double x, boolean IsLog, double A, double B) {
-        if (isLog)
+        if(isLog)
         {
             a = Math.log(a);
             b = Math.log(b);
             x = Math.log(x);
-        } 
-        double t = (x-a) / (b-a);
-        return IsLog ? gerp(A,B,t) : lerp(A,B,t);
+        }
+        double t = (x - a) / (b - a);
+        return IsLog ? gerp(A, B, t) : lerp(A, B, t);
     }
 
     /**
@@ -141,12 +138,12 @@ public class FloatSlider extends JSlider {
         final FloatSlider rslider = new FloatSlider(SwingConstants.HORIZONTAL, 10f, 1f, 100f, true);
         final Label curValue = new Label("FloatSlider value: " + rslider.getFloatValue());
         rslider.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
+            @Override
+            public void stateChanged(ChangeEvent e) {
                 curValue.setText("FloatSlider value: " + rslider.getFloatValue());
                 curValue.repaint();
                 System.out.println("user got: " + rslider.getFloatValue() + " ival: " + rslider.getValue());
-			}
+            }
         });
         Container mainpanel = new Panel();
         mainpanel.setLayout(new GridLayout(3, 1));
@@ -157,11 +154,11 @@ public class FloatSlider extends JSlider {
         frame.setSize(new Dimension(800, 100));
         frame.addWindowListener(new WindowAdapter() {
             @Override
-			public void windowClosing(WindowEvent we) {
+            public void windowClosing(WindowEvent we) {
                 System.exit(1);
             }
         });
-        frame.setVisible(true); 
+        frame.setVisible(true);
     }
 
 }

@@ -1,4 +1,5 @@
 package com.superliminal.magiccube4d;
+
 import java.applet.Applet;
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -14,18 +15,18 @@ import com.superliminal.util.ResourceUtils;
  * Represents a simple Applet demo version of the core MagicCube4D puzzle.
  * 
  * Copyright 2005 - Superliminal Software
+ * 
  * @author Melinda Green
  */
 @SuppressWarnings("serial")
 public class MC4DApplet extends Applet {
-    public MC4DApplet() {
-    }
+    public MC4DApplet() {}
     @Override
-	public void init() {
+    public void init() {
         String lengthstr = getParameter("length");
         int length = lengthstr == null ? 3 : Integer.parseInt(lengthstr);
         System.out.println("length = " + length);
-        String logfile = getParameter("logfile"); 
+        String logfile = getParameter("logfile");
         System.out.println("logfile = " + logfile);
         History hist = new History(length);
         java.net.URL histurl = ResourceUtils.getResource(logfile);

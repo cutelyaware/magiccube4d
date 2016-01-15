@@ -11,15 +11,15 @@ import java.awt.*;
 
 /**
  * Viewer/controller for a MacroManager. <br>
- *
+ * 
  * Created Nov 12, 2006
- *
+ * 
  * @author Melinda Green
  */
 @SuppressWarnings("serial")
 public class MacroControls extends JPanel {
-	private static final int MAX_BUTTON_WIDTH = 140;
-	
+    private static final int MAX_BUTTON_WIDTH = 140;
+
     /**
      * Reports Macro activity.
      */
@@ -41,35 +41,31 @@ public class MacroControls extends JPanel {
 
     public MacroControls() {}
 
-    public void init( final MacroManager mgr, String schlafli, final Listener app ) {
+    public void init(final MacroManager mgr, String schlafli, final Listener app) {
         this.mgr = mgr;
         this.schlafli = schlafli;
         this.app = app;
         init(false);
     }
-    
+
     private void init(boolean changed) {
 
         removeAll();
-        final JButton
-	        moveUp = new JButton("\u25B2"),
-            moveDn = new JButton("\u25BC"),
-            rename = new JButton("Rename"),
-            delete = new JButton("Delete");
+        final JButton moveUp = new JButton("\u25B2"), moveDn = new JButton("\u25BC"), rename = new JButton("Rename"), delete = new JButton("Delete");
         moveUp.setToolTipText("Move Up");
         moveDn.setToolTipText("Move Down");
         moveUp.setFont(SYMBOL_FONT);
         moveDn.setFont(SYMBOL_FONT);
         final Macro macros[] = mgr.getMacros();
-        if(selected==null && macros.length>0)
-            selected = macros[macros.length-1];
-        moveUp.setEnabled(macros.length>0 && selected != macros[0]);
-        moveDn.setEnabled(macros.length>0 && selected != macros[macros.length-1]);
+        if(selected == null && macros.length > 0)
+            selected = macros[macros.length - 1];
+        moveUp.setEnabled(macros.length > 0 && selected != macros[0]);
+        moveDn.setEnabled(macros.length > 0 && selected != macros[macros.length - 1]);
         rename.setEnabled(selected != null);
         delete.setEnabled(selected != null);
         ButtonGroup group = new ButtonGroup();
         JPanel grid = new JPanel(new SpringLayout());
-        for (int iMacro = 0; iMacro < macros.length; ++iMacro) {
+        for(int iMacro = 0; iMacro < macros.length; ++iMacro) {
             final Macro macro = macros[iMacro];
             final JRadioButton rb = new JRadioButton();
             rb.setSelected(macro == selected);
@@ -77,7 +73,7 @@ public class MacroControls extends JPanel {
                 public void actionPerformed(ActionEvent e) {
                     selected = macro;
                     moveUp.setEnabled(selected != macros[0]);
-                    moveDn.setEnabled(selected != macros[macros.length-1]);
+                    moveDn.setEnabled(selected != macros[macros.length - 1]);
                 }
             });
             group.add(rb);
@@ -90,7 +86,7 @@ public class MacroControls extends JPanel {
                 }
             });
             forward.setPreferredSize(new Dimension(Math.min(forward.getPreferredSize().width, MAX_BUTTON_WIDTH), forward.getPreferredSize().height));
-            String appropriatePuzzle =  macro.getPuzzleString();
+            String appropriatePuzzle = macro.getPuzzleString();
             appropriatePuzzle = appropriatePuzzle.substring(0, appropriatePuzzle.indexOf(' '));
             forward.setEnabled(appropriatePuzzle.equals(schlafli));
             forward.setToolTipText(appropriatePuzzle);
