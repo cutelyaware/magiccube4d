@@ -13,8 +13,7 @@ public class ColorUtils {
     private static Random rand = new Random(RAND_SEED);
 
 
-    public static void hsv2rgb(float h, float s, float v, float[] rgb)
-    {
+    public static void hsv2rgb(float h, float s, float v, float[] rgb) {
         // H is given on [0->6] or -1. S and V are given on [0->1]. 
         // RGB are each returned on [0->1]. 
         float m, n, f;

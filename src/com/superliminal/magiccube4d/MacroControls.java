@@ -1,13 +1,22 @@
 package com.superliminal.magiccube4d;
 
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.SpringLayout;
 
 import com.superliminal.util.SpringUtilities;
 import com.superliminal.util.StaticUtils;
-
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.*;
 
 /**
  * Viewer/controller for a MacroManager. <br>
@@ -41,10 +50,10 @@ public class MacroControls extends JPanel {
 
     public MacroControls() {}
 
-    public void init(final MacroManager mgr, String schlafli, final Listener app) {
-        this.mgr = mgr;
-        this.schlafli = schlafli;
-        this.app = app;
+    public void init(final MacroManager macroMgr, String schlafliSymbol, final Listener l) {
+        this.mgr = macroMgr;
+        this.schlafli = schlafliSymbol;
+        this.app = l;
         init(false);
     }
 

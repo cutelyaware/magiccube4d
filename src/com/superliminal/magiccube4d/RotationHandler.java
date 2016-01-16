@@ -1,26 +1,23 @@
 package com.superliminal.magiccube4d;
 
 import java.io.BufferedReader;
-import java.io.Writer;
 import java.io.IOException;
+import java.io.Writer;
 
 import com.donhatchsw.util.VecMath;
 import com.superliminal.util.PropertyManager;
 
 
 // Class which manages view rotations, both ctrl-click and continuous style.
-public class RotationHandler
-{
+public class RotationHandler {
     public RotationHandler() {
         set4dView(null);
     }
-    public RotationHandler(double[][] initialMatrix)
-    {
+    public RotationHandler(double[][] initialMatrix) {
         set4dView(initialMatrix);
     }
 
-    public enum Snap
-    {
+    public enum Snap {
         Snap_Cell, // Rotates cell centers.
         Snap_Smart // Rotates vertices, edge centers, cell centers, etc. smartly.
                    // (we've been calling this cubie-to-center, even though that's not always the case)
@@ -31,8 +28,7 @@ public class RotationHandler
     }
 
     // Persistence.
-    public void write(Writer writer) throws IOException
-    {
+    public void write(Writer writer) throws IOException {
         for(int i = 0; i < 4; i++) {
             for(int j = 0; j < 4; j++) {
                 writer.write("" + viewMat4d[i][j]);
@@ -41,8 +37,7 @@ public class RotationHandler
         }
     }
 
-    public void read(BufferedReader reader) throws IOException
-    {
+    public void read(BufferedReader reader) throws IOException {
         for(int i = 0; i < 4; i++) {
             String line = reader.readLine();
             String numberStrings[] = line.split(" ");
@@ -56,8 +51,7 @@ public class RotationHandler
     private double spinDelta[][];
     private double viewMat4d[][] = VecMath.identitymat(4);
 
-    public double[][] current4dView()
-    {
+    public double[][] current4dView() {
         return viewMat4d;
     }
 
@@ -89,8 +83,7 @@ public class RotationHandler
 
         spinDelta = VecMath.zeromat(4);
 
-        if(left && !shift)
-        {
+        if(left && !shift) {
             spinDelta[0][2] += dx;
             spinDelta[2][0] -= dx;
 
@@ -98,8 +91,7 @@ public class RotationHandler
             spinDelta[2][1] -= dy;
         }
 
-        if(left && shift)
-        {
+        if(left && shift) {
             spinDelta[0][3] -= dx;
             spinDelta[3][0] += dx;
 
@@ -108,8 +100,7 @@ public class RotationHandler
         }
 
         boolean right = !left && !middle;
-        if(right)
-        {
+        if(right) {
             spinDelta[0][1] += dx;
             spinDelta[1][0] -= dx;
 
@@ -125,8 +116,7 @@ public class RotationHandler
             stopSpinning();
     }
 
-    private void applySpinDelta()
-    {
+    private void applySpinDelta() {
         assert (spinDelta != null);
         if(spinDelta == null)
             return;
@@ -139,10 +129,8 @@ public class RotationHandler
     }
 
     // Advances auto-rotation (if any) and returns true if our settings are such that we should continue.
-    public boolean continueSpin()
-    {
-        if(PropertyManager.getBoolean("autorotate", true) && spinDelta != null)
-        {
+    public boolean continueSpin() {
+        if(PropertyManager.getBoolean("autorotate", true) && spinDelta != null) {
             applySpinDelta();
             return true;
         }
@@ -150,13 +138,11 @@ public class RotationHandler
         return false;
     }
 
-    public boolean isSpinning()
-    {
+    public boolean isSpinning() {
         return spinDelta != null;
     }
 
-    public void stopSpinning()
-    {
+    public void stopSpinning() {
         spinDelta = null;
     }
 }

@@ -57,7 +57,7 @@ public class ColorButton extends JButton {
         setColor(PropertyManager.getColor(prefKey, def));
         addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent arg0) {
+            public void actionPerformed(ActionEvent ae) {
                 final Color oldColor = PropertyManager.getColor(prefKey, def);
                 if(oldColor != null)
                     tcc.setColor(oldColor);

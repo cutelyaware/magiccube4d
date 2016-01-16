@@ -35,12 +35,11 @@ public abstract class ProgressManager extends SwingWorker<Void, Void> {
                         progressView.repaint();
                     }
                 }
-            }
-            );
+            });
     }
 
-    private void init(final String string, final boolean indeterminate, int max) {
-        this.max = max;
+    private void init(final String string, final boolean indeterminate, int mx) {
+        this.max = mx;
         setProgress(0);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -49,15 +48,14 @@ public abstract class ProgressManager extends SwingWorker<Void, Void> {
                 progressView.setString(string);
                 //progressView.setVisible(true); // this seems to cause all menu items to disappear
             }
-        }
-            );
+        });
     }
 
     /*
      * Initializes the progress bar in determinate mode.
      */
-    public void init(String string, int max) {
-        init(string, false, max);
+    public void init(String string, int mx) {
+        init(string, false, mx);
     }
 
     /*

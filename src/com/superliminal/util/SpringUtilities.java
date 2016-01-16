@@ -1,8 +1,10 @@
 package com.superliminal.util;
 
-import javax.swing.*;
+import java.awt.Component;
+import java.awt.Container;
+
+import javax.swing.Spring;
 import javax.swing.SpringLayout;
-import java.awt.*;
 
 /**
  * A 1.4 file that provides utility methods for
@@ -34,6 +36,7 @@ public class SpringUtilities {
      * @param xPad x padding between cells
      * @param yPad y padding between cells
      */
+    @SuppressWarnings("null")
     public static void makeGrid(Container parent,
         int rows, int cols,
         int initialX, int initialY,
@@ -91,7 +94,6 @@ public class SpringUtilities {
                 cons.setX(Spring.sum(lastCons.getConstraint(SpringLayout.EAST),
                     xPadSpring));
             }
-
             if(i / cols == 0) { //first row
                 cons.setY(initialYSpring);
             } else { //y position depends on previous row

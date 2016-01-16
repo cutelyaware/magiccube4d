@@ -97,13 +97,13 @@ public class Audio {
             // Get a sound clip resource.
             clip = AudioSystem.getClip();
             clip.open(audioIn);
+            FloatControl volctrl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            float min = volctrl.getMinimum();
+            float max = volctrl.getMaximum();
+            volctrl.setValue(min + (max - min) * scale);// newVal - the value of volume slider
         } catch(Exception e) {
             e.printStackTrace();
         }
-        FloatControl volctrl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-        float min = volctrl.getMinimum();
-        float max = volctrl.getMaximum();
-        volctrl.setValue(min + (max - min) * scale);// newVal - the value of volume slider
         return clip;
     }
 

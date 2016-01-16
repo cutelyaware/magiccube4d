@@ -1,11 +1,25 @@
 package com.superliminal.magiccube4d;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
-import java.util.Enumeration;
 
 import javax.swing.JFrame;
 import javax.swing.JProgressBar;
@@ -107,15 +121,13 @@ public class MC4DView extends Component {
         this.animationQueue = new AnimationQueue(h);
     }
 
-    public void updateStickerHighlighting(boolean isControlDown)
-    {
+    public void updateStickerHighlighting(boolean isControlDown) {
         Point mousePos = getMousePosition();
         if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask(), isControlDown))
             repaint();
     }
 
-    public void updateStickerHighlighting(InputEvent e)
-    {
+    public void updateStickerHighlighting(InputEvent e) {
         updateStickerHighlighting(e.isControlDown());
     }
 
@@ -164,11 +176,9 @@ public class MC4DView extends Component {
                     return;
 
                 boolean isViewRotation = e.isControlDown() || SwingUtilities.isMiddleMouseButton(e);
-                if(isViewRotation)
-                {
+                if(isViewRotation) {
                     // Pass it off to the puzzle manager.
-                    if(puzzleManager != null)
-                    {
+                    if(puzzleManager != null) {
                         puzzleManager.mouseClickedAction(e,
                             rotationHandler,
                             PropertyManager.getFloat("twistfactor", 1),
@@ -185,12 +195,10 @@ public class MC4DView extends Component {
                     puzzleManager.puzzleDescription);
 
                 // The twist might be illegal.
-                if(grip < 0)
-                {
+                if(grip < 0) {
                     System.out.println("missed");
                 }
-                else
-                {
+                else {
                     MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_puzzle = grip; // slamming new id. do we need to set the other members?
                     clicked.face = puzzleManager.puzzleDescription.getGrip2Face()[grip];
@@ -259,8 +267,7 @@ public class MC4DView extends Component {
             @Override
             public void mouseMoved(MouseEvent me) {
                 super.mouseMoved(me);
-                if(puzzleManager != null)
-                {
+                if(puzzleManager != null) {
                     if(!isInMotion() && puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown()))
                         ;
                     repaint();
@@ -407,8 +414,7 @@ public class MC4DView extends Component {
         }
 
         // paint the puzzle
-        if(puzzleManager != null && puzzleManager.puzzleDescription != null)
-        {
+        if(puzzleManager != null && puzzleManager.puzzleDescription != null) {
             final boolean do3DStepsOnly = false;
             PipelineUtils.AnimFrame frame = puzzleManager.computeFrame(
                 PropertyManager.getFloat("faceshrink", MagicCube.FACESHRINK),

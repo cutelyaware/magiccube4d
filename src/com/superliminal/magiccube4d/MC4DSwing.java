@@ -1,8 +1,30 @@
 package com.superliminal.magiccube4d;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PushbackReader;
+import java.io.StringReader;
+import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -10,17 +32,43 @@ import java.util.Random;
 import java.util.Stack;
 import java.util.StringTokenizer;
 
-import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BoundedRangeModel;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JRadioButton;
+import javax.swing.JSlider;
+import javax.swing.JTabbedPane;
+import javax.swing.KeyStroke;
+import javax.swing.SpringLayout;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.superliminal.util.ColorButton;
 import com.superliminal.util.FloatSlider;
 import com.superliminal.util.PropertyManager;
+import com.superliminal.util.ResourceUtils;
 import com.superliminal.util.SpringUtilities;
 import com.superliminal.util.StaticUtils;
-import com.superliminal.util.ResourceUtils;
 
 /**
  * The main desktop application.
@@ -249,8 +297,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 for(Enumeration<MagicCube.TwistData> moves = hist.moves(); moves.hasMoreElements();)
                     toundo.push(moves.nextElement());
                 while(!toundo.isEmpty()) {
-                    MagicCube.TwistData last = toundo.pop();
-                    MagicCube.TwistData inv = new MagicCube.TwistData(last.grip, -last.direction, last.slicemask);
+                    MagicCube.TwistData last_twist = toundo.pop();
+                    MagicCube.TwistData inv = new MagicCube.TwistData(last_twist.grip, -last_twist.direction, last_twist.slicemask);
                     //System.out.println("Cheating grip: " + inv.grip.id_within_puzzle + " dir: " + inv.direction  + " slicemask: " + inv.slicemask);
                     view.animate(inv, true);
                 }
@@ -330,13 +378,11 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             }
         };
 
-    private static boolean isControlDown(ActionEvent e)
-    {
+    private static boolean isControlDown(ActionEvent e) {
         return (e.getModifiers() & ActionEvent.CTRL_MASK) == ActionEvent.CTRL_MASK;
     }
 
-    private void setSkyAndHighlighting(Color c, PuzzleManager.Highlighter h, boolean isControlDown)
-    {
+    private void setSkyAndHighlighting(Color c, PuzzleManager.Highlighter h, boolean isControlDown) {
         view.setSkyOverride(c);
         puzzleManager.setHighlighter(h);
         view.updateStickerHighlighting(isControlDown);
@@ -619,7 +665,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         helpmenu.add(new JMenuItem("About...")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-
                 // Get the minor version from our resource.
                 String minorVersion = ResourceUtils.readRelativeFile("version.txt");
                 if(minorVersion == null) {
@@ -628,7 +673,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 }
                 else
                     minorVersion = "." + minorVersion;
-
                 JOptionPane.showMessageDialog(MC4DSwing.this,
                     "<html><center>" +
                         MagicCube.TITLE +
@@ -693,11 +737,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     } // end MC4DSwing
 
 
-    public void initPuzzleMenu(JMenu puzzlemenu, final JLabel statusLabel, final JProgressBar progressView)
-    {
+    public void initPuzzleMenu(JMenu puzzlemenu, final JLabel label, final JProgressBar progressView) {
         final String[][] table = MagicCube.SUPPORTED_PUZZLES;
-        for(int i = 0; i < table.length; ++i)
-        {
+        for(int i = 0; i < table.length; ++i) {
 
             final String schlafli = table[i][0];
             String lengthStrings[] = table[i][1].split(",");
@@ -706,44 +748,35 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
             // Puzzles with triangles have been problematic.
             boolean allowPuzzlesWithTriangles = true;
-            if(!allowPuzzlesWithTriangles)
-            {
+            if(!allowPuzzlesWithTriangles) {
                 if(schlafli != null && schlafli.indexOf("{3") != -1 && !schlafli.equals("{3,3,3}"))
                     continue;
             }
 
             JMenu submenu;
-            if(schlafli != null)
-            {
+            if(schlafli != null) {
                 submenu = new JMenu(name + "    "); // XXX padding so the > doesn't clobber the end of the longest names!? lame
                 puzzlemenu.add(submenu);
             }
             else
                 submenu = puzzlemenu;
-            for(int j = 0; j < lengthStrings.length; ++j)
-            {
+            for(int j = 0; j < lengthStrings.length; ++j) {
                 final String lengthString = lengthStrings[j];
                 submenu.add(new JMenuItem(schlafli == null ? name : "   " + lengthString + "  ")).addActionListener(new ActionListener() {
                     @Override
-                    public void actionPerformed(ActionEvent ae)
-                    {
+                    public void actionPerformed(ActionEvent ae) {
                         String newSchlafli = schlafli;
                         String newLengthString = lengthString;
-                        if(schlafli == null)
-                        {
+                        if(schlafli == null) {
                             String prompt = "Enter your invention:";
-                            String name = puzzleManager.puzzleDescription.getSchlafliProduct();
-                            String initialInput = name + " " + puzzleManager.getPrettyLength();
-                            while(true)
-                            {
+                            String initialInput = puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.getPrettyLength();
+                            while(true) {
                                 String reply = JOptionPane.showInputDialog(prompt, initialInput);
-                                if(reply == null)
-                                {
+                                if(reply == null) {
                                     return; // Canceled
                                 }
                                 String schlafliAndLength[] = reply.trim().split("\\s+");
-                                if(schlafliAndLength.length != 2)
-                                {
+                                if(schlafliAndLength.length != 2) {
                                     prompt = "Can not build your invention.\nYou must specify the schlafli product symbol (with no spaces),\nfollowed by a space, followed by the puzzle length. Try again!";
                                     initialInput = reply;
                                     continue;
@@ -755,7 +788,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                         }
                         progressView.setVisible(true);
                         System.out.println(newSchlafli + " " + newLengthString);
-                        puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, statusLabel, true);
+                        puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, label, true);
                         hist.clear((int) Double.parseDouble(newLengthString));
                         updateTwistsLabel();
                         scrambleState = SCRAMBLE_NONE;
@@ -773,14 +806,13 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     private void initMacroMenu() {
         apply.removeAll();
         Macro macros[] = macroMgr.getMacros();
-        for(int i = 0; i < macros.length; ++i)
-        {
-            final Macro macro = macros[i];
-            JMenuItem applyitem = apply.add(new JMenuItem(macro.getName()));
-            applyitem.addActionListener(new ProbableAction(macro.getName()) {
+        for(int i = 0; i < macros.length; ++i) {
+            final Macro m = macros[i];
+            JMenuItem applyitem = apply.add(new JMenuItem(m.getName()));
+            applyitem.addActionListener(new ProbableAction(m.getName()) {
                 @Override
                 public void doit(ActionEvent ae) {
-                    lastMacro = macro;
+                    lastMacro = m;
                     last.doit(ae);
                 }
             });
@@ -800,8 +832,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     private final MacroControls macroControls = new MacroControls();
     private final MacroControls.Listener macroControlsListener = new MacroControls.Listener() {
         @Override
-        public void apply(Macro macro, boolean reverse) {
-            lastMacro = macro;
+        public void apply(Macro m, boolean reverse) {
+            lastMacro = m;
             final int mask = reverse ? ActionEvent.CTRL_MASK : 0;
             // A fake event so action will pick up correct direction.
             // A bit of a hack but sometimes a girl's gotta do what a girl's gotta do!
@@ -822,13 +854,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     // TODO: Move the full tab building into a separate method perhaps?
     private void initMacroControls() {
         String schlafli = puzzleManager != null && puzzleManager.puzzleDescription != null ? puzzleManager.puzzleDescription.getSchlafliProduct() : null;
-
         macroControls.init(macroMgr, schlafli, macroControlsListener);
-
-        // If we've already setup the tabs, we're done.
-        if(tabs.getComponentCount() > 0)
+        if(tabs.getComponentCount() > 0) // If we've already setup the tabs, we're done.
             return;
-
         tabs.removeChangeListener(tabListener); // so as not to pick up tab change events due to adding tabs.
         tabs.removeAll();
         tabs.add("Preferences", preferencesEditor);
@@ -846,7 +874,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             if(macroMgr.recording()) {
                 macroMgr.addTwist(twisted);
                 view.animate(twisted, true);
-            } else {
+            }
+            else {
                 if(!macroMgr.addRef(puzzleManager.puzzleDescription, twisted.grip))
                     statusLabel.setText("Picked reference won't determine unique orientation, please try another.");
                 else if(macroMgr.recording()) { // true when the reference sticker added was the last one needed.
@@ -871,8 +900,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                         setSkyAndHighlighting(Color.black, normalHighlighter, e.isControlDown());
                     }
                 }
-                else
-                {
+                else {
                     statusLabel.setText("" + macroMgr.numRefs()); // a little camera sound here would be great.
                     view.updateStickerHighlighting(e);
                 }
@@ -882,7 +910,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             statusLabel.setText("");
             view.animate(twisted, true);
         }
-    }
+    } // end stickerClicked
 
 
     /*
@@ -906,14 +934,19 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 try {
                     BufferedReader reader = new BufferedReader(new FileReader(logfile));
                     String firstlineStr = reader.readLine();
-                    if(firstlineStr == null)
+                    if(firstlineStr == null) {
+                        reader.close();
                         throw new IOException("Empty log file.");
+                    }
                     String firstline[] = firstlineStr.split(" ");
-                    if(firstline.length != 6 || !MagicCube.MAGIC_NUMBER.equals(firstline[0]))
+                    if(firstline.length != 6 || !MagicCube.MAGIC_NUMBER.equals(firstline[0])) {
+                        reader.close();
                         throw new IOException("Unexpected log file format.");
+                    }
                     int readversion = Integer.parseInt(firstline[1]);
                     if(readversion != MagicCube.LOG_FILE_VERSION) {
                         statusLabel.setText("Incompatible log file version " + readversion);
+                        reader.close();
                         return;
                     }
                     scrambleState = Integer.parseInt(firstline[2]);
@@ -937,7 +970,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     e.printStackTrace();
                     parsingError = true;
                 }
-
                 if(parsingError)
                     statusLabel.setText("Failed to parse log file '" + log + "'");
                 else
@@ -1102,10 +1134,10 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    boolean on = isSelected();
+                    boolean is_on = isSelected();
                     if(invert)
-                        on = !on;
-                    PropertyManager.userprefs.setProperty(propname, "" + on);
+                        is_on = !is_on;
+                    PropertyManager.userprefs.setProperty(propname, "" + is_on);
                     dependent.repaint();
                 }
             });
@@ -1237,8 +1269,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             colors.add(outlinesColor);
             SpringUtilities.makeCompactGrid(colors, 3, 2, 0, 0, 0, 5);
 
-            JButton reset = new JButton("Reset To Defaults");
-            reset.addActionListener(new ActionListener() {
+            JButton reset_button = new JButton("Reset To Defaults");
+            reset_button.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     // TODO: make this work. Problem is syncing the view with the reset prefs
