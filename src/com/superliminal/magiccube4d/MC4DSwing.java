@@ -1397,8 +1397,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
             void configureNormal(Frame frame) {
                 frame.setSize(
-                    PropertyManager.getInt("window.width", 900),
-                    PropertyManager.getInt("window.height", 700));
+                    PropertyManager.getInt("window.width", 1300),
+                    PropertyManager.getInt("window.height", 1000));
                 frame.setLocation(
                     PropertyManager.getInt("window.x", frame.getX()),
                     PropertyManager.getInt("window.y", frame.getY()));
