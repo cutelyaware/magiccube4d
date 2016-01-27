@@ -28,6 +28,7 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Random;
 import java.util.Stack;
 import java.util.StringTokenizer;
@@ -53,7 +54,6 @@ import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
-import javax.swing.KeyStroke;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -64,6 +64,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.superliminal.util.ColorButton;
+import com.superliminal.util.Console;
 import com.superliminal.util.FloatSlider;
 import com.superliminal.util.PropertyManager;
 import com.superliminal.util.ResourceUtils;
@@ -100,7 +101,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
     private RotationHandler rotations = new RotationHandler(MagicCube.NICE_VIEW);
 
-    private JPanel viewcontainer = new JPanel(new BorderLayout()); // JComponent container so we can use addHotKey
+    private JPanel viewcontainer = new JPanel(new BorderLayout()); // Can use as addHotKey target when no MenuItem available.
     private JPanel macroControlsContainer = new JPanel(new BorderLayout());
     private JFileChooser
         logFileChooser = new JFileChooser(),
@@ -112,7 +113,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 
     private PuzzleManager puzzleManager = null;
 
-    private JMenu apply = new JMenu("Apply");
+    private JMenu apply = new JMenu("Apply"); // Currently unused since Macros tab added.
+
     private JMenuItem
         openitem = new JMenuItem("Open"),
         saveitem = new JMenuItem("Save"),
@@ -171,7 +173,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             view.getRotations().write(writer);
             //writer.write(sep + puzzle.toString());
             writer.write("*" + sep);
-            hist.write(writer);
+            hist.truncate(); // Don't save potential redo moves after current. Note: loses redo moves as a side effect!
+            writer.write(hist.toString());
+            writer.write(sep);
             writer.close();
             String filepath = file.getAbsolutePath();
             statusLabel.setText("Wrote log file " + filepath);
@@ -244,7 +248,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     return;
                 }
                 if(hist.atMacroClose()) {
-                    statusLabel.setText("undoing macro");
+                    statusLabel.setText("Undoing macro");
                     for(MagicCube.TwistData toUndo = hist.undo(); toUndo != null; toUndo = hist.undo()) {
                         view.animate(toUndo, false, true);
                         if(hist.atMacroOpen())
@@ -254,13 +258,18 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     hist.goToPrevious(); // step over mark to point where macro was applied.
                 }
                 else {
+                    if(hist.atMark(History.MARK_SETUP_MOVES)) {
+                        System.out.println("At Setup");
+                        hist.removeAllMarks(History.MARK_SETUP_MOVES);
+                        setSkyAndHighlighting(null, normalHighlighter, isControlDown(ae));
+                    }
                     MagicCube.TwistData toUndo = hist.undo();
                     if(toUndo != null) {
                         //System.out.println("Undoing grip: " + toUndo.grip + " dir: " + toUndo.direction  + " slicemask: " + toUndo.slicemask);
                         view.animate(toUndo, false);
                     }
                     else
-                        statusLabel.setText("Nothing to undo.");
+                        statusLabel.setText("Nothing to undo");
                 }
             }
         },
@@ -269,7 +278,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             public void doit(ActionEvent ae) {
                 statusLabel.setText("");
                 if(hist.atMacroOpen()) {
-                    statusLabel.setText("redoing macro");
+                    statusLabel.setText("Redoing macro");
                     for(MagicCube.TwistData toRedo = hist.redo(); toRedo != null; toRedo = hist.redo()) {
                         view.animate(toRedo, false, true);
                         if(hist.atMacroClose())
@@ -283,7 +292,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     if(toRedo != null)
                         view.animate(toRedo, false);
                     else
-                        statusLabel.setText("Nothing to redo.");
+                        statusLabel.setText("Nothing to redo");
                 }
             }
         },
@@ -311,13 +320,13 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
 //                MagicCube.TwistData[] solution;
 //                try { solution = puzzle.solve(); }
 //                catch(Error e) {
-//                    statusLabel.setText("no solution");
+//                    statusLabel.setText("No solution");
 //                    return;
 //                }
 //                solution = History.compress(solution, (int)puzzleManager.puzzleDescription.getEdgeLength(), true);
 //                view.animate(solution, true);
 //                scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
-//                statusLabel.setText("twists to solve = " + solution.length);
+//                statusLabel.setText("Twists to solve = " + solution.length);
             }
         },
         macro = new ProbableAction("Start/End") { // toggles macro definition start/end
@@ -332,7 +341,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     else {
                         lastMacro = macroMgr.close(name);
                         initMacroMenu(); // to show new macro.
-                        initMacroControls(); // to show new control
+                        initTabs(); // to show new control
                         statusLabel.setText("Defined \"" + lastMacro.getName() + "\" macro with " +
                             lastMacro.length() + " move" + (lastMacro.length() == 1 ? "." : "s."));
                     }
@@ -344,16 +353,23 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 }
             }
         },
-        cancel = new ProbableAction("Cancel Macro Definition") {
+        cancel = new ProbableAction("Cancel Macro") {
             @Override
             public void doit(ActionEvent ae) {
                 view.cancelAnimation(); // also stops any animation
-                if(!macroMgr.isOpen())
-                    return;
-                macroMgr.cancel();
-                statusLabel.setText("Cancelled");
+                Audio.stop(Audio.Sound.TWISTING); // TODO: Needs a stopAll() method.
+                if(macroMgr.isOpen()) {
+                    macroMgr.cancel();
+                    applyingMacro = 0;
+                    statusLabel.setText("Cancelled");
+                }
+                if(hist.lastMark() == History.MARK_MACRO_OPEN)
+                    hist.removeLastMark(History.MARK_MACRO_OPEN);
                 setSkyAndHighlighting(null, normalHighlighter, isControlDown(ae));
-                applyingMacro = 0;
+                // Remove any set-up mark. Consider also undoing any set-up moves.
+                boolean setup_canceled = hist.removeLastMark(History.MARK_SETUP_MOVES);
+                syncPuzzleStateWithHistory();
+                statusLabel.setText(setup_canceled ? "Cancelled" : "");
             }
         },
         last = new ProbableAction("Apply Last Macro") {
@@ -376,10 +392,20 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
                 setSkyAndHighlighting(new Color(255, 170, 170), macroMgr, isControlDown(ae));
             }
+        },
+        setup = new ProbableAction("Macro Set-Up Moves") {
+            @Override
+            public void doit(ActionEvent ae) {
+                // Begin recording macro set-up moves.
+                hist.removeAllMarks(History.MARK_SETUP_MOVES);
+                hist.mark(History.MARK_SETUP_MOVES);
+                statusLabel.setText("Recording pre-macro set-up moves. Esc to cancel.");
+                view.setSkyOverride(new Color(255, 255, 170));
+            }
         };
 
     private static boolean isControlDown(ActionEvent e) {
-        return (e.getModifiers() & ActionEvent.CTRL_MASK) == ActionEvent.CTRL_MASK;
+        return e != null && (e.getModifiers() & ActionEvent.CTRL_MASK) == ActionEvent.CTRL_MASK;
     }
 
     private void setSkyAndHighlighting(Color c, PuzzleManager.Highlighter h, boolean isControlDown) {
@@ -424,7 +450,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 PropertyManager.userprefs.setProperty("macrofile", filepath);
                 macroMgr = new MacroManager(filepath);
                 initMacroMenu(); // update controls with macro definitions just read.
-                initMacroControls(); // to show new controls
+                initTabs(); // to show new controls
                 int nread = apply.getItemCount();
                 statusLabel.setText("Read " + nread + " macro" + (nread == 1 ? "" : "s") + " from " + filepath);
             }
@@ -490,11 +516,6 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         StaticUtils.addHotKey(KeyEvent.VK_L, solveitem, "Real", solve);
         StaticUtils.addHotKey(KeyEvent.VK_T, cheatitem, "Cheat", cheat);
 
-        // accelerator keys from some non-menu actions
-        StaticUtils.addHotKey(KeyEvent.VK_M, viewcontainer, "Macro", macro);
-        StaticUtils.addHotKey(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), viewcontainer, "Cancel", cancel);
-        StaticUtils.addHotKey(KeyEvent.VK_A, viewcontainer, "Apply", last);
-
         // no hotkey
         saveasitem.addActionListener(saveas);
 
@@ -523,6 +544,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         //editmenu.add(solveitem); // commented out until we reimplement true solves.
         JMenu scramblemenu = new JMenu("Scramble");
 
+        // Scrambling
+        //
         class Scrambler extends ProbableAction {
             private int scramblechenfrengensen;
             public Scrambler(int scramblechens) {
@@ -530,40 +553,24 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 this.scramblechenfrengensen = scramblechens;
             }
 
-            /*
-             * Npieces = number of pieces in the puzzle (including 1-colored pieces)
-             * Nfaces = number of faces in the puzzle
-             * Nstickers = number of stickers in the puzzle
-             * N1Cpieces = number of 1-colored pieces in the puzzle
-             * d = dimension of the puzzle
+            /**
+             * David Smith's wondrous Goldilock's function which produces the (safely)
+             * smallest number of scrambling twists needed to fully scramble any puzzle.
              * 
+             * Where
              * ln(x) = natural logarithm of x
              * log4(x) = base 4 logarithm of x = ln(x)/ln(4) = ln(x)/1.386
+             * AveNumTwists = (nPieces*nFaces/(nStickers - n1CPieces)) * (0.577+ln(nPieces))
+             * Number of Twists to Scramble (round to nearest integer) = AveNumTwists * (d-1+log4(nFaces/(2*d)))
              * 
-             * AveNumTwists = (Npieces*Nfaces/(Nstickers - N1Cpieces)) * (0.577+ln(Npieces))
+             * @see https://groups.yahoo.com/neo/groups/4D_Cubing/conversations/messages/1676
              * 
-             * Number of Twists to Scramble (round to nearest integer) =
-             * 
-             * AveNumTwists * (d-1+log4(Nfaces/(2*d)))
+             * @param nPieces Number of pieces in the puzzle (including 1-colored pieces)
+             * @param nFaces Number of faces in the puzzle
+             * @param nStickers Number of stickers in the puzzle
+             * @param n1CPieces Number of 1-colored pieces in the puzzle
+             * @param d Dimension of the puzzle
              */
-
-            /*
-             * Npieces = number of pieces in the puzzle (including 1-colored pieces)
-             * Nfaces = number of faces in the puzzle
-             * Nstickers = number of stickers in the puzzle
-             * N1Cpieces = number of 1-colored pieces in the puzzle
-             * d = dimension of the puzzle
-             * 
-             * ln(x) = natural logarithm of x
-             * log4(x) = base 4 logarithm of x = ln(x)/ln(4) = ln(x)/1.386
-             * 
-             * AveNumTwists = (Npieces*Nfaces/(Nstickers - N1Cpieces)) * (0.577+ln(Npieces))
-             * 
-             * Number of Twists to Scramble (round to nearest integer) =
-             * 
-             * AveNumTwists * (d-1+log4(Nfaces/(2*d)))
-             */
-
             public int goldilocks(int nPieces, int nFaces, int nStickers, int n1CPieces, int d) {
                 double dpieces = nPieces, dfaces = nFaces, dstickers = nStickers, d1cpieces = n1CPieces;
                 double aveNumTwists = (dpieces * dfaces / (dstickers - d1cpieces)) * (0.577 + Math.log(dpieces));
@@ -651,6 +658,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         item = new JMenuItem("Cancel Macro Definition");
         StaticUtils.addHotKey(KeyEvent.VK_ESCAPE, item, "Cancel", cancel);
         macromenu.add(item);
+        item = new JMenuItem("Begin Macro Setup Moves");
+        StaticUtils.addHotKey(KeyEvent.VK_B, item, "Begin", setup);
+        macromenu.add(item);
         item = new JMenuItem("Apply Last Macro");
         StaticUtils.addHotKey(KeyEvent.VK_A, item, "Last", last);
         macromenu.add(item);
@@ -678,9 +688,16 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                         MagicCube.TITLE +
                         " Version " + MagicCube.PUZZLE_MAJOR_VERSION + minorVersion +
                         "<br>Copyright 2005 by Melinda Green and Don Hatch" +
-                        "<br>with invaluable help from Jay Berkenbilt and Roice Nelson." +
+                        "<br>with invaluable help from Jay Berkenbilt, Roice Nelson," +
+                        "<br>and the members of the MC4D mailing list." +
                         "<br>http://superliminal.com/cube/cube.htm" +
                         "</center></html>");
+            }
+        });
+        helpmenu.add(new JMenuItem("Show Console")).addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                Console.show();
             }
         });
 
@@ -719,7 +736,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
             @Override
             public void puzzleChanged(boolean newPuzzle) {
-                initMacroControls(); // to properly enable/disable the buttons
+                initTabs(); // to properly enable/disable the buttons
                 progressBar.setVisible(false);
                 hist.clear((int) puzzleManager.puzzleDescription.getEdgeLength());
                 updateTwistsLabel();
@@ -731,28 +748,24 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             }
         });
         puzzleManager.setHighlighter(normalHighlighter);
-        initMacroControls(); // to show controls
+        initTabs(); // to show controls
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));
     } // end MC4DSwing
 
-
     public void initPuzzleMenu(JMenu puzzlemenu, final JLabel label, final JProgressBar progressView) {
         final String[][] table = MagicCube.SUPPORTED_PUZZLES;
         for(int i = 0; i < table.length; ++i) {
-
             final String schlafli = table[i][0];
             String lengthStrings[] = table[i][1].split(",");
             final String name = (schlafli == null ? table[i][2] :
                 schlafli + "  " + table[i][2]);
-
             // Puzzles with triangles have been problematic.
             boolean allowPuzzlesWithTriangles = true;
             if(!allowPuzzlesWithTriangles) {
                 if(schlafli != null && schlafli.indexOf("{3") != -1 && !schlafli.equals("{3,3,3}"))
                     continue;
             }
-
             JMenu submenu;
             if(schlafli != null) {
                 submenu = new JMenu(name + "    "); // XXX padding so the > doesn't clobber the end of the longest names!? lame
@@ -820,7 +833,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
     }
 
     // TODO: All this state is part of the hackish way to keep macro buttons properly enabled below.
-    // Maybe the macro controls should listen for puzzle change events or something would be better?
+    // Maybe the macro controls listening for puzzle change events or something else would be better?
     private final PreferencesEditor preferencesEditor = new PreferencesEditor();
     private final JTabbedPane tabs = new JTabbedPane();
     private final ChangeListener tabListener = new ChangeListener() {
@@ -851,8 +864,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         }
     };
 
-    // TODO: Move the full tab building into a separate method perhaps?
-    private void initMacroControls() {
+    private void initTabs() {
         String schlafli = puzzleManager != null && puzzleManager.puzzleDescription != null ? puzzleManager.puzzleDescription.getSchlafliProduct() : null;
         macroControls.init(macroMgr, schlafli, macroControlsListener);
         if(tabs.getComponentCount() > 0) // If we've already setup the tabs, we're done.
@@ -889,9 +901,22 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                             if(applyingMacro < 0)
                                 Macro.reverse(moves);
                             statusLabel.setText("Applying macro '" + lastMacro.getName() + "'");
-                            hist.mark(History.MARK_MACRO_OPEN);
+                            Enumeration<MagicCube.TwistData> setup_moves = hist.movesFromMark(History.MARK_SETUP_MOVES);
+                            view.append(History.MARK_MACRO_OPEN);
                             view.animate(moves, true, true);
                             view.append(History.MARK_MACRO_CLOSE);
+                            if(setup_moves.hasMoreElements()) {
+                                List<MagicCube.TwistData> setup_twists = java.util.Collections.list(setup_moves);
+                                // Reverse move order.
+                                java.util.Collections.reverse(setup_twists);
+                                // Reverse twist direction.
+                                for(MagicCube.TwistData td : setup_twists)
+                                    td.direction *= -1;
+                                hist.removeLastMark(History.MARK_SETUP_MOVES);
+                                view.append(History.MARK_MACRO_OPEN);
+                                view.animate(setup_twists.toArray(new MagicCube.TwistData[0]), true, false);
+                                view.append(History.MARK_MACRO_CLOSE);
+                            }
                         }
                         applyingMacro = 0;
                     }
@@ -901,12 +926,12 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     }
                 }
                 else {
-                    statusLabel.setText("" + macroMgr.numRefs()); // a little camera sound here would be great.
+                    statusLabel.setText("Selected " + macroMgr.numRefs() + " of " + Macro.MAXREFS + " reference stickers"); // a little camera sound here would be great.
                     view.updateStickerHighlighting(e);
                 }
             }
         }
-        else {
+        else { // Not in macro creation mode.
             statusLabel.setText("");
             view.animate(twisted, true);
         }
@@ -924,9 +949,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
      */
     private void initPuzzle(String log) {
         scrambleState = SCRAMBLE_NONE;
-        double initialLength = MagicCube.DEFAULT_LENGTH;
-        int iLength = (int) Math.ceil(initialLength);
-        hist = new History(iLength);
+        double initial_edge_length = MagicCube.DEFAULT_LENGTH;
+        int int_edge_length = (int) Math.ceil(initial_edge_length);
+        hist = new History(int_edge_length);
         if(log != null) { // read the log file, possibly reinitializing length and history.
             File logfile = new File(log);
             if(logfile.exists()) {
@@ -952,10 +977,10 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     scrambleState = Integer.parseInt(firstline[2]);
                     // int numTwists = Integer.parseInt(firstline[3]);
                     String schlafli = firstline[4];
-                    initialLength = Double.parseDouble(firstline[5]);
-                    puzzleManager.initPuzzle(schlafli, "" + initialLength, progressBar, statusLabel, false);
-                    iLength = (int) Math.round(initialLength);
-                    hist = new History(iLength);
+                    initial_edge_length = Double.parseDouble(firstline[5]);
+                    puzzleManager.initPuzzle(schlafli, "" + initial_edge_length, progressBar, statusLabel, false);
+                    int_edge_length = (int) Math.round(initial_edge_length);
+                    hist = new History(int_edge_length);
                     String title = MagicCube.TITLE;
                     rotations.read(reader);
                     int c;
@@ -977,25 +1002,11 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             }
             else
                 statusLabel.setText("Couldn't find log file '" + log + "'");
+            updateTwistsLabel();
+
         } // end reading log file
 
-        // initialize generic version state
-        try {
-            for(Enumeration<MagicCube.TwistData> moves = hist.moves(); moves.hasMoreElements();) {
-                MagicCube.TwistData move = moves.nextElement();
-                if(move.grip.id_within_puzzle == -1) {
-                    System.err.println("Bad move in MC4DSwing.initPuzzle: " + move.grip.id_within_puzzle);
-                    return;
-                }
-                puzzleManager.puzzleDescription.applyTwistToState(
-                    puzzleManager.puzzleState,
-                    move.grip.id_within_puzzle,
-                    move.direction,
-                    move.slicemask);
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+        syncPuzzleStateWithHistory();
 
         if(view != null) {
             // attempt to make the old view garbage-collectible.
@@ -1007,7 +1018,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         viewcontainer.removeAll();
         viewcontainer.add(view, "Center");
 
-        hist.addHistoryListener(new History.HistoryListener() {
+        hist.setHistoryListener(new History.HistoryListener() {
             @Override
             public void currentChanged() {
                 saveitem.setEnabled(true);
@@ -1086,6 +1097,26 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             }
         });
     } // end initPuzzle
+
+    private void syncPuzzleStateWithHistory() {
+        MagicCube.TwistData[] moves = hist.movesArray();
+        try {
+            puzzleManager.resetPuzzleStateNoEvent();
+            for(MagicCube.TwistData move : moves) {
+                if(move.grip.id_within_puzzle == -1) {
+                    System.err.println("Bad move in MC4DSwing.initPuzzle: " + move.grip.id_within_puzzle);
+                    return;
+                }
+                puzzleManager.puzzleDescription.applyTwistToState(
+                    puzzleManager.puzzleState,
+                    move.grip.id_within_puzzle,
+                    move.direction,
+                    move.slicemask);
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * A FloatSlider that synchronizes it's value with a given property.

@@ -1,7 +1,14 @@
 package com.superliminal.magiccube4d;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.OutputStreamWriter;
+import java.io.PushbackReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.LinkedList;
+import java.util.Queue;
 
 
 /**
@@ -11,7 +18,7 @@ import java.util.*;
  * <p>
  * DESIGN
  * </p>
- * <li>Twists and rotates are called "moves". Rotates are represented internally as twists that affect all slices but are logically considered a different kind of move.</li> <li>Marks are single character delimiters that can be inserted between like bookmarks.</li> <li>Moves and marks are called history nodes.</li> <li>Macros are represented internally by a sequence of nodes bracketed by the reserved characters '[' and ']'.</li> <li>There is a reference to a "current" move which may be any node or null and can be accessed via getCurrent() and controlled with the various goToXxxx() methods.</li> <li>Notification of changes to the current node can be listened to.</li>
+ * <li>Twists and rotates are called "moves". Rotates are represented internally as twists that affect all slices but are logically considered a different kind of move.</li> <li>Marks are single character delimiters that can be inserted between moves like bookmarks.</li> <li>Moves and marks are called history nodes.</li> <li>Macros are represented internally by a sequence of nodes bracketed by the reserved characters '[' and ']'.</li> <li>There is a reference to a "current" move which may be any node or null and can be accessed via getCurrent() and controlled with the various goToXxxx() methods.</li> <li>Notification of changes to the current node can be listened to.</li>
  * 
  * Copyright 2005 - Superliminal Software
  * 
@@ -19,18 +26,23 @@ import java.util.*;
  * @author Melinda Green
  */
 public class History {
+    private final static boolean DEBUG = false;
 
     static private void Assert(boolean condition) {
         if(!condition)
             throw new Error("Assertion failed");
     }
 
+    // Predefined marks.
+    // TODO: Move these to MagicCube.java and factor out any macro-specific functionality from History class.
     public final static char
+        MARK_ANY = 0, // Matches any mark when searching.
         MARK_MACRO_OPEN = '[',
         MARK_MACRO_CLOSE = ']',
-        MARK_SCRAMBLE_BOUNDARY = '|';
+        MARK_SCRAMBLE_BOUNDARY = '|',
+        MARK_SETUP_MOVES = 'S';
 
-    private int length;
+    private int edgeLength;
 
     private static class HistoryNode {
         public int stickerid;
@@ -68,11 +80,10 @@ public class History {
             return result;
         }
     }
-    private HistoryNode first, last, current;
+    private HistoryNode first, last, current; // If current == null, current is logically last.
 
-    public History(int length) {
-        this.length = length;
-        //debug = preferences.getBoolProperty(M4D_HISTORY_DEBUG);
+    public History(int edgeLength) {
+        this.edgeLength = edgeLength;
     }
 
     public Enumeration<MagicCube.TwistData> moves() {
@@ -97,24 +108,95 @@ public class History {
         };
     }
 
-    private void deleteNode(HistoryNode node) {
+    /**
+     * @return array version of moves().
+     */
+    public MagicCube.TwistData[] movesArray() {
+        ArrayList<MagicCube.TwistData> list = new ArrayList<MagicCube.TwistData>();
+        for(Enumeration<MagicCube.TwistData> e = moves(); e.hasMoreElements();)
+            list.add(e.nextElement());
+        return list.toArray(new MagicCube.TwistData[0]);
+    }
+
+    /**
+     * @return the most recent mark or -1 if none.
+     */
+    public int lastMark() {
+        for(HistoryNode n = current == null ? last : current; n != null; n = n.prev)
+            if(n.mark != 0)
+                return n.mark;
+        return -1;
+    }
+
+//    /**
+//     * Deletes the first given mark at or before the current node.
+//     * 
+//     * @return true if found, false otherwise.
+//     */
+//    public boolean removeLastMark(char mark) {
+//        if(mark == 0 || current == null)
+//            return false;
+//        HistoryNode m = findMark(mark, true);
+//        if(m != null) {
+//            deleteNode(m);
+//            return true;
+//        }
+//        return false;
+//    }
+
+    /**
+     * @return all twists from the given previous mark.
+     */
+    public Enumeration<MagicCube.TwistData> movesFromMark(final char from_mark) {
+        return new Enumeration<MagicCube.TwistData>() {
+            private Queue<HistoryNode> queue = findTwistsFrom(from_mark);
+            @Override
+            public boolean hasMoreElements() {
+                return queue != null && !queue.isEmpty();
+            }
+            @Override
+            public MagicCube.TwistData nextElement() {
+                HistoryNode n = queue.remove();
+                return new MagicCube.TwistData(n.stickerid, n.dir, n.slicesmask);
+            }
+            private Queue<HistoryNode> findTwistsFrom(char mark) {
+                // Search backwards for first node m containing given mark.
+                HistoryNode m = findMark(mark, true);
+                if(m == null)
+                    return null; // Previous mark not found.
+                // Collect all non twists following mark.
+                Queue<HistoryNode> twists = new LinkedList<HistoryNode>();
+                for(HistoryNode n = m.next; n != null && n != null; n = n.next)
+                    if(n.mark == 0)
+                        twists.add(n);
+                return twists;
+            }
+        };
+    }
+
+    private boolean deleteNode(HistoryNode node) {
         if(node == null)
-            return;
+            return false;
         boolean changed = false;
         if(current == node) {
             current = node.next;
             changed = true;
         }
-        if(node.prev == null)
+        if(node.prev == null) {
+            Assert(node == first);
             first = node.next;
+        }
         else
             node.prev.next = node.next;
-        if(node.next == null)
+        if(node.next == null) {
+            Assert(node == last);
             last = node.prev;
+        }
         else
             node.next.prev = node.prev;
         if(changed)
             fireCurrentChanged();
+        return changed;
     }
 
     private void insertNode(HistoryNode node_to_insert_before, int stickerid, int dir, int slicesmask) {
@@ -137,6 +219,8 @@ public class History {
             first = temp;
         else
             temp.prev.next = temp;
+        if(DEBUG)
+            System.out.println(this);
     }
 
     public void deleteLast() {
@@ -144,27 +228,27 @@ public class History {
     }
 
     public void clear(int newLength) {
-        length = newLength;
+        edgeLength = newLength;
         while(first != null)
             deleteLast();
     }
 
     public void clear() {
-        clear(length);
+        clear(edgeLength);
     }
 
     public void append(int stickerid, int dir, int slicesmask) {
         if(slicesmask == 0)
             slicesmask = 1; // 0 means slicemask 1 so keep them consistent so they always compare equal.
-        HistoryNode node = getPreviousMove();
-        if(!atMacroClose() // to not corrupt any macro. can screw up edit->cheat (issue 66) but compressing history first may fix that.
-            && node != null // there is a previous twist
+        HistoryNode node = getPrevious();
+        // When a twist is the inverse of the previous one, we can sometimes turn it into an undo.
+        if(node != null // There is a previous twist
             && node.stickerid == stickerid // on the same axis
             && node.slicesmask == slicesmask // affecting the same slices
-            && node.dir == -dir) // but in *opposite* direction
+            && node.dir == -dir) // but in the *opposite* direction.
         {
             undo(); // just back the move out rather than append an inverse move
-            truncate(); // had to add this so write() doesn't save moves after new current
+            truncate(); // Required because redo should not be possible since this is not a true undo.
         }
         else
             insertNode(current, stickerid, dir, slicesmask);
@@ -179,25 +263,11 @@ public class History {
     }
 
     /*
-     * If there is a "current", delete it and everything after it.
+     * Delete any current node and everything after it.
      */
     public void truncate() {
         while(current != null)
             deleteLast();
-        // Special case: If we are at a macro open mark, eat it.
-
-        // FIX THIS -- see comments in
-        // EventHandler.applyMacroCBAfterGotRefStickers about how this
-        // makes things awkward at time of application of macro.  The
-        // marking of macros is a little problematic implemented this way,
-        // but the current kludges seem to work right.  One needs to be
-        // able to undo/redo past macros in fast automove mode and to have
-        // no stray m[ in the file after doing a move following undoing a
-        // macro or after applying a macro after undoing a macro.
-        if(atMacroOpen())
-        {
-            //deleteLast();
-        }
     }
 
 
@@ -218,8 +288,14 @@ public class History {
         apply(move.grip, move.direction, move.slicemask);
     }
 
+    /**
+     * Only the first "edge-length" bits of slice masks are valid
+     * so for example, values like 7, 15, and -1 are all pure rotations on an edge-length 3 puzzle.
+     * 
+     * @return true if given slice mask affects the entire puzzle, false otherwise.
+     */
     private boolean isRotate(int slicemask) {
-        for(int i = 0; i < length; i++)
+        for(int i = 0; i < edgeLength; i++)
             if((slicemask & 1 << i) == 0)
                 return false;
         return true;
@@ -250,7 +326,6 @@ public class History {
     private MagicCube.TwistData getCurrent() {
         return new MagicCube.TwistData(current.stickerid, current.dir, current.slicesmask);
     }
-
 
     /* Set current to be the beginning of the list. */
     public void goToBeginning() {
@@ -294,8 +369,7 @@ public class History {
      * Back up one move in the history, returning a move
      * that would undo the last move or null if nothing to undo.
      */
-    public MagicCube.TwistData undo()
-    {
+    public MagicCube.TwistData undo() {
         //search backwards to the next actual move
         HistoryNode node;
         for(node = getPrevious(); node != null; node = node.prev)
@@ -316,8 +390,7 @@ public class History {
      * to redo or null if there is nothing to redo.
      * This is only valid if a move was undone.
      */
-    public MagicCube.TwistData redo()
-    {
+    public MagicCube.TwistData redo() {
         if(current == null)
             return null;
         while(current != null && current.stickerid == -1)
@@ -377,7 +450,65 @@ public class History {
     // MARK METHODS
     //
 
-    private MagicCube.TwistData goBackwardsTowardsMark(int mark) {
+    public void mark(char mark) {
+        insertNode(current, -1, 0, 0, mark);
+        if(DEBUG)
+            System.out.println(this);
+    }
+
+    public boolean removeLastMark(char mark) {
+        boolean deleted = deleteNode(findMark(mark, true));
+        if(DEBUG)
+            System.out.println(this);
+        return deleted;
+    }
+
+    public void removeAllMarks(char mark) {
+        Assert(mark != 0);
+        for(HistoryNode n = first; n != null;) {
+            HistoryNode next = n.next;
+            if(n.mark == mark)
+                deleteNode(n);
+            n = next;
+            if(DEBUG)
+                System.out.println(this);
+        }
+    }
+
+    public boolean atMark(int mark) {
+        if(current != null && current.stickerid == -1 && (mark == MARK_ANY || current.mark == mark))
+            return true;
+        //Go through all marks at the current position.
+        for(HistoryNode node = (current != null ? current.prev : last); node != null && node.stickerid == -1; node = node.prev)
+            if(node.stickerid == -1 && (mark == MARK_ANY || node.mark == mark))
+                return true;
+        return false;
+    }
+
+    public boolean atMacroOpen() {
+        return atMark(MARK_MACRO_OPEN);
+    }
+    public boolean atMacroClose() {
+        return atMark(MARK_MACRO_CLOSE);
+    }
+    public boolean atScrambleBoundary() {
+        return atMark(MARK_SCRAMBLE_BOUNDARY);
+    }
+
+    private HistoryNode findMark(char mark, boolean backwards) {
+        HistoryNode n = current == null ? last : current;
+        while(n != null && n.mark != mark)
+            n = backwards ? n.prev : n.next;
+        return n;
+    }
+
+    public void undoToMark(char mark) {
+        Assert(findMark(mark, true) != null);
+        while(stepBackwardsTowardsMark(mark) != null)
+            ;
+    }
+
+    private MagicCube.TwistData stepBackwardsTowardsMark(int mark) {
         // Continue searching backwards for a potential undo
         for(HistoryNode node = getPrevious(); node != null; node = node.prev)
             if(node.stickerid == -1 && node.mark == mark)
@@ -385,7 +516,7 @@ public class History {
         return null;
     }
 
-    private MagicCube.TwistData goForwardsTowardsMark(int mark) {
+    private MagicCube.TwistData stepForwardsTowardsMark(int mark) {
         // Search forwards for a potential redo
         for(HistoryNode node = current; node != null; node = node.next)
             if(node.stickerid == -1 && node.mark == mark)
@@ -403,51 +534,21 @@ public class History {
      * 
      * @return resulting twist if successful, null if already at the mark or no such mark.
      */
-    public MagicCube.TwistData goTowardsMark(int mark, boolean forward_first) {
+    public MagicCube.TwistData stepTowardsMark(int mark, boolean forward_first) {
         if(atMark(mark))
             return null; // already at the mark
         MagicCube.TwistData status;
         if(!forward_first) {
-            status = this.goBackwardsTowardsMark(mark);
+            status = this.stepBackwardsTowardsMark(mark);
             if(status != null)
                 return status;
         }
-        status = this.goForwardsTowardsMark(mark);
+        status = this.stepForwardsTowardsMark(mark);
         if(status != null)
             return status;
         if(forward_first)
-            status = this.goBackwardsTowardsMark(mark);
+            status = this.stepBackwardsTowardsMark(mark);
         return status;
-    }
-
-    public void mark(char mark) {
-        insertNode(current, -1, 0, 0, mark);
-    }
-
-    public boolean atMark(int mark) {
-        if(current != null && current.stickerid == -1 && current.mark == mark)
-            return true;
-        /*
-         * Go through all marks at the current position
-         */
-        for(HistoryNode node = (current != null ? current.prev : last); node != null && node.stickerid == -1; node = node.prev)
-        {
-            if(node.stickerid == -1 && node.mark == mark)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean atMacroOpen() {
-        return atMark(MARK_MACRO_OPEN);
-    }
-    public boolean atMacroClose() {
-        return atMark(MARK_MACRO_CLOSE);
-    }
-    public boolean atScrambleBoundary() {
-        return atMark(MARK_SCRAMBLE_BOUNDARY);
     }
 
 
@@ -455,37 +556,32 @@ public class History {
     // I/O METHODS
     //
 
-    public void write(Writer writer) {
-
+    @Override
+    public String toString() {
         Assert(isSane());
-        try {
-            int nwritten = 0;
-            for(HistoryNode node = first; node != null && node != current; node = node.next) {
-                // Note: I added the "!=current" above to truncate any history after current
-                // when saving, therefore the following should never happen but I'll leave
-                // it in case we later want to bring it back. - MG
-                if(node == current)
-                    writer.write("c ");
-                if(node.stickerid >= 0) {
-                    writer.write("" + node.stickerid);
-                    writer.write("," + node.dir);
-                    writer.write("," + node.slicesmask);
-                }
-                else
-                    writer.write("m" + node.mark);
-                nwritten++;
-                if(node.next != null && node.next != current) {
-                    if(nwritten % 10 == 0) // write a line break
-                        writer.write(System.getProperty("line.separator"));
-                    else
-                        writer.write(" ");
-                }
+        int nwritten = 0;
+        StringBuilder sb = new StringBuilder();
+        for(HistoryNode node = first; node != null; node = node.next) {
+            if(node == current)
+                sb.append("c ");
+            if(node.stickerid >= 0) {
+                sb.append("" + node.stickerid);
+                sb.append("," + node.dir);
+                sb.append("," + node.slicesmask);
             }
-            writer.write("." + System.getProperty("line.separator")); // end of history marker
-        } catch(IOException ioe) {
-            ioe.printStackTrace();
+            else
+                sb.append("m" + node.mark);
+            nwritten++;
+            if(node.next != null) {
+                if(nwritten % 10 == 0) // write a line break
+                    sb.append(System.getProperty("line.separator"));
+                else
+                    sb.append(" ");
+            }
         }
-    } // end write
+        sb.append("."); // end of history marker
+        return sb.toString();
+    }
 
     public boolean read(PushbackReader pr) {
         HistoryNode who_will_point_to_current = null;
@@ -509,7 +605,6 @@ public class History {
                         return outahere();
                     int slicesmask = readInt(pr);
                     append(sticker, direction, slicesmask);
-                    //System.out.println("read " + sticker + "," + direction + "," + slicesmask);
                 } else if(c == 'm') {
                     c = pr.read();
                     mark((char) c);
@@ -570,10 +665,7 @@ public class History {
 
     private boolean isSane() {
         boolean found_current = false;
-        //int ngrips = MagicCube.NGRIPS;
-
         Assert((first == null) == (last == null));
-
         if(first != null) {
             for(HistoryNode node = first; node != null; node = node.next) {
                 if(node.prev != null)
@@ -584,21 +676,15 @@ public class History {
                     Assert(node.next.prev == node);
                 else
                     Assert(last == node);
-
-                if(node == current) {
-                    Assert(node.stickerid >= 0);
+                if(node == current)
                     found_current = true;
-                }
-
                 if(node.stickerid >= 0) {
-                    //Assert(0 <= node.stickerid && node.stickerid < ngrips); // TODO: fix this
+                    //Assert(0 <= node.stickerid && node.stickerid < MagicCube.NGRIPS); // TODO: fix this
                     Assert(node.dir == MagicCube.CCW || node.dir == MagicCube.CW);
                 }
             }
         }
-
         Assert(found_current == (current != null));
-
         return true;
     } // end isSane
 
@@ -609,18 +695,15 @@ public class History {
     public static interface HistoryListener {
         public void currentChanged();
     }
-    private Set<HistoryListener> historyListeners = new HashSet<HistoryListener>();
-    public void addHistoryListener(HistoryListener listener) {
-        if(historyListeners.add(listener))
-            listener.currentChanged(); // perhaps not the best idea?
-    }
-    public void removeHistoryListener(HistoryListener listener) {
-        if(historyListeners.contains(listener))
-            historyListeners.remove(listener);
+    private HistoryListener historyListener;
+    public void setHistoryListener(HistoryListener listener) {
+        historyListener = listener;
     }
     protected void fireCurrentChanged() {
-        for(HistoryListener hl : historyListeners)
-            hl.currentChanged();
+        if(DEBUG)
+            System.out.println(this);
+        if(historyListener != null)
+            historyListener.currentChanged();
     }
 
 
@@ -628,7 +711,7 @@ public class History {
      * Converts a list of twists into an equivalent and possibly shorter list.
      * 
      * @param inmoves input array of moves to compress.
-     * @param len edge length of the puzzle. Note: <i>not</i> the length of the moves array.
+     * @param len edge edgeLength of the puzzle. Note: <i>not</i> the edgeLength of the moves array.
      * @return possibly reduced list of moves that produce the same effect as the input moves.
      */
     public static MagicCube.TwistData[] compress(MagicCube.TwistData[] inmoves, int len, boolean sweepRotatesForward) {
@@ -650,8 +733,7 @@ public class History {
      * 
      * Note: Also kills current, if any, just due to laziness.
      */
-    private void reverse()
-    {
+    public void reverse() {
         if(first == null)
             return;
         current = null; // so as to not fire change event
@@ -714,12 +796,12 @@ public class History {
 //
 //        class MegaMove {
 //            public int face; // must be less than its opposite
-//            public int sliceTwistMats[][][] = new int[length][4][4];
-//            public MegaMove(int face, int length)
+//            public int sliceTwistMats[][][] = new int[edgeLength][4][4];
+//            public MegaMove(int face, int edgeLength)
 //            {
 //                this.face = face;
-//                this.sliceTwistMats = new int[length][4][4];
-//                for (int i = 0; i < length; ++i)
+//                this.sliceTwistMats = new int[edgeLength][4][4];
+//                for (int i = 0; i < edgeLength; ++i)
 //                    Vec_h._IDENTMAT4(sliceTwistMats[i]);
 //            }
 //            public String toString()
@@ -770,7 +852,7 @@ public class History {
 //                // Can't combine with the existing first megamove,
 //                // so make a new one.
 //                firstMegaMove = new MegaMove(Math.min(face, oppositeFace),
-//                                             length);
+//                                             edgeLength);
 //                megaMoves.addFirst(firstMegaMove);
 //            }
 //
@@ -779,11 +861,11 @@ public class History {
 //            //
 //            float angle = PolygonManager.getTwistTotalAngle(grip.dim, dir);
 //            Math4d.get4dTwistMat(grip.coords, angle, scratchMat);
-//            for (int iSlice = 0; iSlice < length; ++iSlice)
+//            for (int iSlice = 0; iSlice < edgeLength; ++iSlice)
 //            {
 //                if (((slicesmask>>iSlice)&1) != 0)
 //                {
-//                    int iSliceCanonical = (oppositeFace<face ? length-1-iSlice
+//                    int iSliceCanonical = (oppositeFace<face ? edgeLength-1-iSlice
 //                                                             : iSlice);
 //                    Vec_h._MXM4i(firstMegaMove.sliceTwistMats[iSliceCanonical],
 //                                 scratchMat,
@@ -802,10 +884,10 @@ public class History {
 //            {
 //                int winnerVotes = -1;
 //                int winnerSlice = -1;
-//                for (int iSlice = 0; iSlice < length; ++iSlice)
+//                for (int iSlice = 0; iSlice < edgeLength; ++iSlice)
 //                {
 //                    int nSameAsISlice = 1;
-//                    for (int jSlice = iSlice+1; jSlice < length; ++jSlice)
+//                    for (int jSlice = iSlice+1; jSlice < edgeLength; ++jSlice)
 //                        if (Vec_h._EQMAT4(firstMegaMove.sliceTwistMats[jSlice],
 //                                          firstMegaMove.sliceTwistMats[iSlice]))
 //                            nSameAsISlice++;
@@ -819,11 +901,11 @@ public class History {
 //                             current_matrix,
 //                             firstMegaMove.sliceTwistMats[winnerSlice]);
 //                Vec_h._TRANSPOSE4(scratchMat, firstMegaMove.sliceTwistMats[winnerSlice]); // inverse
-//                for (int iSlice = 0; iSlice < length; ++iSlice)
+//                for (int iSlice = 0; iSlice < edgeLength; ++iSlice)
 //                    Vec_h._MXM4i(firstMegaMove.sliceTwistMats[iSlice],
 //                                 scratchMat,
 //                                 firstMegaMove.sliceTwistMats[iSlice]);
-//                if (winnerVotes == length)
+//                if (winnerVotes == edgeLength)
 //                {
 //                    megaMoves.removeFirst(); // it was a pure rotation
 //                    firstMegaMove = null;
@@ -843,7 +925,7 @@ public class History {
 //        // Convert the mega-moves back into twists...
 //        //
 //        clear();
-//        int scratchPermutation[] = new int[length];
+//        int scratchPermutation[] = new int[edgeLength];
 //        while (!megaMoves.isEmpty())
 //        {
 //            // So we look at slices in a random order
@@ -851,14 +933,14 @@ public class History {
 //
 //            MegaMove firstMegaMove = (MegaMove)megaMoves.removeLast();
 //            int face = firstMegaMove.face;
-//            for (int _iSlice = 0; _iSlice < length; ++_iSlice)
+//            for (int _iSlice = 0; _iSlice < edgeLength; ++_iSlice)
 //            {
 //                int iSlice = scratchPermutation[_iSlice];
 //                int sliceTwistMat[][] = firstMegaMove.sliceTwistMats[iSlice];
 //                if (!Vec_h._ISIDENTMAT4(sliceTwistMat))
 //                {
 //                    int slicesmask = 1<<iSlice;
-//                    for (int jSlice = 0; jSlice < length; ++jSlice)
+//                    for (int jSlice = 0; jSlice < edgeLength; ++jSlice)
 //                    {
 //                        if (Vec_h._EQMAT4(firstMegaMove.sliceTwistMats[jSlice],
 //                                          sliceTwistMat))
@@ -1162,36 +1244,30 @@ public class History {
 //        }
 //    }  // end oldcompress
 
-    private static void print(History hist) {
-        for(Enumeration<MagicCube.TwistData> e = hist.moves(); e.hasMoreElements();) {
-            MagicCube.TwistData move = e.nextElement();
-            System.out.print(
-                move.grip.id_within_puzzle +
-                    "," + move.direction +
-                    "," + move.slicemask + " ");
-        }
-        System.out.println();
-    }
 
+    /**
+     * Simple example test main.
+     */
     public static void main(String args[]) {
+        String sep = System.getProperty("line.separator");
         History hist = new History(3);
         hist.append(1, 1, -1);
         hist.append(30, -1, 2);
         hist.append(100, 1, 1);
         try {
             System.out.println("before:");
-            print(hist);
+            System.out.println(hist);
             OutputStreamWriter osw = new OutputStreamWriter(System.out);
 
-            hist.write(osw);
+            osw.write(hist.toString() + sep);
             osw.flush();
             //hist.reverse();
-            //hist.write(osw);
+            //osw.write(hist.toString() + sep);
             //osw.flush();
 
             FileWriter fw;
             fw = new FileWriter("test.txt");
-            hist.write(fw);
+            fw.write(hist.toString() + sep);
             fw.close();
 
             Reader fr = new FileReader("test.txt");
@@ -1201,34 +1277,30 @@ public class History {
             fr = pr = null;
 
             System.out.println("after write and read back:");
-            hist.write(osw);
+            osw.write(hist.toString() + sep);
             osw.flush();
 
             System.out.println("reversed:");
             hist.reverse();
-            print(hist);
-            hist.write(osw);
+            System.out.println(hist);
+            osw.write(hist.toString() + sep);
             osw.flush();
 
             System.out.println("twice reversed:");
             hist.reverse();
-            print(hist);
-            hist.write(osw);
+            System.out.println(hist);
+            osw.write(hist.toString() + sep);
             osw.flush();
 
             System.out.println("thrice reversed:");
             hist.reverse();
-            print(hist);
-            hist.write(osw);
+            System.out.println(hist);
+            osw.write(hist.toString() + sep);
             osw.flush();
         } catch(Exception e) {
             e.printStackTrace();
             System.exit(-1);
         }
-//        for(java.util.Enumeration keys=System.getProperties().keys(); keys.hasMoreElements();) {
-//            String key = (String)keys.nextElement();
-//            System.out.println(key + " = " + System.getProperty(key));
-//        }
-    }
+    } // end main()
 
 }

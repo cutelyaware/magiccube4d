@@ -154,7 +154,7 @@ public class MacroManager implements PuzzleManager.Highlighter {
 
     /**
      * Returns just the captured reference stickers and aborts the ability to define a macro.
-     * This is meant to be use as a convinient way to collect reference stickers for application to
+     * This is meant to be use as a convenient way to collect reference stickers for application to
      * an existing macro.
      * 
      * @return list of all stickers added since opening.

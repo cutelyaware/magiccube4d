@@ -1,15 +1,20 @@
 package com.superliminal.magiccube4d;
 
-import com.donhatchsw.util.VecMath;
-import com.superliminal.util.ColorUtils;
-
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import javax.swing.*;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
+
+import com.donhatchsw.util.VecMath;
+import com.superliminal.util.ColorUtils;
 
 /**
  * Facility for creating, managing, and drawing a current puzzle.
@@ -17,7 +22,7 @@ import javax.swing.*;
  * and the rendering code (view).
  * 
  * TODO: Perhaps the drawing part should be moved to another service?
- * TODO: Hide or consider hiding the public data.
+ * TODO: Hide the public data or pass it in as more arguments.
  */
 public class PuzzleManager
 {
@@ -36,6 +41,7 @@ public class PuzzleManager
         firePuzzleChanged(false);
     }
     public void resetPuzzleStateNoEvent() {
+        nTwist = iTwist = 0;
         if(puzzleDescription == null)
             return;
         puzzleState = VecMath.copyvec(puzzleDescription.getSticker2Face());

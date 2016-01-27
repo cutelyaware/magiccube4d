@@ -1,6 +1,9 @@
 package com.superliminal.magiccube4d;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PushbackReader;
+import java.io.Writer;
 
 import com.donhatchsw.util.VecMath;
 
@@ -12,7 +15,7 @@ import com.donhatchsw.util.VecMath;
  */
 public class Macro {
     public final static int MAXREFS = 3;
-    private History moves = new History(3);
+    private History moves = new History(3); // TODO: Is edge-length 3 a bug? -MG
     private String puzzleString; // Macros are really relative to specific puzzles, so we save this out.
     private String name;
     private MagicCube.Stickerspec defRefs[] = new MagicCube.Stickerspec[MAXREFS];
@@ -29,8 +32,7 @@ public class Macro {
     /**
      * Constructs an unnamed empty macro.
      */
-    public Macro(String puzzleString, MagicCube.Stickerspec appStickers[])
-    {
+    public Macro(String puzzleString, MagicCube.Stickerspec appStickers[]) {
         this(puzzleString, "", appStickers);
     }
 
@@ -40,8 +42,7 @@ public class Macro {
      * @param name display name of the new macro.
      * @param defStickers is a set of "definition" reference stickers.
      */
-    public Macro(String puzzleString, String name, MagicCube.Stickerspec defStickers[])
-    {
+    public Macro(String puzzleString, String name, MagicCube.Stickerspec defStickers[]) {
         this.puzzleString = puzzleString;
         this.name = name;
         assert (defStickers.length == MAXREFS);
@@ -72,14 +73,12 @@ public class Macro {
         moves.apply(move);
     }
 
-    public static double[] getMacroRefCoords(MagicCube.Stickerspec grip, PuzzleDescription puzzle)
-    {
+    public static double[] getMacroRefCoords(MagicCube.Stickerspec grip, PuzzleDescription puzzle) {
         // When/if we have sticker based macros, this method will need to be extended.
         return VecMath.floatToDouble(puzzle.getGripCoords(grip.id_within_puzzle));
     }
 
-    public static double[] getMacroRefFaceCoords(MagicCube.Stickerspec grip, PuzzleDescription puzzle)
-    {
+    public static double[] getMacroRefFaceCoords(MagicCube.Stickerspec grip, PuzzleDescription puzzle) {
         // When/if we have sticker based macros, this method will need to be extended.
         int faceIndex = puzzle.getGrip2Face()[grip.id_within_puzzle];
         return VecMath.floatToDouble(puzzle.getFaceCenter(faceIndex));
@@ -92,9 +91,7 @@ public class Macro {
      * @param appGrips - grips to apply macro relative to.
      * @return array of twists in application space or null if pattern doesn't match.
      */
-    public MagicCube.TwistData[] getTwists(MagicCube.Stickerspec appGrips[],
-        PuzzleDescription puzzle)
-    {
+    public MagicCube.TwistData[] getTwists(MagicCube.Stickerspec appGrips[], PuzzleDescription puzzle) {
         // Default Coordinates.
         // We also use one of the faces.
         double ref0[] = getMacroRefCoords(defRefs[0], puzzle);
@@ -107,31 +104,25 @@ public class Macro {
         double s1[] = getMacroRefCoords(appGrips[1], puzzle);
         double s2[] = getMacroRefCoords(appGrips[2], puzzle);
         double s3[] = getMacroRefFaceCoords(appGrips[0], puzzle);
-
         double transform[][] = new double[4][4];
         if(!Math4d.get4dMatThatRotatesThese4ToThose4(ref0, ref1, ref2, ref3, s0, s1, s2, s3, transform))
             return null;
-
         int expected = length();
         MagicCube.TwistData twists[] = new MagicCube.TwistData[expected];
         moves.goToBeginning();
-        for(int i = 0; i < expected; i++)
-        {
+        for(int i = 0; i < expected; i++) {
             MagicCube.TwistData move = moves.redo();
             if(move == null)
                 return null;
-
             // Transform to new grip.
             int gripIndex = move.grip.id_within_puzzle;
             double[] gripCoords = VecMath.floatToDouble(puzzle.getGripCoords(gripIndex));
             double[] newCoords = VecMath.vxm(gripCoords, transform);
             int newGripIndex = puzzle.getClosestGrip(VecMath.doubleToFloat(newCoords));
             move.grip.id_within_puzzle = newGripIndex;
-
             twists[i] = move;
         }
         assert (moves.redo() == null);
-
         // We could disallow these, since they don't represent a true rotation of the defaults.
         // Don did this in the old puzzle though, and it's a nice shortcut.
         // Note however, this won't work for all reference sets due to the 
@@ -140,9 +131,8 @@ public class Macro {
         double det = VecMath.det(transform);
         if(det < 0)
             reverse(twists);
-
         return twists;
-    }
+    } // end getTwists()
 
     public static void reverse(MagicCube.TwistData[] twists) {
         // reverse move order
@@ -161,27 +151,24 @@ public class Macro {
      * 
      * @param writer is the text stream to write to.
      */
-    public void write(Writer writer) throws IOException
-    {
+    public void write(Writer writer) throws IOException {
         MagicCube.Stickerspec sticker = new MagicCube.Stickerspec();
         writer.write("@" + name + "@@" + puzzleString + "@(");
         if(this.gripBased)
             writer.write("g ");
         else
             writer.write("s ");
-        for(int i = 0; i < defRefs.length; ++i)
-        {
+        for(int i = 0; i < defRefs.length; ++i) {
             sticker = defRefs[i];
             writer.write("" + sticker.id_within_puzzle);
             if(i + 1 < defRefs.length)
                 writer.write(" ");
         }
         writer.write(") ");
-        moves.write(writer);
+        writer.write(moves.toString() + System.getProperty("line.separator"));
     }
 
-    private static String readStringHelper(PushbackReader pr, int ch) throws IOException
-    {
+    private static String readStringHelper(PushbackReader pr, int ch) throws IOException {
         if(ch != '@')
             return null;
         char[] charbuf = new char[256];
@@ -201,27 +188,22 @@ public class Macro {
      * @param pr a text reader assumed to be positioned at the beginning of a previously saved macro.
      * @return macro represented by the text or null if invalid.
      */
-    public static Macro read(BufferedReader reader) throws IOException
-    {
+    public static Macro read(BufferedReader reader) throws IOException {
         PushbackReader pr = new PushbackReader(reader);
         Macro restored = new Macro();
-
         int ch;
         do
             ch = pr.read();
         //while(Character.isWhitespace(ch)); // isWhitespace doesn't exist in 1.4
         while(" \t\n\r\f".indexOf(ch) != -1);
-
         restored.name = readStringHelper(pr, ch);
         ch = pr.read();
         restored.puzzleString = readStringHelper(pr, ch);
         if(restored.name == null || restored.puzzleString == null)
             return null;
-
         ch = pr.read();
         if(ch != '(')
             return null;
-
         // Read whether this is a grip or sticker based macro.
         ch = pr.read();
         if(ch == 'g')
@@ -231,7 +213,6 @@ public class Macro {
         else
             return null;
         ch = pr.read();
-
         // Read the references.
         for(int r = 0; r < MAXREFS; r++) {
             MagicCube.Stickerspec sticker = new MagicCube.Stickerspec();
@@ -242,7 +223,6 @@ public class Macro {
         assert (ch == ')');
         ch = pr.read();
         assert (ch == ' ');
-
         if(!restored.moves.read(pr)) {
             System.out.println("Error reading macro history");
             return null;
