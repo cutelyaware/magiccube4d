@@ -26,7 +26,13 @@ import java.util.Queue;
  * @author Melinda Green
  */
 public class History {
-    private final static boolean DEBUG = false;
+    private static boolean DEBUG = false;
+    public static void setDebugging(boolean on) {
+        DEBUG = on;
+    }
+    public static boolean getDebugging() {
+        return DEBUG;
+    }
 
     static private void Assert(boolean condition) {
         if(!condition)

@@ -1,5 +1,6 @@
 package com.superliminal.util;
 
+import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -27,7 +28,8 @@ public class Console {
     private final static PrintStream mOriginalErr = System.err;
     static {
         JScrollPane scroller = new JScrollPane(mTextArea);
-        mInstance.setSize(1000, 300);
+        int console_height = 300;
+        mInstance.setBounds(0, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight() - console_height, 1000, console_height);
         mInstance.getContentPane().add(scroller);
         mInstance.addWindowListener(new WindowAdapter() {
             @Override

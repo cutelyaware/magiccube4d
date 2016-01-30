@@ -1,18 +1,40 @@
 package com.superliminal.util;
 
-import javax.swing.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+import javax.swing.AbstractButton;
+import javax.swing.Action;
+import javax.swing.InputMap;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.KeyStroke;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileSystemView;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.TreePath;
-import java.awt.*;
-import java.awt.geom.Rectangle2D;
-import java.awt.datatransfer.*;
-import java.awt.event.*;
-import java.io.IOException;
-import java.io.File;
-import java.net.URISyntaxException;
 
 /**
  * A collection of generally useful Swing utility methods.
@@ -26,7 +48,7 @@ public class StaticUtils {
     private StaticUtils() {}
 
     /**
-     * Adds a control hot key to the containing window of a component.
+     * Adds a <ctrl> hot key to the containing window of a component.
      * In the case of buttons and menu items it also attaches the given action to the component itself.
      * 
      * @param key one of the KeyEvent keyboard constants
@@ -35,7 +57,7 @@ public class StaticUtils {
      * @param action callback to notify when control key is pressed
      */
     public static void addHotKey(int key, JComponent to, String actionName, Action action) {
-        addHotKey(KeyStroke.getKeyStroke(key, java.awt.event.InputEvent.CTRL_MASK), to, actionName, action);
+        addHotKey(KeyStroke.getKeyStroke(key, key == KeyEvent.VK_ESCAPE ? 0 : java.awt.event.InputEvent.CTRL_MASK), to, actionName, action);
     }
 
     public static void addHotKey(KeyStroke keystroke, JComponent to, String actionName, Action action) {

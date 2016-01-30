@@ -700,6 +700,15 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                 Console.show();
             }
         });
+        final JCheckBox debug_checkbox = new PropCheckBox("Debugging", "debug", false, helpmenu);
+        debug_checkbox.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent ce) {
+                History.setDebugging(debug_checkbox.isSelected());
+            }
+        });
+        helpmenu.add(debug_checkbox);
+        History.setDebugging(debug_checkbox.isSelected());
 
         JMenuBar menubar = new JMenuBar();
         menubar.add(filemenu);
@@ -752,6 +761,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));
     } // end MC4DSwing
+
 
     public void initPuzzleMenu(JMenu puzzlemenu, final JLabel label, final JProgressBar progressView) {
         final String[][] table = MagicCube.SUPPORTED_PUZZLES;
@@ -1018,7 +1028,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
         viewcontainer.removeAll();
         viewcontainer.add(view, "Center");
 
-        hist.setHistoryListener(new History.HistoryListener() {
+        History.HistoryListener history_listener = new History.HistoryListener() {
             @Override
             public void currentChanged() {
                 saveitem.setEnabled(true);
@@ -1056,7 +1066,9 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     scrambleState = SCRAMBLE_NONE;
                 } // end if(isSolved())
             }
-        }); // end HistoryListener impl
+        }; // end HistoryListener impl
+        hist.setHistoryListener(history_listener);
+        history_listener.currentChanged(); // Just to sync the enabled states of the Edit menu items.
 
         view.addStickerListener(this);
 
