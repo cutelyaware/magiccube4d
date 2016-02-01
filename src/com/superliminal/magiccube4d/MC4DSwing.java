@@ -300,6 +300,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             @Override
             public void doit(ActionEvent ae) {
                 scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
+                hist.removeAllMarks(History.MARK_SCRAMBLE_BOUNDARY); // Allows undo across mark.
                 // TODO: extend compress to work with non cubes.
                 //hist.compress(false); // so fewest moves are required and solution least resembles original moves.
                 Stack<MagicCube.TwistData> toundo = new Stack<MagicCube.TwistData>();
@@ -610,13 +611,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     int gripSlices = puzzleManager.puzzleDescription.getNumSlicesForGrip(iGrip);
                     int slicemask = 1 << rand.nextInt(gripSlices);
                     int dir = rand.nextBoolean() ? -1 : 1;
-                    // apply the twist to the puzzle state.
-                    puzzleManager.puzzleDescription.applyTwistToState(
-                        puzzleManager.puzzleState,
-                        iGrip,
-                        dir,
-                        slicemask);
-                    // and save it in the history.
+                    // apply the twist to the history.
                     MagicCube.Stickerspec ss = new MagicCube.Stickerspec();
                     ss.id_within_puzzle = iGrip; // slamming new id. do we need to set the other members?
                     ss.face = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
@@ -624,6 +619,7 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
                     //System.out.println("Adding scramble twist grip: " + iGrip + " dir: " + dir + " slicemask: " + slicemask);
                 }
                 hist.mark(History.MARK_SCRAMBLE_BOUNDARY);
+                syncPuzzleStateWithHistory();
                 boolean fully = scramblechenfrengensen == -1;
                 scrambleState = fully ? SCRAMBLE_FULL : SCRAMBLE_PARTIAL;
                 statusLabel.setText(fully ? "Fully Scrambled" : scramblechenfrengensen + " Random Twist" + (scramblechenfrengensen == 1 ? "" : "s"));

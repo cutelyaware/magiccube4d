@@ -134,22 +134,6 @@ public class History {
         return -1;
     }
 
-//    /**
-//     * Deletes the first given mark at or before the current node.
-//     * 
-//     * @return true if found, false otherwise.
-//     */
-//    public boolean removeLastMark(char mark) {
-//        if(mark == 0 || current == null)
-//            return false;
-//        HistoryNode m = findMark(mark, true);
-//        if(m != null) {
-//            deleteNode(m);
-//            return true;
-//        }
-//        return false;
-//    }
-
     /**
      * @return all twists from the given previous mark.
      */
@@ -225,8 +209,7 @@ public class History {
             first = temp;
         else
             temp.prev.next = temp;
-        if(DEBUG)
-            System.out.println(this);
+        fireCurrentChanged();
     }
 
     public void deleteLast() {
@@ -258,7 +241,6 @@ public class History {
         }
         else
             insertNode(current, stickerid, dir, slicesmask);
-        fireCurrentChanged();
     }
 
     /**
@@ -268,7 +250,7 @@ public class History {
         append(move.grip.id_within_puzzle, move.direction, move.slicemask);
     }
 
-    /*
+    /**
      * Delete any current node and everything after it.
      */
     public void truncate() {
@@ -277,7 +259,7 @@ public class History {
     }
 
 
-    /*
+    /**
      * Put a single move into the history.
      * This clears the history after the current point,
      * so a "redo" is impossible afterwards.
@@ -333,7 +315,6 @@ public class History {
         return new MagicCube.TwistData(current.stickerid, current.dir, current.slicesmask);
     }
 
-    /* Set current to be the beginning of the list. */
     public void goToBeginning() {
         current = first;
         fireCurrentChanged();
@@ -356,19 +337,6 @@ public class History {
         fireCurrentChanged();
         return true;
     }
-
-//    public MagicCube.TwistData goTo(int twistnum) {
-//        int i=0;
-//        current=first;
-//        while(current!=null) {
-//            if(i++ == twistnum)
-//                return getCurrent();
-//            while(current.stickerid==-1)
-//                current = current.next;
-//            current = current.next;
-//        }
-//        return null;
-//    }
 
 
     /**
@@ -458,25 +426,29 @@ public class History {
 
     public void mark(char mark) {
         insertNode(current, -1, 0, 0, mark);
-        if(DEBUG)
-            System.out.println(this);
     }
 
+    /**
+     * Deletes the first given mark at or before the current node.
+     * 
+     * @return true if found, false otherwise.
+     */
     public boolean removeLastMark(char mark) {
         boolean deleted = deleteNode(findMark(mark, true));
-        if(DEBUG)
+        if(deleted && DEBUG)
             System.out.println(this);
         return deleted;
     }
 
     public void removeAllMarks(char mark) {
         Assert(mark != 0);
+        boolean deleted = false;
         for(HistoryNode n = first; n != null;) {
             HistoryNode next = n.next;
             if(n.mark == mark)
-                deleteNode(n);
+                deleted |= deleteNode(n);
             n = next;
-            if(DEBUG)
+            if(deleted && DEBUG)
                 System.out.println(this);
         }
     }
@@ -734,7 +706,7 @@ public class History {
         return compressed;
     }
 
-    /*
+    /**
      * Reverses both the order of the history moves and their directions.
      * 
      * Note: Also kills current, if any, just due to laziness.
