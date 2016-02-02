@@ -440,17 +440,26 @@ public class History {
         return deleted;
     }
 
+    /**
+     * Removes all instances of the given mark or all marks if given MARK_ANY.
+     */
     public void removeAllMarks(char mark) {
-        Assert(mark != 0);
         boolean deleted = false;
         for(HistoryNode n = first; n != null;) {
             HistoryNode next = n.next;
-            if(n.mark == mark)
+            if(n.stickerid == -1 && (mark == MARK_ANY || n.mark == mark))
                 deleted |= deleteNode(n);
             n = next;
-            if(deleted && DEBUG)
-                System.out.println(this);
         }
+        if(deleted && DEBUG)
+            System.out.println(this);
+    }
+
+    /**
+     * Shorthand for removeAllMarks(MARK_ANY);
+     */
+    public void removeAllMarks() {
+        removeAllMarks(MARK_ANY);
     }
 
     public boolean atMark(int mark) {

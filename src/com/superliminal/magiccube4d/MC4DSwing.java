@@ -300,7 +300,8 @@ public class MC4DSwing extends JFrame implements MC4DView.StickerListener {
             @Override
             public void doit(ActionEvent ae) {
                 scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
-                hist.removeAllMarks(History.MARK_SCRAMBLE_BOUNDARY); // Allows undo across mark.
+                cancel.doit(ae);
+                hist.removeAllMarks(); // Allows undo across marks.
                 // TODO: extend compress to work with non cubes.
                 //hist.compress(false); // so fewest moves are required and solution least resembles original moves.
                 Stack<MagicCube.TwistData> toundo = new Stack<MagicCube.TwistData>();
