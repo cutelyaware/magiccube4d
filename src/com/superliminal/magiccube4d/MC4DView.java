@@ -469,6 +469,9 @@ public class MC4DView extends Component {
             queueHist = hist;
         }
 
+        /**
+         * @return The currently animating twist if any. Otherwise begins animating the next item if any and returns that. Otherwise null.
+         */
         public MagicCube.TwistData getAnimating() {
             if(animating != null)
                 return animating.twist;
@@ -476,7 +479,6 @@ public class MC4DView extends Component {
                 Object item = queue.remove(0);
                 if(item instanceof QueueItem) { // this is an animatable item.
                     animating = (QueueItem) item;
-
                     int iTwistGrip = animating.twist.grip.id_within_puzzle;
                     int iSlicemask = animating.twist.slicemask;
                     int[] orders = puzzleManager.puzzleDescription.getGripSymmetryOrders();
@@ -485,10 +487,8 @@ public class MC4DView extends Component {
                         continue;
                     }
                     int order = orders[iTwistGrip];
-
                     if(!PipelineUtils.hasValidTwist(iTwistGrip, iSlicemask, puzzleManager.puzzleDescription))
                         continue;
-
                     double totalRotationAngle = 2 * Math.PI / order;
                     boolean quickly = false;
                     if(PropertyManager.getBoolean("quickmoves", false)) // use some form of quick moves

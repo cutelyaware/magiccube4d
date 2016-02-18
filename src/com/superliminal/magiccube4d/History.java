@@ -18,7 +18,15 @@ import java.util.Queue;
  * <p>
  * DESIGN
  * </p>
- * <li>Twists and rotates are called "moves". Rotates are represented internally as twists that affect all slices but are logically considered a different kind of move.</li> <li>Marks are single character delimiters that can be inserted between moves like bookmarks.</li> <li>Moves and marks are called history nodes.</li> <li>Macros are represented internally by a sequence of nodes bracketed by the reserved characters '[' and ']'.</li> <li>There is a reference to a "current" move which may be any node or null and can be accessed via getCurrent() and controlled with the various goToXxxx() methods.</li> <li>Notification of changes to the current node can be listened to.</li>
+ * 
+ * <pre>
+ * - Twists and rotates are called "moves". Rotates are represented internally as twists that affect all slices (-1) but are logically considered a different kind of move.
+ * - Marks are single character delimiters that can be inserted between moves like bookmarks. Note: there can be any number of marks between moves.
+ * - Moves and marks are called history nodes.
+ * - Macros are represented internally by a sequence of nodes bracketed by the reserved characters '[' and ']'.
+ * - There is a reference to a "current" move which may be any node and can be accessed via getCurrent() and controlled with the various goToXxxx() methods. Internally, a null current refers to last.
+ * - Notification of changes to the current node can be listened to.
+ * </pre>
  * 
  * Copyright 2005 - Superliminal Software
  * 
@@ -129,6 +137,18 @@ public class History {
      */
     public int lastMark() {
         for(HistoryNode n = current == null ? last : current; n != null; n = n.prev)
+            if(n.mark != 0)
+                return n.mark;
+        return -1;
+    }
+
+    /**
+     * @return the next mark after current or -1 if none.
+     */
+    public int nextMark() {
+        if(current == null)
+            return -1;
+        for(HistoryNode n = current.next; n != null; n = n.next)
             if(n.mark != 0)
                 return n.mark;
         return -1;
@@ -248,6 +268,11 @@ public class History {
      */
     public void append(MagicCube.TwistData move) {
         append(move.grip.id_within_puzzle, move.direction, move.slicemask);
+    }
+
+    public void append(MagicCube.TwistData[] moves) {
+        for(MagicCube.TwistData move : moves)
+            append(move.grip.id_within_puzzle, move.direction, move.slicemask);
     }
 
     /**
@@ -435,6 +460,18 @@ public class History {
      */
     public boolean removeLastMark(char mark) {
         boolean deleted = deleteNode(findMark(mark, true));
+        if(deleted && DEBUG)
+            System.out.println(this);
+        return deleted;
+    }
+
+    /**
+     * Deletes the next given mark at or after the current node.
+     * 
+     * @return true if found, false otherwise.
+     */
+    public boolean removeNextMark(char mark) {
+        boolean deleted = deleteNode(findMark(mark, false));
         if(deleted && DEBUG)
             System.out.println(this);
         return deleted;
@@ -706,13 +743,7 @@ public class History {
         for(int i = 0; i < inmoves.length; i++)
             hist.append(inmoves[i]);
         hist.compress(sweepRotatesForward);
-        MagicCube.TwistData[] compressed = new MagicCube.TwistData[hist.countMoves(false)];
-        int i = 0;
-        for(java.util.Enumeration<MagicCube.TwistData> outmoves = hist.moves(); outmoves.hasMoreElements();)
-            compressed[i++] = outmoves.nextElement();
-        if(i != compressed.length)
-            System.err.println("compress(TwistData[]) failed");
-        return compressed;
+        return hist.movesArray();
     }
 
     /**
