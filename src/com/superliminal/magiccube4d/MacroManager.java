@@ -235,7 +235,7 @@ public class MacroManager implements PuzzleManager.Highlighter {
      * Returns false if the ref won't determine a unique orientation.
      */
     public boolean addRef(PuzzleDescription puzzle, MagicCube.Stickerspec sticker) {
-        assert (nrefs < Macro.MAXREFS);
+        assert (isOpen() && nrefs < Macro.MAXREFS);
         if(!refDeterminesUniqueOrientation(puzzle, sticker))
             return false;
         refStickers[nrefs++] = sticker;
@@ -253,6 +253,20 @@ public class MacroManager implements PuzzleManager.Highlighter {
         curMacro.addMove(twisted);
     }
 
+    /**
+     * @return Number of twists so far in open macro or -1 if not open.
+     */
+    public int numTwists() {
+        return isOpen() ? curMacro.length() : -1;
+    }
+
+    /**
+     * Adds a move to the currently recording macro.
+     */
+    public MagicCube.TwistData removeTwist() {
+        assert (recording());
+        return curMacro.removeMove();
+    }
 
     public void moveMacro(Macro macro, int offset) {
         int index = macros.indexOf(macro);

@@ -73,6 +73,15 @@ public class Macro {
         moves.apply(move);
     }
 
+    /**
+     * Removes the last twist or rotation if any. *
+     * 
+     * @return A move that would undo the last move or null if nothing to undo.
+     */
+    public MagicCube.TwistData removeMove() {
+        return moves.undo();
+    }
+
     public static double[] getMacroRefCoords(MagicCube.Stickerspec grip, PuzzleDescription puzzle) {
         // When/if we have sticker based macros, this method will need to be extended.
         return VecMath.floatToDouble(puzzle.getGripCoords(grip.id_within_puzzle));

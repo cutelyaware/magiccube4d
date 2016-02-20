@@ -365,8 +365,9 @@ public class History {
 
 
     /**
-     * Back up one move in the history, returning a move
-     * that would undo the last move or null if nothing to undo.
+     * Back up one move in the history.
+     * 
+     * @return A move that would undo the last move or null if nothing to undo.
      */
     public MagicCube.TwistData undo() {
         //search backwards to the next actual move
