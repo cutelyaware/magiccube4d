@@ -83,33 +83,36 @@ import com.superliminal.util.StaticUtils;
 @SuppressWarnings("serial")
 public class MC4DSwing extends JFrame {
 
+    // The puzzle states regarding scrambling.
     private final static int
-        SCRAMBLE_NONE = 0,
-        SCRAMBLE_PARTIAL = 1,
-        SCRAMBLE_FULL = 2;
+        SCRAMBLE_NONE = 0, // Unscrambled
+        SCRAMBLE_PARTIAL = 1, // Some small number of scrambles
+        SCRAMBLE_FULL = 2; // Fully scrambled
     private int scrambleState = SCRAMBLE_NONE;
 
-    // macro state
+    // Macro state
     private MacroManager macroMgr = new MacroManager(PropertyManager.top.getProperty("macrofile",
         StaticUtils.getHomeDir() + File.separator + "MC4D.macros"));
     private Macro lastMacro;
     private int applyingMacro; // -1 == reversed, 0 == not, 1 == forward
 
-    // These are the variables that will be (re)created in initPuzzle().
-    private History hist;
-    private MC4DView view;
-    private BoundedRangeModel viewScaleModel;
+    // Top level Model and View objects in MVC pattern.
+    private History hist; // Contains the list of all moves and marks.
+    private MC4DView view; // 4D display of the puzzle state, animates a "move queue" and notifies as they complete.
 
+    // View transformations
+    private BoundedRangeModel viewScaleModel;
     private RotationHandler rotations = new RotationHandler(MagicCube.NICE_VIEW);
 
+    // References to Swing components.
+    private JLabel
+        statusLabel = new JLabel(), // Lower left text describing latest state or info messages.
+        twistLabel = new JLabel(); // Lower right count of the number of pure twists in History.
     private JPanel viewcontainer = new JPanel(new BorderLayout()); // Can use as addHotKey target when no MenuItem available.
     private JPanel macroControlsContainer = new JPanel(new BorderLayout());
     private JFileChooser
         logFileChooser = new JFileChooser(),
         macroFileChooser = new JFileChooser();
-    private JLabel
-        twistLabel = new JLabel(),
-        statusLabel = new JLabel();
     private JProgressBar progressBar = new JProgressBar();
 
     private PuzzleManager puzzleManager = null;
@@ -164,12 +167,17 @@ public class MC4DSwing extends JFrame {
     };
 
 
-    private void saveAs(String log) {
-        if(log == null) {
-            System.err.println("saveAs: null file name");
+    /**
+     * Writes the current state of the History to a log file with the given name.
+     * 
+     * @param logFileName
+     */
+    private void saveAs(String logFileName) {
+        if(logFileName == null) {
+            statusLabel.setText("saveAs: null file name");
             return;
         }
-        File file = new File(log);
+        File file = new File(logFileName);
         String sep = System.getProperty("line.separator");
         try {
             Writer writer = new FileWriter(file);
@@ -202,9 +210,29 @@ public class MC4DSwing extends JFrame {
             PropertyManager.userprefs.setProperty("logfile", filepath);
             setTitle(MagicCube.TITLE + " - " + file.getName());
         } catch(IOException ioe) {
-            statusLabel.setText("Save to '" + log + "' failed. Consider using 'File > Save As' to save somewhere else.");
+            statusLabel.setText("Save to '" + logFileName + "' failed. Consider using 'File > Save As' to save somewhere else.");
         }
     } // end saveAs()
+
+
+    private static boolean isControlDown(ActionEvent e) {
+        return e != null && (e.getModifiers() & ActionEvent.CTRL_MASK) == ActionEvent.CTRL_MASK;
+    }
+
+    /**
+     * The sky color and the way the stickers highlight as the user mouses over them
+     * are tightly coupled with the different macro modes and modifier keys being held down.
+     * This method is called when those things change.
+     * 
+     * @param sky The sky color for the current mode.
+     * @param stickerHighlighter controls which stickers highlight in the current mode.
+     * @param isControlDown Whether the user is holding down the Control key.
+     */
+    private void setSkyAndHighlighting(Color sky, PuzzleManager.Highlighter stickerHighlighter, boolean isControlDown) {
+        view.setSkyOverride(sky);
+        puzzleManager.setHighlighter(stickerHighlighter);
+        view.updateStickerHighlighting(isControlDown);
+    }
 
 
     /**
@@ -224,7 +252,15 @@ public class MC4DSwing extends JFrame {
         }
     }
 
-    // Actions which are to only be enabled when not animating.
+    //
+    // CONTROLLERS
+    //
+    // Here begins the actions triggered directly by UI actions,
+    // Usually from menu items and hot-keys.
+    //
+
+
+    // The first set are Actions which should only be enabled when not animating.
     //
     private ProbableAction
         open = new ProbableAction("Open") {
@@ -270,27 +306,31 @@ public class MC4DSwing extends JFrame {
                     return;
                 }
                 if(macroMgr.isOpen()) {
-                    MagicCube.TwistData macroUndo = macroMgr.removeTwist();
-                    if(macroUndo == null) { // User backed out of macro definition so cancel it.
+                    // Try to remove last move from macro manager.
+                    MagicCube.TwistData macroUndone = macroMgr.recording() ? macroMgr.removeTwist() : null;
+                    if(macroUndone == null) { // User backed out of macro definition so cancel it.
                         macroMgr.cancel();
                         setSkyAndHighlighting(null, normalHighlighter, isControlDown(ae));
+                        statusLabel.setText("Macro canceled");
                     }
-                    else { // Undo history move.
-                        MagicCube.TwistData histUndo = hist.undo();
-                        assert (macroUndo.direction == histUndo.direction && macroUndo.slicemask == histUndo.slicemask && macroUndo.grip.id_within_puzzle == histUndo.grip.id_within_puzzle);
-                        view.animate(histUndo, false, true);
+                    else { // Macro move was undone. Now undo corresponding history move.
+                        MagicCube.TwistData histUndone = hist.undo(); // Perform the undo.
+                        // Sanity check that it was the same as from the macro manager.
+                        assert (macroUndone.direction == histUndone.direction && macroUndone.slicemask == histUndone.slicemask && macroUndone.grip.id_within_puzzle == histUndone.grip.id_within_puzzle);
+                        view.animate(histUndone, null, true); // Show the result.
                         statusLabel.setText("Macro twists: " + macroMgr.numTwists());
                     }
                 }
-                // Note: If macro cancelled above, this "else" means no twist will be undone.
-                // If users dislike needing an extra undo, simply remove the "else" but keep everything else.
+                // Note: If macro cancelled above, this "else if" means no twist will be undone.
+                // If users dislike needing an extra undo, simply turn the "else if" into "if".
                 else if(hist.atMacroClose()) { // Undo a macro invocation.
                     statusLabel.setText("Undoing macro");
-                    for(MagicCube.TwistData toUndo = hist.undo(); toUndo != null; toUndo = hist.undo()) {
-                        view.animate(toUndo, false, true);
+                    for(MagicCube.TwistData toUndone = hist.undo(); toUndone != null; toUndone = hist.undo()) {
+                        view.animate(toUndone, null, true);
                         if(hist.atMacroOpen())
                             break;
                     }
+                    view.append(clearStatus);// Will erase the label above.
                     assert (hist.atMacroOpen());
                     hist.goToPrevious(); // step over mark to point where macro was applied.
                 }
@@ -299,13 +339,11 @@ public class MC4DSwing extends JFrame {
                         hist.removeAllMarks(History.MARK_SETUP_MOVES);
                         setSkyAndHighlighting(null, normalHighlighter, isControlDown(ae));
                     }
-                    MagicCube.TwistData toUndo = hist.undo();
-                    if(toUndo != null) {
-                        //System.out.println("Undoing grip: " + toUndo.grip + " dir: " + toUndo.direction  + " slicemask: " + toUndo.slicemask);
-                        view.animate(toUndo, false);
-                    }
-                    else
+                    MagicCube.TwistData toUndone = hist.undo();
+                    if(toUndone == null)
                         statusLabel.setText("Nothing to undo");
+                    else
+                        view.animate(toUndone);
                 }
             }
         },
@@ -315,22 +353,25 @@ public class MC4DSwing extends JFrame {
                 statusLabel.setText("");
                 if(hist.atMacroOpen()) {
                     statusLabel.setText("Redoing macro");
-                    for(MagicCube.TwistData toRedo = hist.redo(); toRedo != null; toRedo = hist.redo()) {
-                        view.animate(toRedo, false, true);
+                    for(MagicCube.TwistData histRedone = hist.redo(); histRedone != null; histRedone = hist.redo()) {
+                        view.animate(histRedone, null, true);
+                        if(macroMgr.recording()) // Allows macro redo during macro creation.
+                            macroMgr.addTwist(histRedone);
                         if(hist.atMacroClose())
                             break;
                     }
                     assert (hist.atMacroClose());
+                    view.append(clearStatus); // Will erase the label above.
                     hist.goToNext(); // step over mark to point where macro is completed.
                 }
                 else {
-                    MagicCube.TwistData toRedo = hist.redo();
-                    if(toRedo == null)
+                    MagicCube.TwistData histRedone = hist.redo();
+                    if(histRedone == null)
                         statusLabel.setText("Nothing to redo");
                     else {
-                        view.animate(toRedo, false);
-                        if(macroMgr.isOpen()) {
-                            macroMgr.addTwist(toRedo);
+                        view.animate(histRedone);
+                        if(macroMgr.recording()) {
+                            macroMgr.addTwist(histRedone);
                             statusLabel.setText("Macro twists: " + macroMgr.numTwists());
                         }
                     }
@@ -346,9 +387,12 @@ public class MC4DSwing extends JFrame {
                 // TODO: extend compress to work with non cubes.
                 //hist.compress(false); // so fewest moves are required and solution least resembles original moves.
                 MagicCube.TwistData[] reverse_twists = hist.movesArray();
-                Macro.reverse(reverse_twists);
-                view.animate(reverse_twists, true, false);
-                statusLabel.setText("");
+                if(reverse_twists.length > 0) {
+                    Macro.reverse(reverse_twists);
+                    view.append(makeLabeler("Solving"));
+                    view.animate(reverse_twists, applyToHistory, false);
+                    view.append(clearStatus); // Will erase the label above.
+                }
             }
         },
         solve = new ProbableAction("Solve") {
@@ -414,11 +458,11 @@ public class MC4DSwing extends JFrame {
             @Override
             public void doit(ActionEvent ae) {
                 if(macroMgr.isOpen()) {
-                    System.err.println("Warning: Macro already open.");
+                    statusLabel.setText("Warning: Macro already open.");
                     return;
                 }
                 if(lastMacro == null) {
-                    System.err.println("Warning: No last macro to apply.");
+                    statusLabel.setText("Warning: No last macro to apply.");
                     return;
                 }
                 macroMgr.open();
@@ -427,13 +471,17 @@ public class MC4DSwing extends JFrame {
                 // but that's broken for Don, so...
                 boolean modified = ae.getID() == ActionEvent.CTRL_MASK;
                 applyingMacro = modified ? -1 : 1;
-                statusLabel.setText("Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
+                statusLabel.setText("Applying macro '" + lastMacro.getName() + "'. Click " + Macro.MAXREFS + " reference stickers. Esc to cancel.");
                 setSkyAndHighlighting(new Color(255, 170, 170), macroMgr, isControlDown(ae));
             }
         },
         setup = new ProbableAction("Macro Set-Up Moves") {
             @Override
             public void doit(ActionEvent ae) {
+                if(macroMgr.isOpen()) {
+                    statusLabel.setText("Warning: Macro already open.");
+                    return;
+                }
                 // Begin recording macro set-up moves.
                 hist.removeAllMarks(History.MARK_SETUP_MOVES);
                 hist.mark(History.MARK_SETUP_MOVES);
@@ -442,17 +490,7 @@ public class MC4DSwing extends JFrame {
             }
         };
 
-    private static boolean isControlDown(ActionEvent e) {
-        return e != null && (e.getModifiers() & ActionEvent.CTRL_MASK) == ActionEvent.CTRL_MASK;
-    }
-
-    private void setSkyAndHighlighting(Color c, PuzzleManager.Highlighter h, boolean isControlDown) {
-        view.setSkyOverride(c);
-        puzzleManager.setHighlighter(h);
-        view.updateStickerHighlighting(isControlDown);
-    }
-
-    // those actions which *can* be realistically performed while animations are playing
+    // Actions which *can* be realistically performed while animations are playing
     //
     private Action
         quit = new AbstractAction("Quit") {
@@ -467,7 +505,7 @@ public class MC4DSwing extends JFrame {
                 scrambleState = SCRAMBLE_NONE; // do first to avoid issue 64 (fanfare on reset).
                 cancel();
                 puzzleManager.resetPuzzleState(); // also fires puzzle change event.
-                statusLabel.setText("");
+                statusLabel.setText("Reset");
                 view.repaint();
             }
         },
@@ -524,18 +562,49 @@ public class MC4DSwing extends JFrame {
             }
         };
 
-    private ImageIcon getImageIcon(String path) {
-        ClassLoader cl = getClass().getClassLoader();
-        return new ImageIcon(cl.getResource(path));
+
+    /**
+     * An ItemCompleteCallback that adds its related twist to the history.
+     */
+    private MC4DView.ItemCompleteCallback applyToHistory = new MC4DView.ItemCompleteCallback() {
+        @Override
+        public void onItemComplete(MagicCube.TwistData twist) {
+            hist.append(twist);
+        }
+    };
+
+    /**
+     * @return an ItemCompleteCallback that sets the status line to the given text.
+     */
+    private MC4DView.ItemCompleteCallback makeLabeler(final String label) {
+        return new MC4DView.ItemCompleteCallback() {
+            @Override
+            public void onItemComplete(MagicCube.TwistData twist) {
+                statusLabel.setText(label);
+            }
+        };
     }
 
+    /**
+     * An ItemCompleteCallback that clears the status text.
+     */
+    private MC4DView.ItemCompleteCallback clearStatus = makeLabeler("");
 
+
+    /**
+     * One of the main controllers, this one listens to the view object for reports of clicks on stickers.
+     * Those clicks are interpreted as twists, macro sticker selections, etc.
+     * 
+     * Note: Control-click rotations of the whole puzzle are not reported here because they can be
+     * handled entirely between the 4D view and the puzzle manager. It's just a view thing. This method
+     * handles those things that can affect the puzzle state.
+     */
     private MC4DView.StickerListener stickerListener = new MC4DView.StickerListener() {
         @Override
         public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
             if(!macroMgr.isOpen()) { // The simple case.
                 statusLabel.setText("");
-                view.animate(twisted, true);
+                view.animate(twisted, applyToHistory);
                 return;
             }
             // A macro is open.
@@ -543,7 +612,7 @@ public class MC4DSwing extends JFrame {
                 // We are in the twist capturing phase of macro creation.
                 macroMgr.addTwist(twisted);
                 statusLabel.setText("Macro twists: " + macroMgr.numTwists());
-                view.animate(twisted, true);
+                view.animate(twisted, applyToHistory);
             }
             else {
                 // We are in the reference sticker capturing phase of macro creation.
@@ -565,8 +634,9 @@ public class MC4DSwing extends JFrame {
                             hist.mark(History.MARK_MACRO_OPEN);
                             hist.append(moves);
                             hist.mark(History.MARK_MACRO_CLOSE);
-                            view.animate(moves, false, true);
+                            view.animate(moves, null, true);
                             if(setup_moves.hasMoreElements()) {
+                                view.append(makeLabeler("Reversing set-up moves"));
                                 List<MagicCube.TwistData> setup_twists = java.util.Collections.list(setup_moves);
                                 MagicCube.TwistData[] reverse_setup = setup_twists.toArray(new MagicCube.TwistData[0]);
                                 Macro.reverse(reverse_setup);
@@ -574,8 +644,9 @@ public class MC4DSwing extends JFrame {
                                 hist.mark(History.MARK_MACRO_OPEN);
                                 hist.append(reverse_setup);
                                 hist.mark(History.MARK_MACRO_CLOSE);
-                                view.animate(reverse_setup, false, true);
+                                view.animate(reverse_setup, null, true);
                             }
+                            view.append(clearStatus); // Will erase the above labels.
                         }
                         applyingMacro = 0;
                     }
@@ -592,6 +663,11 @@ public class MC4DSwing extends JFrame {
         } // end stickerClicked
     }; // end new MC4DView.StickerListener()
 
+
+    private ImageIcon getImageIcon(String path) {
+        ClassLoader cl = getClass().getClassLoader();
+        return new ImageIcon(cl.getResource(path));
+    }
 
     /**
      * A fully-functional 4D Rubik's Cube.
@@ -800,7 +876,7 @@ public class MC4DSwing extends JFrame {
                 Console.show();
             }
         });
-        final JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", "debug", false, helpmenu);
+        final JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", MagicCube.DEBUGGING, false, helpmenu);
         debug_checkbox.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent ce) {
@@ -1059,7 +1135,7 @@ public class MC4DSwing extends JFrame {
             updateTwistsLabel();
         } // end reading log file
         syncPuzzleStateWithHistory();
-        view = new MC4DView(puzzleManager, rotations, hist);
+        view = new MC4DView(puzzleManager, rotations);
         view.addStickerListener(stickerListener);
         view.addKeyListener(new KeyAdapter() {
             @Override
@@ -1094,13 +1170,11 @@ public class MC4DSwing extends JFrame {
             @Override
             public void currentChanged() {
                 saveitem.setEnabled(true);
-                undoitem.setEnabled(hist.countMoves(false) > 0);
+                undoitem.setEnabled(hist.countMoves(false) > 0 || macroMgr.isOpen()); // Macro test allows undo to cancel macro creation.
                 redoitem.setEnabled(hist.hasNextMove());
                 cheatitem.setEnabled(hist.hasPreviousMove());
                 solveitem.setEnabled(!puzzleManager.isSolved() && puzzleManager.puzzleDescription.getEdgeLength() < 4);
                 updateTwistsLabel();
-                if(hist.atMark(History.MARK_MACRO_CLOSE))
-                    statusLabel.setText(""); // Erase any macro application related message.
                 if(puzzleManager.isSolved()) {
                     int intlen = (int) puzzleManager.puzzleDescription.getEdgeLength();
                     if(intlen <= 1)

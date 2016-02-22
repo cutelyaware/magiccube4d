@@ -1,10 +1,10 @@
 package com.superliminal.magiccube4d;
 
 import java.applet.Applet;
-import java.awt.*;
+import java.awt.BorderLayout;
 import java.awt.event.InputEvent;
-import java.io.StringReader;
 import java.io.PushbackReader;
+import java.io.StringReader;
 
 import javax.swing.JProgressBar;
 
@@ -21,6 +21,7 @@ import com.superliminal.util.ResourceUtils;
 @SuppressWarnings("serial")
 public class MC4DApplet extends Applet {
     public MC4DApplet() {}
+
     @Override
     public void init() {
         String lengthstr = getParameter("length");
@@ -28,17 +29,23 @@ public class MC4DApplet extends Applet {
         System.out.println("length = " + length);
         String logfile = getParameter("logfile");
         System.out.println("logfile = " + logfile);
-        History hist = new History(length);
+        final History hist = new History(length);
         java.net.URL histurl = ResourceUtils.getResource(logfile);
         if(histurl == null)
             System.out.println("couldn't read history file");
         else
             hist.read(new PushbackReader(new StringReader(ResourceUtils.readFileFromURL(histurl))));
-        final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", 3, new JProgressBar()), new RotationHandler(), hist);
+        final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", 3, new JProgressBar()), new RotationHandler());
+        final MC4DView.ItemCompleteCallback applyToHistory = new MC4DView.ItemCompleteCallback() {
+            @Override
+            public void onItemComplete(MagicCube.TwistData twist) {
+                hist.append(twist);
+            }
+        };
         view.addStickerListener(new MC4DView.StickerListener() {
             @Override
             public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
-                view.animate(twisted, true);
+                view.animate(twisted, applyToHistory);
             }
         });
         setLayout(new BorderLayout());

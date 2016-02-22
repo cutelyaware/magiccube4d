@@ -16,7 +16,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
@@ -40,6 +39,10 @@ import com.superliminal.util.StaticUtils;
 @SuppressWarnings("serial")
 public class MC4DView extends Component {
 
+    public interface ItemCompleteCallback {
+        public void onItemComplete(MagicCube.TwistData twist);
+    }
+
     private PuzzleManager puzzleManager = null;
 
     // Listener support
@@ -58,7 +61,7 @@ public class MC4DView extends Component {
             sl.stickerClicked(event, twist);
     }
 
-    private AnimationQueue animationQueue;
+    private AnimationQueue animationQueue = new AnimationQueue();
     public boolean isAnimating() {
         return animationQueue.isAnimating();
     }
@@ -86,39 +89,33 @@ public class MC4DView extends Component {
     }
 
     /**
-     * Performs a move and optionally applies it to the history when finished.
+     * Performs a move and calls optional callback when finished.
      */
-    public void animate(MagicCube.TwistData move, boolean applyToHist, boolean macroMove) {
-        animationQueue.append(move, applyToHist, macroMove);
+    public void animate(MagicCube.TwistData move, ItemCompleteCallback icc, boolean macroMove) {
+        animationQueue.append(move, icc, macroMove);
         repaint();
     }
-    public void animate(MagicCube.TwistData move, boolean applyToHist) {
-        animate(move, applyToHist, false);
+    public void animate(MagicCube.TwistData move, ItemCompleteCallback icc) {
+        animate(move, icc, false);
+    }
+    public void animate(MagicCube.TwistData move) {
+        animate(move, null, false);
     }
 
     /**
-     * Performs a sequence of moves and optionally applies each to the history as they finished.
+     * Performs a sequence of moves and calls optional callback when each is finished.
      */
-    public void animate(MagicCube.TwistData moves[], boolean applyToHist, boolean macroMove) {
+    public void animate(MagicCube.TwistData moves[], ItemCompleteCallback icc, boolean macroMove) {
         for(MagicCube.TwistData move : moves)
-            animate(move, applyToHist, macroMove);
+            animate(move, icc, macroMove);
     }
 
-    public void animate(History hist, boolean applyToHist) {
-        for(Enumeration<MagicCube.TwistData> moves = hist.moves(); moves.hasMoreElements();)
-            animate(moves.nextElement(), applyToHist);
-    }
-
-    public void append(char mark) {
-        animationQueue.appendMark(mark);
+    public void append(ItemCompleteCallback icc) {
+        animationQueue.appendCallback(icc);
     }
 
     public void cancelAnimation() {
         animationQueue.cancelAnimation();
-    }
-
-    public void setHistory(History h) {
-        this.animationQueue = new AnimationQueue(h);
     }
 
     public void updateStickerHighlighting(boolean isControlDown) {
@@ -131,10 +128,9 @@ public class MC4DView extends Component {
         updateStickerHighlighting(e.isControlDown());
     }
 
-    public MC4DView(PuzzleManager gg, RotationHandler rotations, History hist) {
+    public MC4DView(PuzzleManager gg, RotationHandler rotations) {
         this.puzzleManager = gg;
         this.rotationHandler = rotations;
-        this.setHistory(hist);
         this.setFocusable(true);
 
         // manage slicemask as user holds and releases number keys
@@ -257,7 +253,7 @@ public class MC4DView extends Component {
                 rotationHandler.mouseDragged(drag_dir[0], drag_dir[1],
                     SwingUtilities.isLeftMouseButton(me), SwingUtilities.isMiddleMouseButton(me), me.isShiftDown());
                 frames = 0;
-                if(debugging)
+                if(PropertyManager.getBoolean(MagicCube.DEBUGGING, false))
                     FPSTimer.restart();
 
                 lastDrag = me.getPoint();
@@ -367,7 +363,6 @@ public class MC4DView extends Component {
     // Quick & dirty frame timer for debugging.
     //
     private static int frames = 0, FPS = 0;
-    private static boolean debugging = PropertyManager.getBoolean("debugging", false);
     private static Timer FPSTimer = new Timer(1000, new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent arg0) {
@@ -442,7 +437,7 @@ public class MC4DView extends Component {
                 for(int i = 0; i < FPS; i++)
                     sb.append(' ');
                 g.setColor(Color.black);
-                StaticUtils.fillString("FPS: " + FPS + sb, 0, getHeight(), Color.white, g);
+                StaticUtils.fillString(" FPS: " + FPS + sb, 0, getHeight(), Color.white, g);
             }
         }
     } // end paint
@@ -450,23 +445,18 @@ public class MC4DView extends Component {
 
     // wants to be static
     private class AnimationQueue {
-        private History queueHist;
         private Vector<Object> queue = new Vector<Object>();
         private QueueItem animating; // non-null == animation in progress
 
         private class QueueItem {
             public MagicCube.TwistData twist;
-            public boolean applyAnimHistWhenDone = true; // whether to change history after animating
+            public ItemCompleteCallback icc;
             public boolean macroMove = false;
-            public QueueItem(MagicCube.TwistData twist, boolean applyAnimHistWhenDone, boolean macroMove) {
+            public QueueItem(MagicCube.TwistData twist, ItemCompleteCallback icc, boolean macroMove) {
                 this.twist = twist;
-                this.applyAnimHistWhenDone = applyAnimHistWhenDone;
+                this.icc = icc;
                 this.macroMove = macroMove;
             }
-        }
-
-        public AnimationQueue(History hist) {
-            queueHist = hist;
         }
 
         /**
@@ -504,8 +494,8 @@ public class MC4DView extends Component {
                     puzzleManager.twistSliceMask = animating.twist.slicemask;
                     break; // successfully dequeued a twist which is now animating.
                 }
-                if(item instanceof Character) // apply the queued mark and continue dequeuing.
-                    queueHist.mark(((Character) item).charValue());
+                if(item instanceof ItemCompleteCallback) // Call the supplied callback and continue dequeuing.
+                    ((ItemCompleteCallback) item).onItemComplete(null);
             }
             return animating == null ? null : animating.twist;
         } // end getAnimating
@@ -514,18 +504,18 @@ public class MC4DView extends Component {
             return animating != null;
         }
 
-        public void append(MagicCube.TwistData twist, boolean applyAnimHistWhenDone, boolean macroMove) {
-            queue.add(new QueueItem(twist, applyAnimHistWhenDone, macroMove));
+        public void append(MagicCube.TwistData twist, ItemCompleteCallback icc, boolean macroMove) {
+            queue.add(new QueueItem(twist, icc, macroMove));
             getAnimating(); // in case queue was empty this sets twist as animating
         }
 
-        public void appendMark(char mark) {
-            queue.add(new Character(mark));
+        public void appendCallback(ItemCompleteCallback icc) {
+            queue.add(icc);
         }
 
         public void finishedTwist() {
-            if(animating != null && animating.applyAnimHistWhenDone)
-                queueHist.apply(animating.twist);
+            if(animating != null && animating.icc != null)
+                animating.icc.onItemComplete(animating.twist);
             animating = null; // the signal that the twist is finished.
             getAnimating(); // queue up the next twist if any.
         }
@@ -543,13 +533,19 @@ public class MC4DView extends Component {
     public static void main(String[] args) throws java.io.IOException {
         final String SCHLAFLI = "{4,3,3}";
         final int LENGTH = 3;
+        final int[] num_twists = new int[1];
         System.out.println("version " + System.getProperty("java.version"));
         JFrame frame = new StaticUtils.QuickFrame("test");
-        final MC4DView view = new MC4DView(new PuzzleManager(SCHLAFLI, LENGTH, new JProgressBar()), new RotationHandler(), new History(LENGTH));
+        final MC4DView view = new MC4DView(new PuzzleManager(SCHLAFLI, LENGTH, new JProgressBar()), new RotationHandler());
         view.addStickerListener(new MC4DView.StickerListener() {
             @Override
             public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
-                view.animate(twisted, true);
+                view.animate(twisted, new ItemCompleteCallback() {
+                    @Override
+                    public void onItemComplete(MagicCube.TwistData twist) {
+                        System.out.println("Num Twists: " + ++num_twists[0]);
+                    }
+                });
             }
         });
         frame.getContentPane().add(view);

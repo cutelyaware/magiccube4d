@@ -79,7 +79,9 @@ public class Macro {
      * @return A move that would undo the last move or null if nothing to undo.
      */
     public MagicCube.TwistData removeMove() {
-        return moves.undo();
+        MagicCube.TwistData undid = moves.undo();
+        moves.truncate(); // We don't want any redo data in the macro history.
+        return undid;
     }
 
     public static double[] getMacroRefCoords(MagicCube.Stickerspec grip, PuzzleDescription puzzle) {
