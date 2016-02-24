@@ -154,7 +154,8 @@ public class MagicCube {
         TITLE = "Magic Cube 4D",
         LOG_FILE = "MagicCube4D.log", // in user's home directory
         FACE_COLORS_FILE = "facecolors.txt", // relative to executable
-        MAGIC_NUMBER = "MagicCube4D"; // 1st string in log and macro files for sanity checking
+        MAGIC_NUMBER = "MagicCube4D", // 1st string in log and macro files for sanity checking
+        DEBUGGING = "debugging"; // Shared Property Manager key for toggling debugging code.
 
     public final static Color
         SKY = new Color(20, 170, 235),

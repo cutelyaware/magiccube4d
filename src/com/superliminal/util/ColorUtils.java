@@ -13,28 +13,27 @@ public class ColorUtils {
     private static Random rand = new Random(RAND_SEED);
 
 
+    /**
+     * Converts an HSV color to RGB.
+     * 
+     * @param h hue in range [0->6] or -1. (If -1, returned RGB will be (v,v,v).
+     * @param s saturation in range [0->1].
+     * @param v brightness (value) in range [0->1].
+     * @param rgb returned values in range [0->1].
+     */
     public static void hsv2rgb(float h, float s, float v, float[] rgb) {
-        // H is given on [0->6] or -1. S and V are given on [0->1]. 
-        // RGB are each returned on [0->1]. 
-        float m, n, f;
-        int i;
-
-        float[] hsv = new float[3];
-
-        hsv[0] = h;
-        hsv[1] = s;
-        hsv[2] = v;
+        float[] hsv = {h, s, v};
         System.out.println("H: " + h + " S: " + s + " V:" + v);
         if(hsv[0] == -1) {
             rgb[0] = rgb[1] = rgb[2] = hsv[2];
             return;
         }
-        i = (int) (Math.floor(hsv[0]));
-        f = hsv[0] - i;
+        int i = (int) (Math.floor(hsv[0]));
+        float f = hsv[0] - i;
         if(i % 2 == 0)
             f = 1 - f; // if i is even 
-        m = hsv[2] * (1 - hsv[1]);
-        n = hsv[2] * (1 - hsv[1] * f);
+        float m = hsv[2] * (1 - hsv[1]);
+        float n = hsv[2] * (1 - hsv[1] * f);
         switch(i) {
             case 6:
             case 0:
