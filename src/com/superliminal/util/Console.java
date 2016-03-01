@@ -27,6 +27,7 @@ public class Console {
     private final static PrintStream mOriginalOut = System.out;
     private final static PrintStream mOriginalErr = System.err;
     static {
+        mTextArea.setWrapStyleWord(true);
         JScrollPane scroller = new JScrollPane(mTextArea);
         int console_height = 300;
         mInstance.setBounds(0, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight() - console_height, 1000, console_height);
@@ -42,17 +43,23 @@ public class Console {
 
     private Console() {}
 
-    public static void show() {
+    public static void show(String title) {
+        mInstance.setTitle(title);
         System.setOut(mTextStream);
         System.setErr(mTextStream);
         mInstance.setVisible(true);
+    }
+
+    public static int getLineCount() {
+        return mTextArea.getLineCount();
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                Console.show();
+                Console.show("Console Test");
+                System.out.println("Standard out and error messages are redirected here while this window is showing. Closing it reverts them.");
             }
         });
         for(int i = 0; i < 15; i++) {

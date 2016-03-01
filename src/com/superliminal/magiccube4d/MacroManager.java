@@ -36,6 +36,7 @@ public class MacroManager implements PuzzleManager.Highlighter {
     private Macro curMacro;
     private MagicCube.Stickerspec refStickers[];
     private int nrefs;
+    private int applyDirection; // -1 == reversed, 0 == not, 1 == forward
 
     /**
      * Constructs a macro manager set to read and write to a given file path.
@@ -102,7 +103,7 @@ public class MacroManager implements PuzzleManager.Highlighter {
     }
 
     /**
-     * @return true if the list of reference stickers is not complete, false otherwise.
+     * @return true if macro creation or apply has begun, false otherwise.
      */
     public boolean isOpen() {
         return refStickers != null;
@@ -122,6 +123,11 @@ public class MacroManager implements PuzzleManager.Highlighter {
         return nrefs;
     }
 
+    public int getApplyDirection() {
+        assert (isOpen() && !recording());
+        return applyDirection;
+    }
+
     /**
      * @return the currently contained list of macros.
      */
@@ -131,11 +137,15 @@ public class MacroManager implements PuzzleManager.Highlighter {
 
     /**
      * Begins the creation or application of a macro.
+     * 
+     * @param apply_direction 0 == creation, 1 == apply forward, -1 == apply backwards.
      */
-    public void open() {
+    public void open(int apply_direction) {
+        assert (-1 <= apply_direction && apply_direction <= 1);
         assert (!isOpen());
         refStickers = new MagicCube.Stickerspec[Macro.MAXREFS];
         nrefs = 0;
+        applyDirection = apply_direction;
     }
 
     /**
@@ -160,9 +170,14 @@ public class MacroManager implements PuzzleManager.Highlighter {
      * @return list of all stickers added since opening.
      */
     public MagicCube.Stickerspec[] close() {
+        MagicCube.Stickerspec[] captured = getRefs();
+        cancel();
+        return captured;
+    }
+
+    public MagicCube.Stickerspec[] getRefs() {
         MagicCube.Stickerspec[] captured = new MagicCube.Stickerspec[nrefs];
         System.arraycopy(refStickers, 0, captured, 0, nrefs);
-        cancel();
         return captured;
     }
 
@@ -173,6 +188,7 @@ public class MacroManager implements PuzzleManager.Highlighter {
         curMacro = null;
         refStickers = null;
         nrefs = 0;
+        applyDirection = 0;
     }
 
     @Override
@@ -250,7 +266,13 @@ public class MacroManager implements PuzzleManager.Highlighter {
      */
     public void addTwist(MagicCube.TwistData twisted) {
         assert (recording());
+        assert (applyDirection == 0);
         curMacro.addMove(twisted);
+    }
+
+    public void addTwists(MagicCube.TwistData[] twists) {
+        for(MagicCube.TwistData t : twists)
+            addTwist(t);
     }
 
     /**
@@ -265,6 +287,7 @@ public class MacroManager implements PuzzleManager.Highlighter {
      */
     public MagicCube.TwistData removeTwist() {
         assert (recording());
+        assert (applyDirection == 0);
         return curMacro.removeMove();
     }
 

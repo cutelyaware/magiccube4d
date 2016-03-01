@@ -14,7 +14,7 @@ public class MagicCube {
     /**
      * Version constants
      */
-    public final static String PUZZLE_MAJOR_VERSION = "4.1";
+    public final static String PUZZLE_MAJOR_VERSION = "4.2";
     public final static int LOG_FILE_VERSION = 3;
     public final static int MACRO_FILE_VERSION = 2;
 
@@ -160,4 +160,11 @@ public class MagicCube {
     public final static Color
         SKY = new Color(20, 170, 235),
         GROUND = new Color(20, 130, 20);
+
+    /*
+     * Main window defaults.
+     */
+    public final static int
+        DEFAULT_WINDOW_WIDTH = 1300,
+        DEFAULT_WINDOW_HEIGHT = 900;
 }
