@@ -130,6 +130,9 @@ public class MC4DSwing extends JFrame {
         resetitem = new JMenuItem("Reset"),
         undoitem = new JMenuItem("Undo"),
         redoitem = new JMenuItem("Redo"),
+        beginitem = new JMenuItem("Go To Beginning"),
+        enditem = new JMenuItem("Go To End"),
+        playitem = new JMenuItem("Play"),
         cheatitem = new JMenuItem("Solve (Cheat)"),
         solveitem = new JMenuItem("Solve (For Real)");
 
@@ -207,7 +210,7 @@ public class MC4DSwing extends JFrame {
                     puzzleManager.puzzleDescription.getSchlafliProduct() + " " +
                     puzzleManager.getPrettyLength());
             writer.write(sep);
-            view.getRotations().write(writer);
+            rotations.write(writer);
             //writer.write(sep + puzzle.toString());
             writer.write("*" + sep);
             hist.truncate(); // Don't save potential redo moves after current. Note: loses redo moves as a side effect!
@@ -378,8 +381,8 @@ public class MC4DSwing extends JFrame {
                             break;
                     }
                     assert (hist.atMacroClose());
+                    hist.goToNext(); // step past macro close mark.
                     view.append(clearStatus); // Will erase the label above.
-                    hist.goToNext(); // step over mark to point where macro is completed.
                 }
                 else {
                     MagicCube.TwistData histRedone = hist.redo();
@@ -412,9 +415,36 @@ public class MC4DSwing extends JFrame {
                 }
             }
         },
-        solve = new ProbableAction("Solve") { // A true solve.
+        play = new ProbableAction("Play") {
             @Override
             public void doit(ActionEvent ae) {
+                view.append(redoMore);
+                //redoMore.onItemComplete(null);
+            }
+        },
+        beginning = new ProbableAction("Go to Beginning") { // Undo all. No animation.
+            @Override
+            public void doit(ActionEvent ae) {
+                cancel();
+                if(scrambleState == SCRAMBLE_NONE)
+                    hist.goToBeginning();
+                else
+                    hist.goBackwardsToMark(History.MARK_SCRAMBLE_BOUNDARY);
+                syncPuzzleStateWithHistory();
+            }
+        },
+        end = new ProbableAction("Go to End") { // Redo all. No animation.
+            @Override
+            public void doit(ActionEvent ae) {
+                cancel();
+                hist.goToEnd();
+                syncPuzzleStateWithHistory();
+            }
+        },
+
+//        solve = new ProbableAction("Solve") { // A true solve.
+//            @Override
+//            public void doit(ActionEvent ae) {
 //                MagicCube.TwistData[] solution;
 //                try { solution = puzzle.solve(); }
 //                catch(Error e) {
@@ -425,8 +455,8 @@ public class MC4DSwing extends JFrame {
 //                view.animate(solution, applyToHistory, false);
 //                scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
 //                setStatus("Twists to solve = " + solution.length);
-            }
-        },
+//            }
+//        },
         macro = new ProbableAction("Start/End") { // toggles macro definition start/end
             @Override
             public void doit(ActionEvent ae) {
@@ -614,6 +644,20 @@ public class MC4DSwing extends JFrame {
      */
     private MC4DView.ItemCompleteCallback clearStatus = makeLabeler("");
 
+    private final MC4DView.ItemCompleteCallback redoMore = new MC4DView.ItemCompleteCallback() {
+        @Override
+        public void onItemComplete(MagicCube.TwistData twist) {
+            assert (twist == null);
+            if(!hist.hasNextMove()) {
+                return; // Nothing left to redo.
+            }
+            redo.doit(null);
+            // Queue up another. Note: we can't tell at this point whether it will have an effect.
+            // The previous one might redo a whole macro or get cancelled.
+            view.append(redoMore);
+        }
+    };
+
 
     /**
      * One of the main controllers, this one listens to the view object for reports of clicks on stickers.
@@ -710,11 +754,14 @@ public class MC4DSwing extends JFrame {
         StaticUtils.addHotKey(KeyEvent.VK_Z, undoitem, "Undo", undo);
         StaticUtils.addHotKey(KeyEvent.VK_V, redoitem, "Redo", redo);
         StaticUtils.addHotKey(KeyEvent.VK_Y, redoitem, "Redo", redo);
+        StaticUtils.addHotKey(KeyEvent.VK_P, playitem, "Play", play);
         StaticUtils.addHotKey(KeyEvent.VK_O, openitem, "Open", open);
         StaticUtils.addHotKey(KeyEvent.VK_S, saveitem, "Save", save);
         StaticUtils.addHotKey(KeyEvent.VK_Q, quititem, "Quit", quit);
         //StaticUtils.addHotKey(KeyEvent.VK_L, solveitem, "Real", solve);
         StaticUtils.addHotKey(KeyEvent.VK_L, cheatitem, "Cheat", cheat);
+        StaticUtils.addHotKey(KeyEvent.VK_LEFT, beginitem, "Begin", beginning);
+        StaticUtils.addHotKey(KeyEvent.VK_RIGHT, enditem, "End", end);
 
         // no hotkey
         saveasitem.addActionListener(saveas);
@@ -739,8 +786,11 @@ public class MC4DSwing extends JFrame {
         editmenu.add(resetitem);
         editmenu.add(undoitem);
         editmenu.add(redoitem);
+        editmenu.add(beginitem);
+        editmenu.add(enditem);
         editmenu.addSeparator();
         editmenu.add(cheatitem);
+        editmenu.add(playitem);
         //editmenu.add(solveitem); // commented out until we reimplement true solves.
         JMenu scramblemenu = new JMenu("Scramble");
 
@@ -900,7 +950,6 @@ public class MC4DSwing extends JFrame {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 Console.show("MC4D Debugging Console");
-                int lines = Console.getLineCount();
                 if(Console.getLineCount() <= 1 && !debug_checkbox.isSelected())
                     System.out.println("Output text and error messages are redirected here when this window is showing. \nYou'll probably need to also turn on Help > debugging to see much.");
             }
@@ -1149,7 +1198,7 @@ public class MC4DSwing extends JFrame {
                     if(hist.read(new PushbackReader(reader)))
                         title += " - " + logfile.getName();
                     else
-                        System.out.println("Error reading puzzle history");
+                        System.err.println("Error reading puzzle history");
                     setTitle(title);
                 } catch(Exception e) {
                     e.printStackTrace();
@@ -1200,8 +1249,6 @@ public class MC4DSwing extends JFrame {
             @Override
             public void currentChanged() {
                 saveitem.setEnabled(true);
-                undoitem.setEnabled(hist.countMoves(false) > 0 || macroMgr.isOpen()); // Macro test allows undo to cancel macro creation.
-                redoitem.setEnabled(hist.hasNextMove());
                 cheatitem.setEnabled(hist.hasPreviousMove());
                 solveitem.setEnabled(!puzzleManager.isSolved() && puzzleManager.puzzleDescription.getEdgeLength() < 4);
                 updateTwistsLabel();

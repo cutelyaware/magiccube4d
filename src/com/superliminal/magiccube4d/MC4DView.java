@@ -39,13 +39,7 @@ import com.superliminal.util.StaticUtils;
 @SuppressWarnings("serial")
 public class MC4DView extends Component {
 
-    public interface ItemCompleteCallback {
-        public void onItemComplete(MagicCube.TwistData twist);
-    }
-
-    private PuzzleManager puzzleManager = null;
-
-    // Listener support
+    // Sticker click listener support
     public static interface StickerListener {
         public void stickerClicked(InputEvent e, MagicCube.TwistData twisted);
     }
@@ -61,7 +55,18 @@ public class MC4DView extends Component {
             sl.stickerClicked(event, twist);
     }
 
-    private AnimationQueue animationQueue = new AnimationQueue();
+    /**
+     * Callback used to notify completion of queued twist animations and pure callback items.
+     */
+    public interface ItemCompleteCallback {
+        /**
+         * @param twist the move associated with the callback if any, null if none.
+         */
+        public void onItemComplete(MagicCube.TwistData twist);
+    }
+
+    private PuzzleManager puzzleManager = null;
+    private AnimationQueue animationQueue;
     public boolean isAnimating() {
         return animationQueue.isAnimating();
     }
@@ -76,10 +81,6 @@ public class MC4DView extends Component {
     private long lastDragTime; // timestamp of last drag event
     private RotationHandler rotationHandler;
 
-    public RotationHandler getRotations() {
-        return rotationHandler;
-    } // const
-
     /**
      * Overrides the user's preference when not null. Set to null to revert.
      */
@@ -89,29 +90,34 @@ public class MC4DView extends Component {
     }
 
     /**
-     * Performs a move and calls optional callback when finished.
+     * Appends a move and calls optional callback when finished.
+     * 
+     * @param move A single twist or rotation to be animated as soon as possible.
+     * @param icc Optional callback to be notified of twist completion.
+     * @param macroMove Whether this move is part of a sequence subject to quick moves.
      */
     public void animate(MagicCube.TwistData move, ItemCompleteCallback icc, boolean macroMove) {
         animationQueue.append(move, icc, macroMove);
         repaint();
     }
+    // Helper functions that call the above.
     public void animate(MagicCube.TwistData move, ItemCompleteCallback icc) {
         animate(move, icc, false);
     }
     public void animate(MagicCube.TwistData move) {
         animate(move, null, false);
     }
-
-    /**
-     * Performs a sequence of moves and calls optional callback when each is finished.
-     */
     public void animate(MagicCube.TwistData moves[], ItemCompleteCallback icc, boolean macroMove) {
         for(MagicCube.TwistData move : moves)
             animate(move, icc, macroMove);
     }
 
+    /**
+     * Appends a callback to be called when when any previous item is finished, or immediately if none.
+     */
     public void append(ItemCompleteCallback icc) {
         animationQueue.appendCallback(icc);
+        repaint();
     }
 
     public void cancelAnimation() {
@@ -123,16 +129,16 @@ public class MC4DView extends Component {
         if(mousePos != null && puzzleManager.updateStickerHighlighting(mousePos.x, mousePos.y, getSlicemask(), isControlDown))
             repaint();
     }
-
     public void updateStickerHighlighting(InputEvent e) {
         updateStickerHighlighting(e.isControlDown());
     }
 
+
     public MC4DView(PuzzleManager gg, RotationHandler rotations) {
         this.puzzleManager = gg;
         this.rotationHandler = rotations;
+        this.animationQueue = new AnimationQueue(puzzleManager);
         this.setFocusable(true);
-
         // manage slicemask as user holds and releases number keys
         this.addKeyListener(new KeyAdapter() {
             @Override
@@ -142,7 +148,6 @@ public class MC4DView extends Component {
                     slicemask |= 1 << numkey - 1; // turn on the specified bit
                     updateStickerHighlighting(arg0);
                 }
-
                 if(arg0.getKeyCode() == KeyEvent.VK_CONTROL) {
                     updateStickerHighlighting(arg0);
                 }
@@ -154,23 +159,20 @@ public class MC4DView extends Component {
                     slicemask &= ~(1 << numkey - 1); // turn off the specified bit
                     updateStickerHighlighting(arg0);
                 }
-
                 if(arg0.getKeyCode() == KeyEvent.VK_CONTROL) {
                     updateStickerHighlighting(arg0);
                 }
             }
         });
+        // Pick up mouse clicks, drags, etc.
         this.addMouseListener(new MouseAdapter() {
             private boolean wasInMotionWhenPressed = true;
-
             // look for and initiate twist and rotation animations
             @Override
             public void mouseClicked(MouseEvent e) {
                 MC4DView.this.requestFocusInWindow(); // to start receiving key events.
-
                 if(!puzzleManager.canMouseClick())
                     return;
-
                 boolean isViewRotation = e.isControlDown() || SwingUtilities.isMiddleMouseButton(e);
                 if(isViewRotation) {
                     // Pass it off to the puzzle manager.
@@ -183,13 +185,11 @@ public class MC4DView extends Component {
                     }
                     return;
                 }
-
                 // Pick our grip.
                 int grip = PipelineUtils.pickGrip(
                     e.getX(), e.getY(),
                     puzzleManager.untwistedFrame,
                     puzzleManager.puzzleDescription);
-
                 // The twist might be illegal.
                 if(grip < 0) {
                     System.out.println("missed");
@@ -198,11 +198,9 @@ public class MC4DView extends Component {
                     MagicCube.Stickerspec clicked = new MagicCube.Stickerspec();
                     clicked.id_within_puzzle = grip; // slamming new id. do we need to set the other members?
                     clicked.face = puzzleManager.puzzleDescription.getGrip2Face()[grip];
-                    //System.out.println("face: " + clicked.face);
-
                     // Tell listeners about the legal twist and let them call animate() if desired.
                     int dir = (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isMiddleMouseButton(e)) ? MagicCube.CCW : MagicCube.CW;
-                    //if(e.isShiftDown()) // experimental control to allow double twists but also requires speed control.
+                    //if(e.isShiftDown()) // Experimental control to allow double twists.
                     //    dir *= 2;
                     if(!wasInMotionWhenPressed)
                         fireStickerClickedEvent(e, new MagicCube.TwistData(clicked, dir, getSlicemask()));
@@ -237,7 +235,7 @@ public class MC4DView extends Component {
                 requestFocusInWindow(); // So we can get ctrl and other key events before the user clicks.
                 super.mouseEntered(e);
             }
-        });
+        }); // end MouseListener
         // watch for dragging gestures to rotate the 3D view
         this.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
@@ -249,13 +247,11 @@ public class MC4DView extends Component {
                 drag_dir = new float[2];
                 Vec_h._VMV2(drag_dir, new float[]{lastDrag.x, lastDrag.y}, end);
                 drag_dir[1] *= -1; // in Windows, Y is down, so invert it
-
                 rotationHandler.mouseDragged(drag_dir[0], drag_dir[1],
                     SwingUtilities.isLeftMouseButton(me), SwingUtilities.isMiddleMouseButton(me), me.isShiftDown());
                 frames = 0;
                 if(PropertyManager.getBoolean(MagicCube.DEBUGGING, false))
                     FPSTimer.restart();
-
                 lastDrag = me.getPoint();
                 lastDragTime = me.getWhen();
                 repaint();
@@ -271,7 +267,6 @@ public class MC4DView extends Component {
                 }
             }
         });
-
         // Listen for changes to factors that affect puzzle/view scaling
         //
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
@@ -294,7 +289,7 @@ public class MC4DView extends Component {
                 updateViewFactors();
             }
         });
-    } // end MC4DView
+    } // end MC4DView()
 
 
     private void updateViewFactors() {
@@ -303,7 +298,6 @@ public class MC4DView extends Component {
             return;
         xOff = ((W > H) ? (W - H) / 2 : 0) + minpix / 2;
         yOff = ((H > W) ? (H - W) / 2 : 0) + minpix / 2;
-
         // Generate view-independent vertices for the current puzzle in its original 4D orientation, centered at the origin.
         final boolean do3DStepsOnly = true;
         PipelineUtils.AnimFrame frame = puzzleManager.computeFrame(
@@ -318,7 +312,6 @@ public class MC4DView extends Component {
             false, // Don't let shadow polygons muck up the calculation.
             do3DStepsOnly,
             null);
-
         float radius3d = -1;
         int stickerInds[][][] = puzzleManager.puzzleDescription.getStickerInds();
         for(int i = 0; i < frame.drawListSize; i++) {
@@ -332,14 +325,11 @@ public class MC4DView extends Component {
             }
         }
         radius3d = (float) Math.sqrt(radius3d);
-        //System.out.println("visible radius: " + radius3d);
-
         // This is what corrects the view scale for changes in puzzle and puzzle geometry.
         // To remove this correction, just set polys2pixelSF = minpix.
         polys2pixelsSF = minpix / (1.25f * radius3d);
-
         repaint(); // Needed when a puzzle is read via Ctrl-O.
-    } // end updateViewFactors
+    } // end updateViewFactors()
 
 
     /**
@@ -381,9 +371,7 @@ public class MC4DView extends Component {
     @Override
     public void paint(Graphics g) {
         frames++;
-
         if(animationQueue.isAnimating() && puzzleManager.iTwist == puzzleManager.nTwist) {
-            animationQueue.getAnimating();
             // time to stop the animation
             animationQueue.finishedTwist(); // end animation
             repaint();
@@ -391,7 +379,6 @@ public class MC4DView extends Component {
         if(lastDrag == null && rotationHandler.continueSpin()) { // keep spinning
             repaint();
         }
-
         // antialiasing makes for a beautiful image but can also be expensive to draw therefore
         // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
         if(g instanceof Graphics2D) {
@@ -399,7 +386,6 @@ public class MC4DView extends Component {
             ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
         }
-
         // paint the background
         g.setColor(skyOverride == null ? PropertyManager.getColor("sky.color", MagicCube.SKY) : skyOverride);
         g.fillRect(0, 0, getWidth(), getHeight());
@@ -407,7 +393,6 @@ public class MC4DView extends Component {
             g.setColor(PropertyManager.getColor("ground.color"));
             g.fillRect(0, getHeight() * 6 / 9, getWidth(), getHeight());
         }
-
         // paint the puzzle
         if(puzzleManager != null && puzzleManager.puzzleDescription != null) {
             final boolean do3DStepsOnly = false;
@@ -431,7 +416,6 @@ public class MC4DView extends Component {
                 PropertyManager.getBoolean("highlightbycubie", false),
                 PropertyManager.getBoolean("outlines", false) ? PropertyManager.getColor("outlines.color") : null,
                 PropertyManager.getFloat("twistfactor", 1));
-
             if(FPSTimer.isRunning() && rotationHandler.continueSpin() && lastDrag == null) {
                 StringBuffer sb = new StringBuffer();
                 for(int i = 0; i < FPS; i++)
@@ -440,13 +424,29 @@ public class MC4DView extends Component {
                 StaticUtils.fillString(" FPS: " + FPS + sb, 0, getHeight(), Color.white, g);
             }
         }
-    } // end paint
+    } // end paint()
 
 
-    // wants to be static
-    private class AnimationQueue {
+    /**
+     * Maintains a queue of "animatable" items consisting of twists and callbacks.
+     * Twists represent puzzle twists as well as pure rotations, collectively called "moves".
+     * Moves can contain optional callbacks to be called when they complete their animation.
+     * Callback items are called immediately upon being dequeued.
+     * 
+     * The getAnimating() method returns the currently animating move if any and dequeues
+     * the next one if any. Queued items do not get automatically dequeued as others finish.
+     * This method is required to get them going and should be called frequently.
+     * 
+     * The provided PuzzleManager is used to compute frame polygons. It's puzzle state is
+     * never altered (IE treated as const) though it's highlighting properties are set
+     * depending upon the state of the mouse buttons and keyboard keys.
+     * 
+     * The cancelAnimation() method cancels any current animation and clears the queue.
+     */
+    private static class AnimationQueue {
         private Vector<Object> queue = new Vector<Object>();
         private QueueItem animating; // non-null == animation in progress
+        private PuzzleManager puzzleMgr;
 
         private class QueueItem {
             public MagicCube.TwistData twist;
@@ -459,25 +459,33 @@ public class MC4DView extends Component {
             }
         }
 
+        public AnimationQueue(PuzzleManager pm) {
+            puzzleMgr = pm;
+        }
+
         /**
+         * Returns the currently animating twist. If no twist is currently animating, it pulls new items off the animation queue.
+         * Dequeued twists begin animating. Dequeued callback items are called immediately.
+         * It is generally OK to call this method at any time. It can have the side effect of
+         * 
          * @return The currently animating twist if any. Otherwise begins animating the next item if any and returns that. Otherwise null.
          */
         public MagicCube.TwistData getAnimating() {
-            if(animating != null)
-                return animating.twist;
-            while(!queue.isEmpty()) {
+            while(animating == null && !queue.isEmpty()) {
+                // No twists are currently animating and there are items queued up,
+                // so begin processing them until one of those things is no longer true.
                 Object item = queue.remove(0);
                 if(item instanceof QueueItem) { // this is an animatable item.
                     animating = (QueueItem) item;
                     int iTwistGrip = animating.twist.grip.id_within_puzzle;
                     int iSlicemask = animating.twist.slicemask;
-                    int[] orders = puzzleManager.puzzleDescription.getGripSymmetryOrders();
+                    int[] orders = puzzleMgr.puzzleDescription.getGripSymmetryOrders();
                     if(0 > iTwistGrip || iTwistGrip >= orders.length) {
                         System.err.println("order indexing error in MC4CView.AnimationQueue.getAnimating()");
                         continue;
                     }
                     int order = orders[iTwistGrip];
-                    if(!PipelineUtils.hasValidTwist(iTwistGrip, iSlicemask, puzzleManager.puzzleDescription))
+                    if(!PipelineUtils.hasValidTwist(iTwistGrip, iSlicemask, puzzleMgr.puzzleDescription))
                         continue;
                     double totalRotationAngle = 2 * Math.PI / order;
                     boolean quickly = false;
@@ -486,16 +494,17 @@ public class MC4DView extends Component {
                             quickly = animating.macroMove;
                         else
                             quickly = true;
-                    puzzleManager.nTwist = quickly ? 1 :
-                        puzzleManager.calculateNTwists(totalRotationAngle, PropertyManager.getFloat("twistfactor", 1));
-                    puzzleManager.iTwist = 0;
-                    puzzleManager.iTwistGrip = iTwistGrip;
-                    puzzleManager.twistDir = animating.twist.direction;
-                    puzzleManager.twistSliceMask = animating.twist.slicemask;
+                    puzzleMgr.nTwist = quickly ? 1 :
+                        puzzleMgr.calculateNTwists(totalRotationAngle, PropertyManager.getFloat("twistfactor", 1));
+                    puzzleMgr.iTwist = 0;
+                    puzzleMgr.iTwistGrip = iTwistGrip;
+                    puzzleMgr.twistDir = animating.twist.direction;
+                    puzzleMgr.twistSliceMask = animating.twist.slicemask;
                     break; // successfully dequeued a twist which is now animating.
                 }
-                if(item instanceof ItemCompleteCallback) // Call the supplied callback and continue dequeuing.
+                if(item instanceof ItemCompleteCallback) { // Call the supplied callback and continue dequeuing.
                     ((ItemCompleteCallback) item).onItemComplete(null);
+                }
             }
             return animating == null ? null : animating.twist;
         } // end getAnimating
@@ -511,13 +520,15 @@ public class MC4DView extends Component {
 
         public void appendCallback(ItemCompleteCallback icc) {
             queue.add(icc);
+            getAnimating(); // in case queue was empty this will call the callback.
         }
 
         public void finishedTwist() {
-            if(animating != null && animating.icc != null)
-                animating.icc.onItemComplete(animating.twist);
+            QueueItem finished = animating;
             animating = null; // the signal that the twist is finished.
-            getAnimating(); // queue up the next twist if any.
+            getAnimating(); // Queue up the next item if any before calling callback which may queue up more.
+            if(finished != null && finished.icc != null)
+                finished.icc.onItemComplete(finished.twist);
         }
 
         public void cancelAnimation() {

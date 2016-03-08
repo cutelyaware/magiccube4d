@@ -146,7 +146,7 @@ public class MagicCube {
     public final static float
         TILT = 30, // degrees
         TWIRL = -42, // degrees
-        EYEZ = 10; // should really be function of LENGTH and EYEW
+        EYEZ = 8.5f; // should really be function of LENGTH and EYEW
 
     public final static float SUNVEC[] = {.82f, 1.55f, 3.3f}; // Default for shading & shadows points *towards* sun. 
 

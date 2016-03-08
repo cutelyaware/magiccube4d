@@ -340,27 +340,43 @@ public class History {
         return new MagicCube.TwistData(current.stickerid, current.dir, current.slicesmask);
     }
 
-    public void goToBeginning() {
-        current = first;
+    //
+    // Purely navigational methods that change the current node without affecting any.
+    //
+    private void goTo(HistoryNode node) {
+        current = node;
         fireCurrentChanged();
     }
+    public void goToBeginning() {
+        goTo(first);
+    }
     public void goToEnd() {
-        current = null;
-        fireCurrentChanged();
+        goTo(null);
     }
     public boolean goToPrevious() {
         if(current == null)
             return false;
-        current = current.prev;
-        fireCurrentChanged();
+        goTo(current.prev);
         return true;
     }
     public boolean goToNext() {
         if(current == null)
             return false;
-        current = current.next;
-        fireCurrentChanged();
+        goTo(current.next);
         return true;
+    }
+    public boolean goTowardsMark(char mark, boolean backwards) {
+        HistoryNode node = findMark(mark, backwards);
+        if(node == null)
+            return false;
+        goTo(node);
+        return true;
+    }
+    public boolean goBackwardsToMark(char mark) {
+        return goTowardsMark(mark, true);
+    }
+    public boolean goForwardsToMark(char mark) {
+        return goTowardsMark(mark, false);
     }
 
 
