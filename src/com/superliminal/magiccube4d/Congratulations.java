@@ -6,11 +6,10 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -20,6 +19,12 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
 
 
+/**
+ * A big congratulatory pop-up that plays a fanfare while showing a trophy
+ * and flashing animation for a while.
+ * 
+ * @author Melinda Green
+ */
 @SuppressWarnings("serial")
 public class Congratulations extends JFrame {
     final static int FPS = 15, DUR = 2;
@@ -37,7 +42,6 @@ public class Congratulations extends JFrame {
             else {
                 timer.stop(); // This is important to allow garbage collection of this JFrame.
                 text.setVisible(true);
-                body.add(new JLabel("Thanks to http://oldtiffinianscc.co.uk/ for the trophy image."));
                 contentpane.setBackground(Color.white);
                 body.repaint();
             }
@@ -46,7 +50,6 @@ public class Congratulations extends JFrame {
 
     public Congratulations(String content) {
         super("Congratulations!");
-        //this.setUndecorated(true);
         contentpane = getContentPane();
         body = new JPanel();
         body.setOpaque(false);
@@ -62,6 +65,16 @@ public class Congratulations extends JFrame {
         tmp.add(text);
         tmp.setOpaque(false);
         body.add(tmp);
+        JButton close = new JButton("Yea!");
+        close.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Congratulations.this.setVisible(false);
+                Congratulations.this.dispose();
+            }
+        });
+        close.setAlignmentX(.5f);
+        body.add(close);
         getContentPane().add(body);
         pack();
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -73,13 +86,6 @@ public class Congratulations extends JFrame {
 
     public void start() {
         Audio.play(Audio.Sound.FANFARE);
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Congratulations.this.setVisible(false);
-                super.mouseClicked(e);
-            }
-        });
         timer.start();
     }
 
@@ -95,16 +101,9 @@ public class Congratulations extends JFrame {
                 Congratulations congrats = new Congratulations(
                     "<html><center>" +
                         "<H1>You may already be a winner!</H1>" +
-                        "<br><br><p>Click this window to close.</p>" +
+                        "<br><br><p>Click button to close.</p>" +
                         "</center></html>");
                 congrats.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                congrats.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        super.mouseClicked(e);
-                        System.exit(0);
-                    }
-                });
                 congrats.setVisible(true);
                 congrats.start();
             }

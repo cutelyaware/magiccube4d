@@ -8,6 +8,7 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 
 import com.superliminal.util.PropertyManager;
+import com.superliminal.util.PropertyManager.PropertyListener;
 
 
 /**
@@ -27,7 +28,6 @@ public class Audio {
         snap,
         correct,
         fanfare;
-    private static boolean muted = PropertyManager.getBoolean("muted", false);
 
     public Audio() {
         twisting = get("white1000.wav", .3f);
@@ -35,6 +35,19 @@ public class Audio {
         snap = get("close.wav", .7f);
         correct = get("correct.wav", .8f);
         fanfare = get("fanfare.wav", 1);
+        // Listen for changes to the "muted" property and cancel all sounds when true.
+        PropertyManager.top.addPropertyListener(new PropertyListener() {
+            @Override
+            public void propertyChanged(String property, String newval) {
+                if("true".equals(newval)) {
+                    twisting.stop();
+                    highlight.stop();
+                    snap.stop();
+                    correct.stop();
+                    fanfare.stop();
+                }
+            }
+        }, MagicCube.MUTED);
     }
 
     public static void play(Sound sound) {
@@ -45,17 +58,6 @@ public class Audio {
     }
     public static void stop(Sound sound) {
         sound2clip(sound).stop();
-    }
-
-    public static void setMuted(boolean mute) {
-        muted = mute;
-        if(mute) {
-            twisting.stop();
-            highlight.stop();
-            snap.stop();
-            correct.stop();
-            fanfare.stop();
-        }
     }
 
     private static Clip sound2clip(Sound sound) {
@@ -76,8 +78,8 @@ public class Audio {
     }
 
     private static void play(Sound sound, boolean looped) {
-        if(muted)
-            return;
+        if(PropertyManager.getBoolean(MagicCube.MUTED, false))
+            return; // Don't start any sounds while muted.
         Clip clip = sound2clip(sound);
         clip.setFramePosition(0);
         clip.setLoopPoints(0, clip.getFrameLength() - 1);

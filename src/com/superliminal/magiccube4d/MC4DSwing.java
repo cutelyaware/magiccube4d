@@ -246,9 +246,9 @@ public class MC4DSwing extends JFrame {
         view.updateStickerHighlighting(isControlDown);
     }
 
-    private void appendSequence(MagicCube.TwistData[] moves) {
+    private void applySequence(MagicCube.TwistData[] moves) {
         hist.mark(History.MARK_MACRO_OPEN);
-        hist.append(moves);
+        hist.apply(moves);
         hist.mark(History.MARK_MACRO_CLOSE);
         view.animate(moves, null, true);
     }
@@ -398,39 +398,28 @@ public class MC4DSwing extends JFrame {
                 }
             }
         },
-        cheat = new ProbableAction("Cheat") { // A fake solve, just backing out the history.
+        cheat = new ProbableAction("Cheat") { // Undo all with animation.
             @Override
             public void doit(ActionEvent ae) {
-                scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
-                cancel();
-                hist.removeAllMarks(); // Allows undo across marks.
-                // TODO: extend compress to work with non cubes.
-                //hist.compress(false); // so fewest moves are required and solution least resembles original moves.
-                MagicCube.TwistData[] reverse_twists = hist.movesArray();
-                if(reverse_twists.length > 0) {
-                    Macro.reverse(reverse_twists);
-                    view.append(makeLabeler("Solving"));
-                    view.animate(reverse_twists, applyToHistory, false);
-                    view.append(clearStatus); // Will erase the label above.
-                }
+                view.append(undoMore);
             }
         },
-        play = new ProbableAction("Play") {
+        play = new ProbableAction("Play") { // Redo all with animation.
             @Override
             public void doit(ActionEvent ae) {
                 view.append(redoMore);
-                //redoMore.onItemComplete(null);
             }
         },
-        beginning = new ProbableAction("Go to Beginning") { // Undo all. No animation.
+        beginning = new ProbableAction("Go to Beginning") { // Undo all without animation.
             @Override
             public void doit(ActionEvent ae) {
                 cancel();
-                if(scrambleState == SCRAMBLE_NONE)
-                    hist.goToBeginning();
+                if(!hist.goBackwardsToMark(History.MARK_SCRAMBLE_BOUNDARY)) // Try to go back to a scramble mark.
+                    hist.goToBeginning(); // Not found so go back all the way.
                 else
-                    hist.goBackwardsToMark(History.MARK_SCRAMBLE_BOUNDARY);
+                    hist.goToNext(); // Hit scramble mark which is now current, so go to next real move.
                 syncPuzzleStateWithHistory();
+                updateTwistsLabel();
             }
         },
         end = new ProbableAction("Go to End") { // Redo all. No animation.
@@ -517,7 +506,7 @@ public class MC4DSwing extends JFrame {
                     if(getTwistDirection(ae) < 0)
                         Macro.reverse(moves);
                     macroMgr.addTwists(moves);
-                    appendSequence(moves);
+                    applySequence(moves);
                     return;
                 }
                 if(lastMacro == null) {
@@ -623,7 +612,7 @@ public class MC4DSwing extends JFrame {
     private MC4DView.ItemCompleteCallback applyToHistory = new MC4DView.ItemCompleteCallback() {
         @Override
         public void onItemComplete(MagicCube.TwistData twist) {
-            hist.append(twist);
+            hist.apply(twist);
         }
     };
 
@@ -655,6 +644,24 @@ public class MC4DSwing extends JFrame {
             // Queue up another. Note: we can't tell at this point whether it will have an effect.
             // The previous one might redo a whole macro or get cancelled.
             view.append(redoMore);
+        }
+    };
+
+    private final MC4DView.ItemCompleteCallback undoMore = new MC4DView.ItemCompleteCallback() {
+        @Override
+        public void onItemComplete(MagicCube.TwistData twist) {
+            assert (twist == null);
+            if(!hist.hasPreviousMove()) {
+                return; // Nothing left to undo.
+            }
+            if(hist.atScrambleBoundary()) {
+                scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
+                hist.removeAllMarks(History.MARK_SCRAMBLE_BOUNDARY);
+            }
+            undo.doit(null);
+            // Queue up another. Note: we can't tell at this point whether it will have an effect.
+            // The previous one might undo a whole macro or get cancelled.
+            view.append(undoMore);
         }
     };
 
@@ -705,14 +712,14 @@ public class MC4DSwing extends JFrame {
                             if(dir < 0)
                                 Macro.reverse(moves); // User asked to apply macro in reverse.
                             setStatus("Applying macro '" + lastMacro.getName() + "'");
-                            appendSequence(moves);
+                            applySequence(moves);
                             if(setup_moves.hasMoreElements()) {
                                 view.append(makeLabeler("Reversing set-up moves"));
                                 List<MagicCube.TwistData> setup_twists = java.util.Collections.list(setup_moves);
                                 MagicCube.TwistData[] reverse_setup = setup_twists.toArray(new MagicCube.TwistData[0]);
                                 Macro.reverse(reverse_setup);
                                 hist.removeLastMark(History.MARK_SETUP_MOVES);
-                                appendSequence(reverse_setup);
+                                applySequence(reverse_setup);
                             }
                             view.append(clearStatus); // Will erase the above labels.
                         }
@@ -731,6 +738,7 @@ public class MC4DSwing extends JFrame {
         ClassLoader cl = getClass().getClassLoader();
         return new ImageIcon(cl.getResource(path));
     }
+
 
     /**
      * A fully-functional 4D Rubik's Cube.
@@ -803,45 +811,17 @@ public class MC4DSwing extends JFrame {
                 this.scramblechenfrengensen = scramblechens;
             }
 
-            /**
-             * David Smith's wondrous Goldilock's function which produces the (safely)
-             * smallest number of scrambling twists needed to fully scramble any puzzle.
-             * 
-             * Where
-             * ln(x) = natural logarithm of x
-             * log4(x) = base 4 logarithm of x = ln(x)/ln(4) = ln(x)/1.386
-             * AveNumTwists = (nPieces*nFaces/(nStickers - n1CPieces)) * (0.577+ln(nPieces))
-             * Number of Twists to Scramble (round to nearest integer) = AveNumTwists * (d-1+log4(nFaces/(2*d)))
-             * 
-             * @see https://groups.yahoo.com/neo/groups/4D_Cubing/conversations/messages/1676
-             * 
-             * @param nPieces Number of pieces in the puzzle (including 1-colored pieces)
-             * @param nFaces Number of faces in the puzzle
-             * @param nStickers Number of stickers in the puzzle
-             * @param n1CPieces Number of 1-colored pieces in the puzzle
-             * @param d Dimension of the puzzle
-             */
-            public int goldilocks(int nPieces, int nFaces, int nStickers, int n1CPieces, int d) {
-                double dpieces = nPieces, dfaces = nFaces, dstickers = nStickers, d1cpieces = n1CPieces;
-                double aveNumTwists = (dpieces * dfaces / (dstickers - d1cpieces)) * (0.577 + Math.log(dpieces));
-                return (int) Math.round(aveNumTwists * (d - 1 + log4(dfaces / (2.0 * d))));
-            }
-
-            private double log4(double x) {
-                return Math.log(x) / Math.log(4);
-            }
-
             @Override
             public void doit(ActionEvent e) {
+                if(puzzleManager.puzzleDescription.getEdgeLength() == 1) {
+                    // Avoids issue 102 (Scrambling length-1 puzzles locks up the program).
+                    setStatus("Can't scramble puzzles with edge length 1.", true);
+                    return;
+                }
                 scrambleState = SCRAMBLE_NONE; // do first to avoid issue 62 (fanfare on scramble).
                 reset.actionPerformed(e);
                 int previous_face = -1;
-                int totalTwistsNeededToFullyScramble = goldilocks(
-                    puzzleManager.puzzleDescription.nCubies(),
-                    puzzleManager.puzzleDescription.nFaces(),
-                    puzzleManager.puzzleDescription.nStickers(),
-                    puzzleManager.puzzleDescription.getNumCubiesWithNumColors(1),
-                    MagicCube.NDIMS);
+                int totalTwistsNeededToFullyScramble = puzzleManager.twistsNeededToFullyScramble();
                 int scrambleTwists = scramblechenfrengensen == -1 ? totalTwistsNeededToFullyScramble : scramblechenfrengensen;
                 if(scramblechenfrengensen == -1)
                     System.out.println("Performing " + scrambleTwists + " scrambling twists");
@@ -929,14 +909,14 @@ public class MC4DSwing extends JFrame {
                 else
                     minorVersion = "." + minorVersion;
                 JOptionPane.showMessageDialog(MC4DSwing.this,
-                    "<html><center>" +
+                    "<html><center><big>" +
                         MagicCube.TITLE +
                         " Version " + MagicCube.PUZZLE_MAJOR_VERSION + minorVersion +
-                        "<br>Copyright 2005 by Melinda Green and Don Hatch" +
-                        "<br>with invaluable help from Jay Berkenbilt, Roice Nelson," +
-                        "<br>and the members of the MC4D mailing list." +
+                        "</big><br>Copyright 2005 by Melinda Green and Don Hatch</center>" +
+                        "<br>With invaluable help from Jay Berkenbilt, Roice Nelson," +
+                        "and the members of the MC4D mailing list." +
                         "<br>http://superliminal.com/cube/cube.htm" +
-                        "</center></html>");
+                        "</html>");
             }
         });
         final JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", MagicCube.DEBUGGING, false, helpmenu);
@@ -955,7 +935,6 @@ public class MC4DSwing extends JFrame {
             }
         });
         helpmenu.add(debug_checkbox);
-        History.setDebugging(debug_checkbox.isSelected());
 
         JMenuBar menubar = new JMenuBar();
         menubar.add(filemenu);
@@ -1007,6 +986,9 @@ public class MC4DSwing extends JFrame {
         initTabs(); // to show controls
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));
+
+        // Do this after loading initial puzzle to avoid console spam while loading long log file.
+        History.setDebugging(debug_checkbox.isSelected());
     } // end MC4DSwing
 
 
@@ -1128,6 +1110,8 @@ public class MC4DSwing extends JFrame {
         // but that's broken for Don, so...
         boolean modified = ae.getID() == ActionEvent.CTRL_MASK;
         return modified ? -1 : 1;
+        // NOTE: This may be causing a problem when using slicemasks on Windows 10 or with Swedish keyboards
+        // As reported by Joel Karlsson. He found that using <alt> instead of <ctrl> is a workaround.
     }
 
     private void initTabs() {
@@ -1250,7 +1234,7 @@ public class MC4DSwing extends JFrame {
             public void currentChanged() {
                 saveitem.setEnabled(true);
                 cheatitem.setEnabled(hist.hasPreviousMove());
-                solveitem.setEnabled(!puzzleManager.isSolved() && puzzleManager.puzzleDescription.getEdgeLength() < 4);
+                solveitem.setEnabled(!puzzleManager.isSolved());
                 updateTwistsLabel();
                 if(puzzleManager.isSolved()) {
                     int intlen = (int) puzzleManager.puzzleDescription.getEdgeLength();
@@ -1258,21 +1242,29 @@ public class MC4DSwing extends JFrame {
                         return; // No soup for you!
                     switch(scrambleState) {
                         case SCRAMBLE_PARTIAL:
+                            // TIP: To help debug full solution handling, comment out these lines 
+                            // including the break statement and then solve a single random twist. 
                             setStatus("Solved!");
                             Audio.play(Audio.Sound.CORRECT); // Just a little "attaboy" sound.
                             break;
                         case SCRAMBLE_FULL:
                             setStatus("Solved!");
-                            // A really flashy reward.
+                            String puzzle = puzzleManager.puzzleDescription.getSchlafliProduct() + intlen;
+                            int previous_full_solves = PropertyManager.getInt("full" + puzzle, 0);
+                            PropertyManager.userprefs.setProperty("full" + puzzle, "" + (previous_full_solves + 1)); // Remember solved puzzles.
+                            int min_scrambles = puzzleManager.twistsNeededToFullyScramble();
+                            if(previous_full_solves > 0 || min_scrambles < MagicCube.MIN_SCRAMBLE_TWISTS_FOR_FANFARE) {
+                                // Only a small reward since the user has already solved this puzzle or it's too easy.
+                                Audio.play(Audio.Sound.CORRECT);
+                                break;
+                            }
+                            // A really flashy reward for difficult first-time solutions.
                             Congratulations congrats = new Congratulations(
                                 "<html>" +
-                                    "<center><H1>You have solved the " +
-                                    puzzleManager.puzzleDescription.getSchlafliProduct() + " " + intlen +
-                                    "!</H1></center>" +
-                                    "<br>You may want to use File > Save As to archive your solution." +
-                                    "<br>If this is a first for you or it is a record, consider submitting it to" +
+                                    "<center><H1>You have solved the " + puzzle + "!</H1></center>" +
+                                    "<br>You may want to use File > Save As to archive your solution, then copy it somewhere safe." +
+                                    "<br>If this is a first for you or it is a record, consider submitting it via" +
                                     "<br>http://superliminal.com/cube/halloffame.htm" +
-                                    "<br><br><p><center>Click this window to close.</center></p>" +
                                     "</html>");
                             congrats.setVisible(true);
                             congrats.start();
@@ -1340,13 +1332,12 @@ public class MC4DSwing extends JFrame {
             rotateMode.add(ctrlClickLabel);
             rotateMode.add(Box.createHorizontalGlue());
             ctrlClickLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            final JCheckBox mute = new JCheckBox("Mute Sound Effects", PropertyManager.getBoolean("muted", false));
+            final JCheckBox mute = new JCheckBox("Mute Sound Effects", PropertyManager.getBoolean(MagicCube.MUTED, false));
             mute.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     boolean muted = mute.isSelected();
-                    PropertyManager.userprefs.setProperty("muted", "" + muted);
-                    Audio.setMuted(muted);
+                    PropertyManager.userprefs.setProperty(MagicCube.MUTED, "" + muted);
                 }
             });
             class MyLabel extends JLabel {

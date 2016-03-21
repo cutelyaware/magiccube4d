@@ -11,6 +11,10 @@ import java.awt.Color;
  * @author Melinda Green & Don Hatch
  */
 public class MagicCube {
+    // Disallows instantiation of static utility class.
+    private MagicCube() {
+    }
+
     /**
      * Version constants
      */
@@ -24,6 +28,8 @@ public class MagicCube {
     public final static int
         NDIMS = 4,
         DEFAULT_LENGTH = 3;
+
+    public final static int MIN_SCRAMBLE_TWISTS_FOR_FANFARE = 21;
 
     public final static String DEFAULT_PUZZLE = "{4,3,3}";
     public final static String SUPPORTED_PUZZLES[][] = {
@@ -67,9 +73,6 @@ public class MagicCube {
     public final static int
         CCW = 1,
         CW = -1;
-
-    // disallows instantiation of utility class
-    private MagicCube() {}
 
     /**
      * Indexing data for a sticker or a grip.
@@ -155,7 +158,8 @@ public class MagicCube {
         LOG_FILE = "MagicCube4D.log", // in user's home directory
         FACE_COLORS_FILE = "facecolors.txt", // relative to executable
         MAGIC_NUMBER = "MagicCube4D", // 1st string in log and macro files for sanity checking
-        DEBUGGING = "debugging"; // Shared Property Manager key for toggling debugging code.
+        DEBUGGING = "debugging", // Shared Property Manager key for toggling debugging code.
+        MUTED = "muted"; // Whether to play sounds.
 
     public final static Color
         SKY = new Color(20, 170, 235),

@@ -246,7 +246,12 @@ public class History {
         clear(edgeLength);
     }
 
-    public void append(int stickerid, int dir, int slicesmask) {
+    /**
+     * Adds a move to the end.
+     * NOTE: Private because it is used internally and is easily confused with the apply() methods
+     * which operate relative to the current node.
+     */
+    private void append(int stickerid, int dir, int slicesmask) {
         if(slicesmask == 0)
             slicesmask = 1; // 0 means slicemask 1 so keep them consistent so they always compare equal.
         HistoryNode node = getPrevious();
@@ -266,13 +271,8 @@ public class History {
     /**
      * Simply calls 3-arg version with data from given move.
      */
-    public void append(MagicCube.TwistData move) {
+    private void append(MagicCube.TwistData move) {
         append(move.grip.id_within_puzzle, move.direction, move.slicemask);
-    }
-
-    public void append(MagicCube.TwistData[] moves) {
-        for(MagicCube.TwistData move : moves)
-            append(move.grip.id_within_puzzle, move.direction, move.slicemask);
     }
 
     /**
@@ -299,6 +299,11 @@ public class History {
      */
     public void apply(MagicCube.TwistData move) {
         apply(move.grip, move.direction, move.slicemask);
+    }
+
+    public void apply(MagicCube.TwistData[] moves) {
+        for(MagicCube.TwistData move : moves)
+            apply(move);
     }
 
     /**
@@ -365,6 +370,13 @@ public class History {
         goTo(current.next);
         return true;
     }
+    /**
+     * Looks either forwards or backwards for a given mark and makes it the current node if found.
+     * 
+     * @param mark Mark to search for.
+     * @param backwards Direction to search.
+     * @return true if found and current changed, false otherwise.
+     */
     public boolean goTowardsMark(char mark, boolean backwards) {
         HistoryNode node = findMark(mark, backwards);
         if(node == null)
@@ -423,8 +435,8 @@ public class History {
      * @return true if history has a previous actual twist or rotate.
      */
     public boolean hasPreviousMove() {
-        for(HistoryNode node = current == null ? last : current; node != null; node = node.prev)
-            if(node.stickerid != -1)
+        for(HistoryNode node = current == null ? last : current; node != null && node.prev != null; node = node.prev)
+            if(node.prev.stickerid != -1)
                 return true;
         return false;
     }
@@ -433,9 +445,9 @@ public class History {
      * @return the last actual twist or rotate.
      */
     public HistoryNode getPreviousMove() {
-        for(HistoryNode node = current == null ? last : current; node != null; node = node.prev)
-            if(node.stickerid != -1)
-                return node;
+        for(HistoryNode node = current == null ? last : current; node != null && node.prev != null; node = node.prev)
+            if(node.prev.stickerid != -1)
+                return node.prev;
         return null;
     }
 
@@ -451,7 +463,7 @@ public class History {
      * @return most recent history node whether actual move or not.
      */
     private HistoryNode getPrevious() {
-        return(current != null ? current.prev : last);
+        return current != null ? current.prev : last;
     }
 
     /**
@@ -516,13 +528,17 @@ public class History {
         removeAllMarks(MARK_ANY);
     }
 
+    /**
+     * @return true if at a given mark or a move preceeded by it, false otherwise.
+     */
     public boolean atMark(int mark) {
         if(current != null && current.stickerid == -1 && (mark == MARK_ANY || current.mark == mark))
             return true;
         //Go through all marks at the current position.
-        for(HistoryNode node = (current != null ? current.prev : last); node != null && node.stickerid == -1; node = node.prev)
+        for(HistoryNode node = (current == null ? last : current.prev); node != null && node.stickerid == -1; node = node.prev)
             if(node.stickerid == -1 && (mark == MARK_ANY || node.mark == mark))
                 return true;
+        // TODO: Make it also look forward from a current mark to the next move.
         return false;
     }
 
@@ -541,55 +557,6 @@ public class History {
         while(n != null && n.mark != mark)
             n = backwards ? n.prev : n.next;
         return n;
-    }
-
-    public void undoToMark(char mark) {
-        Assert(findMark(mark, true) != null);
-        while(stepBackwardsTowardsMark(mark) != null)
-            ;
-    }
-
-    private MagicCube.TwistData stepBackwardsTowardsMark(int mark) {
-        // Continue searching backwards for a potential undo
-        for(HistoryNode node = getPrevious(); node != null; node = node.prev)
-            if(node.stickerid == -1 && node.mark == mark)
-                return undo();
-        return null;
-    }
-
-    private MagicCube.TwistData stepForwardsTowardsMark(int mark) {
-        // Search forwards for a potential redo
-        for(HistoryNode node = current; node != null; node = node.next)
-            if(node.stickerid == -1 && node.mark == mark)
-                return redo();
-        return null;
-    }
-
-    /**
-     * Executes an undo or redo.
-     * If forward_first is true and we are not at the mark, then search
-     * forward first and search backward only if the mark is not ahead of us.
-     * Otherwise, search backward first and search forward only if
-     * the mark is not behind us. Being able to choose which way to go
-     * first makes it useful to have multiple marks with the same identifier.
-     * 
-     * @return resulting twist if successful, null if already at the mark or no such mark.
-     */
-    public MagicCube.TwistData stepTowardsMark(int mark, boolean forward_first) {
-        if(atMark(mark))
-            return null; // already at the mark
-        MagicCube.TwistData status;
-        if(!forward_first) {
-            status = this.stepBackwardsTowardsMark(mark);
-            if(status != null)
-                return status;
-        }
-        status = this.stepForwardsTowardsMark(mark);
-        if(status != null)
-            return status;
-        if(forward_first)
-            status = this.stepBackwardsTowardsMark(mark);
-        return status;
     }
 
 

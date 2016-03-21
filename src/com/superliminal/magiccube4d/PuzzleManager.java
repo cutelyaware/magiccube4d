@@ -605,11 +605,6 @@ public class PuzzleManager
     }
 
 
-    //
-    // Everything from here down is just for testing/example purposes.
-    // though the scramble methods are public since they could be useful.
-    // 
-
     public void scramble(int nTwists) {
         if(puzzleDescription == null)
             return;
@@ -637,14 +632,47 @@ public class PuzzleManager
         }
     }
 
-    public void scrambleFully() {
+
+    /**
+     * David Smith's wondrous Goldilock's function which produces the (safely)
+     * smallest number of scrambling twists needed to fully scramble any puzzle.
+     * 
+     * Where
+     * ln(x) = natural logarithm of x
+     * log4(x) = base 4 logarithm of x = ln(x)/ln(4) = ln(x)/1.386
+     * AveNumTwists = (nPieces*nFaces/(nStickers - n1CPieces)) * (0.577+ln(nPieces))
+     * Number of Twists to Scramble (round to nearest integer) = AveNumTwists * (d-1+log4(nFaces/(2*d)))
+     * 
+     * @see https://groups.yahoo.com/neo/groups/4D_Cubing/conversations/messages/1676
+     * 
+     * @param nPieces Number of pieces in the puzzle (including 1-colored pieces)
+     * @param nFaces Number of faces in the puzzle
+     * @param nStickers Number of stickers in the puzzle
+     * @param n1CPieces Number of 1-colored pieces in the puzzle
+     * @param d Dimension of the puzzle
+     */
+    public static int goldilocks(int nPieces, int nFaces, int nStickers, int n1CPieces, int d) {
+        double dpieces = nPieces, dfaces = nFaces, dstickers = nStickers, d1cpieces = n1CPieces;
+        double aveNumTwists = (dpieces * dfaces / (dstickers - d1cpieces)) * (0.577 + Math.log(dpieces));
+        return (int) Math.round(aveNumTwists * (d - 1 + log4(dfaces / (2.0 * d))));
+    }
+
+    private static double log4(double x) {
+        return Math.log(x) / Math.log(4);
+    }
+
+    public int twistsNeededToFullyScramble() {
         if(puzzleDescription == null)
-            return;
-        int totalTwistsNeededToFullyScramble =
-            puzzleDescription.nFaces() // needed twists is proportional to nFaces
-                * (int) puzzleDescription.getEdgeLength() // and to number of slices
-                * 2; // and to a fudge factor that brings the 3^4 close to the original 40 twists.
-        scramble(totalTwistsNeededToFullyScramble + rand.nextInt(10)); // add a few random twists so parity is unpredictable.
+            throw new IllegalStateException();
+        return goldilocks(puzzleDescription.nCubies(),
+            puzzleDescription.nFaces(),
+            puzzleDescription.nStickers(),
+            puzzleDescription.getNumCubiesWithNumColors(1),
+            MagicCube.NDIMS);
+    }
+
+    public void scrambleFully() {
+        scramble(twistsNeededToFullyScramble());
     }
 
     public static void main(String[] args) {

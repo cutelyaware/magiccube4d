@@ -20,7 +20,8 @@ import com.superliminal.util.ResourceUtils;
  */
 @SuppressWarnings("serial")
 public class MC4DApplet extends Applet {
-    public MC4DApplet() {}
+    public MC4DApplet() {
+    }
 
     @Override
     public void init() {
@@ -39,7 +40,7 @@ public class MC4DApplet extends Applet {
         final MC4DView.ItemCompleteCallback applyToHistory = new MC4DView.ItemCompleteCallback() {
             @Override
             public void onItemComplete(MagicCube.TwistData twist) {
-                hist.append(twist);
+                hist.apply(twist);
             }
         };
         view.addStickerListener(new MC4DView.StickerListener() {
