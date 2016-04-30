@@ -1,0 +1,1 @@
+Freeware with attribution requested.
