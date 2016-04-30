@@ -29,22 +29,34 @@ public class Audio {
         correct,
         fanfare;
 
+    // This is a workaround for issue #114 on Ubuntu: "Exception thrown initializing audio on Ubuntu".
+    // If any exceptions are thrown by the audio system I set this to true and check it before
+    // performing future operations. So once broken, there will be no audio for the session.
+    private static boolean audioBroken = false;
+
     public Audio() {
-        twisting = get("white1000.wav", .3f);
-        highlight = get("click.wav", .0f);
-        snap = get("close.wav", .7f);
-        correct = get("correct.wav", .8f);
-        fanfare = get("fanfare.wav", 1);
+        try {
+            twisting = get("white1000.wav", .3f);
+            highlight = get("click.wav", .0f);
+            snap = get("close.wav", .7f);
+            correct = get("correct.wav", .8f);
+            fanfare = get("fanfare.wav", 1);
+        } catch(Throwable t) {
+            audioBroken = true;
+            t.printStackTrace();
+        }
+        if(audioBroken)
+            return; // Don't bother listening for mute changes when we're not going to do anything.
         // Listen for changes to the "muted" property and cancel all sounds when true.
         PropertyManager.top.addPropertyListener(new PropertyListener() {
             @Override
             public void propertyChanged(String property, String newval) {
                 if("true".equals(newval)) {
-                    twisting.stop();
-                    highlight.stop();
-                    snap.stop();
-                    correct.stop();
-                    fanfare.stop();
+                    stop(Sound.TWISTING);
+                    stop(Sound.HIGHLIGHT);
+                    stop(Sound.SNAP);
+                    stop(Sound.CORRECT);
+                    stop(Sound.FANFARE);
                 }
             }
         }, MagicCube.MUTED);
@@ -53,11 +65,23 @@ public class Audio {
     public static void play(Sound sound) {
         play(sound, false);
     }
+
     public static void loop(Sound sound) {
         play(sound, true);
     }
+
     public static void stop(Sound sound) {
-        sound2clip(sound).stop();
+        if(audioBroken)
+            return;
+        Clip clip = sound2clip(sound);
+        if(clip != null) {
+            try {
+                clip.stop();
+            } catch(Throwable t) {
+                audioBroken = true;
+                t.printStackTrace();
+            }
+        }
     }
 
     private static Clip sound2clip(Sound sound) {
@@ -78,15 +102,22 @@ public class Audio {
     }
 
     private static void play(Sound sound, boolean looped) {
-        if(PropertyManager.getBoolean(MagicCube.MUTED, false))
-            return; // Don't start any sounds while muted.
+        if(PropertyManager.getBoolean(MagicCube.MUTED, false) || audioBroken)
+            return; // Don't start any sounds while muted or broken.
         Clip clip = sound2clip(sound);
-        clip.setFramePosition(0);
-        clip.setLoopPoints(0, clip.getFrameLength() - 1);
-        if(looped)
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-        else
-            clip.start();
+        if(clip == null)
+            return; // Just being defensive.
+        try {
+            clip.setFramePosition(0);
+            clip.setLoopPoints(0, clip.getFrameLength() - 1);
+            if(looped)
+                clip.loop(Clip.LOOP_CONTINUOUSLY);
+            else
+                clip.start();
+        } catch(Throwable t) {
+            audioBroken = true;
+            t.printStackTrace();
+        }
     }
 
     private Clip get(String fname, float scale) {
@@ -104,6 +135,7 @@ public class Audio {
             float max = volctrl.getMaximum();
             volctrl.setValue(min + (max - min) * scale);// newVal - the value of volume slider
         } catch(Exception e) {
+            audioBroken = true;
             e.printStackTrace();
         }
         return clip;
