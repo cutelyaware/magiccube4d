@@ -207,10 +207,26 @@ public class MacroManager implements PuzzleManager.Highlighter {
         return Math.abs(a) < eps || Math.abs(Math.PI - a) < eps;
     }
 
+    private boolean coplanar(double p1[], double p2[], double p3[], double p4[]) {    
+    	double[][] M = new double[][] { p1, p2, p3, p4 };
+    	double det = VecMath.detDestructive(VecMath.transpose(M));
+    	double eps = 1e-6;
+    	return Math.abs(det) < eps;
+    }
+    
     private boolean refDeterminesUniqueOrientation(PuzzleDescription puzzle, MagicCube.Stickerspec ref) {
         // We need to make sure the refs will determine a unique orientation.
         // There are a number of click patterns which will fail to do so.
 
+    	// The first clicked sticker can't be a face center,
+    	// because that will be the implicit point.
+    	if(nrefs == 0) {
+            if(VecMath.equals(
+                Macro.getMacroRefFaceCoords(ref, puzzle),
+                Macro.getMacroRefCoords(ref, puzzle), 1e-6))
+                return false;
+    	}
+    	
         // Make sure the same ref isn't used twice.
         for(int i = 0; i < nrefs; i++) {
             if(refStickers[i].id_within_puzzle == ref.id_within_puzzle)
@@ -243,6 +259,17 @@ public class MacroManager implements PuzzleManager.Highlighter {
                 return false;
         }
 
+        // All 4 ref points must not be coplanar.
+        if(nrefs == 2) {
+        	if(coplanar(
+        		Macro.getMacroRefFaceCoords(refStickers[0], puzzle),
+                Macro.getMacroRefCoords(refStickers[0], puzzle),
+                Macro.getMacroRefCoords(refStickers[1], puzzle),
+                Macro.getMacroRefCoords(ref, puzzle)))
+        		return false;
+        }
+        
+        
         return true;
     }
 
