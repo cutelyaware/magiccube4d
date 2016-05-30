@@ -87,7 +87,8 @@ public class MC4DSwing extends JFrame {
     private final static int
         SCRAMBLE_NONE = 0, // Unscrambled
         SCRAMBLE_PARTIAL = 1, // Some small number of scrambles
-        SCRAMBLE_FULL = 2; // Fully scrambled
+        SCRAMBLE_FULL = 2, // Fully scrambled
+        SCRAMBLE_SOLVED = 3; // Was solved by user even if not currently solved
     private int scrambleState = SCRAMBLE_NONE;
 
     // Macro state
@@ -146,6 +147,12 @@ public class MC4DSwing extends JFrame {
     private void updateTwistsLabel() {
         int twists = hist.countTwists();
         twistLabel.setText("Total Twists: " + twists);
+    }
+
+    private void updateEditMenuItems() {
+        saveitem.setEnabled(true);
+        cheatitem.setEnabled(hist.hasPreviousMove());
+        solveitem.setEnabled(!puzzleManager.isSolved());
     }
 
     /**
@@ -1198,6 +1205,8 @@ public class MC4DSwing extends JFrame {
             updateTwistsLabel();
         } // end reading log file
         syncPuzzleStateWithHistory();
+        if((scrambleState == SCRAMBLE_PARTIAL || scrambleState == SCRAMBLE_FULL) && puzzleManager.isSolved())
+            scrambleState = SCRAMBLE_SOLVED; // Because log files from older MC4D versions didn't have the solved state.
         view = new MC4DView(puzzleManager, rotations);
         view.addStickerListener(stickerListener);
         view.addKeyListener(new KeyAdapter() {
@@ -1232,22 +1241,22 @@ public class MC4DSwing extends JFrame {
         History.HistoryListener history_listener = new History.HistoryListener() {
             @Override
             public void currentChanged() {
-                saveitem.setEnabled(true);
-                cheatitem.setEnabled(hist.hasPreviousMove());
-                solveitem.setEnabled(!puzzleManager.isSolved());
+                updateEditMenuItems();
                 updateTwistsLabel();
-                if(puzzleManager.isSolved()) {
+                if((scrambleState == SCRAMBLE_PARTIAL || scrambleState == SCRAMBLE_FULL) && puzzleManager.isSolved()) {
                     int intlen = (int) puzzleManager.puzzleDescription.getEdgeLength();
                     if(intlen <= 1)
                         return; // No soup for you!
                     switch(scrambleState) {
                         case SCRAMBLE_PARTIAL:
+                            scrambleState = SCRAMBLE_SOLVED; // Credit the user for solving.
                             // TIP: To help debug full solution handling, comment out these lines 
                             // including the break statement and then solve a single random twist. 
                             setStatus("Solved!");
                             Audio.play(Audio.Sound.CORRECT); // Just a little "attaboy" sound.
                             break;
                         case SCRAMBLE_FULL:
+                            scrambleState = SCRAMBLE_SOLVED; // Credit the user for solving.
                             setStatus("Solved!");
                             String puzzle = puzzleManager.puzzleDescription.getSchlafliProduct() + intlen;
                             int previous_full_solves = PropertyManager.getInt("full" + puzzle, 0);
@@ -1270,12 +1279,11 @@ public class MC4DSwing extends JFrame {
                             congrats.start();
                             break;
                     }
-                    scrambleState = SCRAMBLE_NONE;
                 } // end if(isSolved())
             }
         }; // end HistoryListener impl
         hist.setHistoryListener(history_listener);
-        history_listener.currentChanged(); // Just to sync the enabled states of the Edit menu items.
+        updateEditMenuItems();
         viewcontainer.removeAll();
         viewcontainer.add(view, "Center");
     } // end initPuzzle
