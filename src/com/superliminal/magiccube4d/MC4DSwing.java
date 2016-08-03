@@ -1148,7 +1148,6 @@ public class MC4DSwing extends JFrame {
         macroControlsContainer.validate();
     }
 
-
     private void initPuzzle(String log) {
         scrambleState = SCRAMBLE_NONE;
         double initial_edge_length = MagicCube.DEFAULT_LENGTH;
