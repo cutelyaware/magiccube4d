@@ -672,6 +672,16 @@ public class MC4DSwing extends JFrame {
         }
     };
 
+    /**
+     * An ItemCompleteCallback that causes checking for solved and updates the puzzle state.
+     */
+    private final MC4DView.ItemCompleteCallback checkSolved = new MC4DView.ItemCompleteCallback() {
+        @Override
+        public void onItemComplete(MagicCube.TwistData twist) {
+            history_listener.currentChanged();
+        }
+    };
+
 
     /**
      * One of the main controllers, this one listens to the view object for reports of clicks on stickers.
@@ -729,6 +739,7 @@ public class MC4DSwing extends JFrame {
                                 applySequence(reverse_setup);
                             }
                             view.append(clearStatus); // Will erase the above labels.
+                            view.append(checkSolved); // Will check for solved after animation completes. Issue 124 (No fanfare when macro solved)
                         }
                     }
                 }
@@ -1142,6 +1153,8 @@ public class MC4DSwing extends JFrame {
         scrambleState = SCRAMBLE_NONE;
         double initial_edge_length = MagicCube.DEFAULT_LENGTH;
         int int_edge_length = (int) Math.ceil(initial_edge_length);
+        if(hist != null) // Stop listening to last History.
+            hist.setHistoryListener(null);
         hist = new History(int_edge_length);
         if(log != null) { // read the log file, possibly reinitializing length and history.
             File logfile = new File(log);
@@ -1238,56 +1251,59 @@ public class MC4DSwing extends JFrame {
                 }
             }
         });
-        History.HistoryListener history_listener = new History.HistoryListener() {
-            @Override
-            public void currentChanged() {
-                updateEditMenuItems();
-                updateTwistsLabel();
-                if((scrambleState == SCRAMBLE_PARTIAL || scrambleState == SCRAMBLE_FULL) && puzzleManager.isSolved()) {
-                    int intlen = (int) puzzleManager.puzzleDescription.getEdgeLength();
-                    if(intlen <= 1)
-                        return; // No soup for you!
-                    switch(scrambleState) {
-                        case SCRAMBLE_PARTIAL:
-                            scrambleState = SCRAMBLE_SOLVED; // Credit the user for solving.
-                            // TIP: To help debug full solution handling, comment out these lines 
-                            // including the break statement and then solve a single random twist. 
-                            setStatus("Solved!");
-                            Audio.play(Audio.Sound.CORRECT); // Just a little "attaboy" sound.
-                            break;
-                        case SCRAMBLE_FULL:
-                            scrambleState = SCRAMBLE_SOLVED; // Credit the user for solving.
-                            setStatus("Solved!");
-                            String puzzle = puzzleManager.puzzleDescription.getSchlafliProduct() + intlen;
-                            int previous_full_solves = PropertyManager.getInt("full" + puzzle, 0);
-                            PropertyManager.userprefs.setProperty("full" + puzzle, "" + (previous_full_solves + 1)); // Remember solved puzzles.
-                            int min_scrambles = puzzleManager.twistsNeededToFullyScramble();
-                            if(previous_full_solves > 0 || min_scrambles < MagicCube.MIN_SCRAMBLE_TWISTS_FOR_FANFARE) {
-                                // Only a small reward since the user has already solved this puzzle or it's too easy.
-                                Audio.play(Audio.Sound.CORRECT);
-                                break;
-                            }
-                            // A really flashy reward for difficult first-time solutions.
-                            Congratulations congrats = new Congratulations(
-                                "<html>" +
-                                    "<center><H1>You have solved the " + puzzle + "!</H1></center>" +
-                                    "<br>You may want to use File > Save As to archive your solution, then copy it somewhere safe." +
-                                    "<br>If this is a first for you or it is a record, consider submitting it via" +
-                                    "<br>http://superliminal.com/cube/halloffame.htm" +
-                                    "</html>");
-                            congrats.setVisible(true);
-                            congrats.start();
-                            break;
-                    }
-                } // end if(isSolved())
-            }
-        }; // end HistoryListener impl
         hist.setHistoryListener(history_listener);
         updateEditMenuItems();
         viewcontainer.removeAll();
         viewcontainer.add(view, "Center");
     } // end initPuzzle
 
+    /**
+     * Watches puzzle changes for solutions and keeps related UI in sync.
+     */
+    private History.HistoryListener history_listener = new History.HistoryListener() {
+        @Override
+        public void currentChanged() {
+            updateEditMenuItems();
+            updateTwistsLabel();
+            if((scrambleState == SCRAMBLE_PARTIAL || scrambleState == SCRAMBLE_FULL) && puzzleManager.isSolved()) {
+                int intlen = (int) puzzleManager.puzzleDescription.getEdgeLength();
+                if(intlen <= 1)
+                    return; // No soup for you!
+                switch(scrambleState) {
+                    case SCRAMBLE_PARTIAL:
+                        scrambleState = SCRAMBLE_SOLVED; // Credit the user for solving.
+                        // TIP: To help debug full solution handling, comment out these lines 
+                        // including the break statement and then solve a single random twist. 
+                        setStatus("Solved!");
+                        Audio.play(Audio.Sound.CORRECT); // Just a little "attaboy" sound.
+                        break;
+                    case SCRAMBLE_FULL:
+                        scrambleState = SCRAMBLE_SOLVED; // Credit the user for solving.
+                        setStatus("Solved!");
+                        String puzzle = puzzleManager.puzzleDescription.getSchlafliProduct() + intlen;
+                        int previous_full_solves = PropertyManager.getInt("full" + puzzle, 0);
+                        PropertyManager.userprefs.setProperty("full" + puzzle, "" + (previous_full_solves + 1)); // Remember solved puzzles.
+                        int min_scrambles = puzzleManager.twistsNeededToFullyScramble();
+                        if(previous_full_solves > 0 || min_scrambles < MagicCube.MIN_SCRAMBLE_TWISTS_FOR_FANFARE) {
+                            // Only a small reward since the user has already solved this puzzle or it's too easy.
+                            Audio.play(Audio.Sound.CORRECT);
+                            break;
+                        }
+                        // A really flashy reward for difficult first-time solutions.
+                        Congratulations congrats = new Congratulations(
+                            "<html>" +
+                                "<center><H1>You have solved the " + puzzle + "!</H1></center>" +
+                                "<br>You may want to use File > Save As to archive your solution, then copy it somewhere safe." +
+                                "<br>If this is a first for you or it is a record, consider submitting it via" +
+                                "<br>http://superliminal.com/cube/halloffame.htm" +
+                                "</html>");
+                        congrats.setVisible(true);
+                        congrats.start();
+                        break;
+                }
+            } // end if(isSolved())
+        }
+    }; // end HistoryListener impl
 
     private void syncPuzzleStateWithHistory() {
         MagicCube.TwistData[] moves = hist.movesArray();
