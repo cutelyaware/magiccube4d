@@ -993,7 +993,7 @@ public class MC4DSwing extends JFrame {
                 progressBar.setVisible(false);
                 hist.clear((int) puzzleManager.puzzleDescription.getEdgeLength());
                 updateTwistsLabel();
-                Color[] userColors = findColors( "facecolors/"+puzzleManager.puzzleDescription.getSchlafliProduct()+".txt");
+                Color[] userColors = findColors( "/facecolors/"+puzzleManager.puzzleDescription.getSchlafliProduct()+".txt");
                 if(userColors != null)
                     puzzleManager.faceColors = userColors;
                 if(view != null)
