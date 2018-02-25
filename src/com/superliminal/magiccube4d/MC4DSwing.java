@@ -993,7 +993,7 @@ public class MC4DSwing extends JFrame {
                 progressBar.setVisible(false);
                 hist.clear((int) puzzleManager.puzzleDescription.getEdgeLength());
                 updateTwistsLabel();
-                Color[] userColors = findColors(puzzleManager.puzzleDescription.nFaces(), MagicCube.FACE_COLORS_FILE);
+                Color[] userColors = findColors(puzzleManager.puzzleDescription.nFaces(), "./facecolors/"+puzzleManager.puzzleDescription.getSchlafliProduct()+".txt");
                 if(userColors != null)
                     puzzleManager.faceColors = userColors;
                 if(view != null)
@@ -1500,9 +1500,13 @@ public class MC4DSwing extends JFrame {
     } // end readColorLists()
 
     private static Color[] findColors(int len, String fname) {
-        for(Color[] cols : readColorLists(fname)) {
-            if(cols.length == len)
-                return cols;
+        for(Color[] cols : readColorLists(fname)){
+        	if(cols.length == len)
+	 	return cols;
+        }
+        for(Color[] cols : readColorLists(MagicCube.FACE_COLORS_FILE)){
+        	if(cols.length == len)
+	 	return cols;
         }
         return null;
     }
