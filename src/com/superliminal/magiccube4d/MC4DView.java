@@ -261,9 +261,7 @@ public class MC4DView extends Component {
                 super.mouseMoved(me);
                 if(puzzleManager != null) {
                     if(!isInMotion() && puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown()))
-                        ;
-                    repaint();
-                    return;
+                        repaint();
                 }
             }
         });
