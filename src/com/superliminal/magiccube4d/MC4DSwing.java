@@ -95,7 +95,6 @@ public class MC4DSwing extends JFrame {
     private MacroManager macroMgr = new MacroManager(PropertyManager.top.getProperty("macrofile",
         StaticUtils.getHomeDir() + File.separator + "MC4D.macros"));
     private Macro lastMacro;
-//    private int applyingMacro; // -1 == reversed, 0 == not, 1 == forward
 
     // Top level Model and View objects in MVC pattern.
     private History hist; // Contains the list of all moves and marks.
@@ -994,8 +993,8 @@ public class MC4DSwing extends JFrame {
                 hist.clear((int) puzzleManager.puzzleDescription.getEdgeLength());
                 updateTwistsLabel();
                 Color[] userColors = findColors(
-                		puzzleManager.puzzleDescription.getSchlafliProduct(),
-                		puzzleManager.puzzleDescription.nFaces() );
+                    puzzleManager.puzzleDescription.getSchlafliProduct(),
+                    puzzleManager.puzzleDescription.nFaces());
                 if(userColors != null)
                     puzzleManager.faceColors = userColors;
                 if(view != null)
@@ -1501,21 +1500,21 @@ public class MC4DSwing extends JFrame {
         return colorlines.toArray(new Color[0][]);
     } // end readColorLists()
 
-    private static String colorFilename( String schlafli )
+    private static String colorFilename(String schlafli)
     {
-    	return "facecolors" + File.separator + schlafli + ".txt";
+        return "facecolors" + File.separator + schlafli + ".txt";
     }
-    
-    private static Color[] findColors( String schlafli, int len ) 
+
+    private static Color[] findColors(String schlafli, int len)
     {
-    	String filename = colorFilename( schlafli );
-    	Color[] colors = findColors( len, filename );
-    	if( colors != null )
-    		return colors;
-    	
-    	return findColors( len, MagicCube.FACE_COLORS_FILE );  	
+        String filename = colorFilename(schlafli);
+        Color[] colors = findColors(len, filename);
+        if(colors != null)
+            return colors;
+
+        return findColors(len, MagicCube.FACE_COLORS_FILE);
     }
-    
+
     private static Color[] findColors(int len, String fname) {
         for(Color[] cols : readColorLists(fname)) {
             if(cols.length == len)

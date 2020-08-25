@@ -262,7 +262,7 @@ public class MC4DView extends Component {
                 super.mouseMoved(me);
                 if(puzzleManager != null) {
                     if(!isInMotion() && puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown()))
-                        ;  // TODO(issue #136): typo? possibly causing excessive repainting
+                        ; // TODO(issue #136): typo? possibly causing excessive repainting
                     repaint();
                     return;
                 }
@@ -427,18 +427,17 @@ public class MC4DView extends Component {
                 StaticUtils.fillString(" FPS: " + FPS + sb, 0, getHeight(), Color.white, g);
             }
         }
-        ++numPaints;  // before looking at it
+        ++numPaints; // before looking at it
         if(PropertyManager.getBoolean(MagicCube.DEBUGGING, false)) {
             // Show e.g. "(123 paints)" in upper right of the picture.
             g.setColor(Color.black);
-            String text = "(" + numPaints + " paint" + (numPaints==1?"":"s") + ")";
+            String text = "(" + numPaints + " paint" + (numPaints == 1 ? "" : "s") + ")";
             FontMetrics fontMetrics = g.getFontMetrics();
             g.drawString(text,
-                         /*x=*/getWidth() - 2 - fontMetrics.stringWidth(text),
-                         /*y=*/g.getFontMetrics().getAscent());
+                /* x= */getWidth() - 2 - fontMetrics.stringWidth(text),
+                /* y= */g.getFontMetrics().getAscent());
         }
     } // end paint()
-
 
 
     /**
