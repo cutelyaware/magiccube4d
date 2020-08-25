@@ -2,6 +2,7 @@ package com.superliminal.magiccube4d;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -368,6 +369,8 @@ public class MC4DView extends Component {
             || (puzzleManager != null ? puzzleManager.isAnimating() : isAnimating());
     }
 
+    private int numPaints = 0;
+
     @Override
     public void paint(Graphics g) {
         frames++;
@@ -424,7 +427,18 @@ public class MC4DView extends Component {
                 StaticUtils.fillString(" FPS: " + FPS + sb, 0, getHeight(), Color.white, g);
             }
         }
+        ++numPaints;  // before looking at it
+        if(PropertyManager.getBoolean(MagicCube.DEBUGGING, false)) {
+            // Show e.g. "(123 paints)" in upper right of the picture.
+            g.setColor(Color.black);
+            String text = "(" + numPaints + " paint" + (numPaints==1?"":"s") + ")";
+            FontMetrics fontMetrics = g.getFontMetrics();
+            g.drawString(text,
+                         /*x=*/getWidth() - 2 - fontMetrics.stringWidth(text),
+                         /*y=*/g.getFontMetrics().getAscent());
+        }
     } // end paint()
+
 
 
     /**
