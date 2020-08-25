@@ -189,7 +189,7 @@ public class PuzzleManager
         return true;
     }
 
-    private static PuzzleDescription buildPuzzle(String schlafli, String lengthString, ProgressManager progressView) {
+    private static PuzzleDescription buildPuzzle(String schlafli, String lengthString, final ProgressManager progressView) {
         double len;
         try {
             len = Double.parseDouble(lengthString);
@@ -202,7 +202,32 @@ public class PuzzleManager
         PuzzleDescription newPuzzle = null;
         try
         {
-            newPuzzle = new PolytopePuzzleDescription(schlafli, len, progressView);
+            // NOTE: I don't think the following should be necessary,
+            // since progressView is already final.  But something about
+            // the additional fact that this is in a try block confuses Eclipse
+            // and it won't compile the code with it.
+            final ProgressManager finalMgr = progressView;
+            newPuzzle = new PolytopePuzzleDescription(schlafli, len, new PolytopePuzzleDescription.ProgressCallbacks() {
+                @Override
+                public boolean subtaskInit(String string, int max) {
+                    finalMgr.init(string, max);
+                    return true; // keep going
+                }
+                @Override
+                public boolean subtaskInit(String string) {
+                    finalMgr.init(string);
+                    return true; // keep going
+                }
+                @Override
+                public boolean updateProgress(int progress) {
+                    finalMgr.updateProgress(progress);
+                    return true; // keep going
+                }
+                @Override
+                public boolean subtaskDone() {
+                    return true; // keep going
+                }
+            });
         } catch(Throwable t)
         {
             //t.printStacktrace();
