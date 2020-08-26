@@ -18,7 +18,7 @@ public class MagicCube {
     /**
      * Version constants
      */
-    public final static String PUZZLE_MAJOR_VERSION = "4.3";
+    public final static String PUZZLE_MAJOR_VERSION = "4.4";
     public final static int LOG_FILE_VERSION = 4;
     public final static int MACRO_FILE_VERSION = 3;
 
