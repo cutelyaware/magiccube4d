@@ -62,6 +62,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.superliminal.util.ColorButton;
+import com.superliminal.util.ColorButton.ColorChangeListener;
 import com.superliminal.util.Console;
 import com.superliminal.util.PropControls;
 import com.superliminal.util.PropControls.PropCheckBox;
@@ -941,6 +942,7 @@ public class MC4DSwing extends JFrame {
             @Override
             public void stateChanged(ChangeEvent ce) {
                 History.setDebugging(debug_checkbox.isSelected());
+                view.repaint();
             }
         });
         helpmenu.add(new JMenuItem("Debugging Console")).addActionListener(new ActionListener() {
@@ -1344,6 +1346,12 @@ public class MC4DSwing extends JFrame {
                         view.repaint();
                 }
             };
+            ColorChangeListener color_repainter = new ColorChangeListener() {
+                @Override
+                public void colorChanged(Color newColor) {
+                    view.repaint();
+                }
+            };
             removeAll();
             final JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", true, false, repainter);
             final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", false, true, repainter);
@@ -1424,12 +1432,12 @@ public class MC4DSwing extends JFrame {
             general.add(ctrlRotateByCubie);
             general.add(Box.createVerticalGlue());
             // background controls
-            ColorButton skyColor = new ColorButton("Sky", "sky.color", MagicCube.SKY, null, true);
-            ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND, null, true);
+            ColorButton skyColor = new ColorButton("Sky", "sky.color", MagicCube.SKY, color_repainter, true);
+            ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND, color_repainter, true);
             JCheckBox drawGround = new PropCheckBox("Draw Ground", "ground", true, repainter);
             // outlining controls
             JCheckBox drawOutlines = new PropCheckBox("Draw Outlines", "outlines", false, repainter);
-            ColorButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK, null, true);
+            ColorButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK, color_repainter, true);
             JPanel colors = new JPanel(new SpringLayout());
             colors.add(new JLabel());
             colors.add(skyColor);
