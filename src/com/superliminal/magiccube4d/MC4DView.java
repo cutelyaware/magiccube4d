@@ -383,15 +383,16 @@ public class MC4DView extends Component {
         // antialiasing makes for a beautiful image but can also be expensive to draw therefore
         // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
         if(g instanceof Graphics2D) {
+            Graphics2D g2d = (Graphics2D) g;
             boolean okToAntialias = !isInMotion() && PropertyManager.getBoolean("antialiasing", true);
-            ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
             // Voodoo to remove 1/2 pixel lower-right bias so that all four modes match up:
             // [antialiased,non-antialiased] x [fill,outlines].  Note that this works only
             // when rendering directly to a visible Component (not a BufferedImage).
             // For details, see Issue #138 and
             // https://stackoverflow.com/questions/7701097/java-graphics-fillpolygon-how-to-also-render-right-and-bottom-edges/63645061#answer-63645061 .
-            ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+            g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         }
         // paint the background
         g.setColor(skyOverride == null ? PropertyManager.getColor("sky.color", MagicCube.SKY) : skyOverride);
