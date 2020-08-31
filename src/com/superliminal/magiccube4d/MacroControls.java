@@ -48,7 +48,8 @@ public class MacroControls extends JPanel {
     private Macro selected;
     private final static Font SYMBOL_FONT = new Font("Dialog", Font.PLAIN, 12);
 
-    public MacroControls() {}
+    public MacroControls() {
+    }
 
     public void init(final MacroManager macroMgr, String schlafliSymbol, final Listener l) {
         this.mgr = macroMgr;
@@ -58,11 +59,10 @@ public class MacroControls extends JPanel {
     }
 
     private void init(boolean changed) {
-
         removeAll();
         final JButton moveUp = new JButton("\u25B2"), moveDn = new JButton("\u25BC"), rename = new JButton("Rename"), delete = new JButton("Delete");
-        moveUp.setToolTipText("Move Up");
-        moveDn.setToolTipText("Move Down");
+        moveUp.setToolTipText("Move selected macro up");
+        moveDn.setToolTipText("Move selected macro down");
         moveUp.setFont(SYMBOL_FONT);
         moveDn.setFont(SYMBOL_FONT);
         final Macro macros[] = mgr.getMacros();

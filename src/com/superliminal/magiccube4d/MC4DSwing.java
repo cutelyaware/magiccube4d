@@ -937,7 +937,7 @@ public class MC4DSwing extends JFrame {
                         "</html>");
             }
         });
-        final JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", MagicCube.DEBUGGING, false, helpmenu);
+        final JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", MagicCube.DEBUGGING, false, helpmenu, "Whether to print diagnostic information to the console");
         debug_checkbox.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent ce) {
@@ -1353,8 +1353,8 @@ public class MC4DSwing extends JFrame {
                 }
             };
             removeAll();
-            final JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", true, false, repainter);
-            final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", false, true, repainter);
+            final JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", true, false, repainter, "Control-click will rotate clicked face to the center");
+            final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", false, true, repainter, "Control-click will rotate clicked cubie to the center");
             ButtonGroup ctrlRotateGroup = new ButtonGroup();
             ctrlRotateGroup.add(ctrlRotateByFace);
             ctrlRotateGroup.add(ctrlRotateByCubie);
@@ -1364,14 +1364,7 @@ public class MC4DSwing extends JFrame {
             rotateMode.add(ctrlClickLabel);
             rotateMode.add(Box.createHorizontalGlue());
             ctrlClickLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            final JCheckBox mute = new JCheckBox("Mute Sound Effects", PropertyManager.getBoolean(MagicCube.MUTED, false));
-            mute.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent ae) {
-                    boolean muted = mute.isSelected();
-                    PropertyManager.userprefs.setProperty(MagicCube.MUTED, "" + muted);
-                }
-            });
+            JCheckBox mute = new PropCheckBox("Mute Sound Effects", MagicCube.MUTED, false, repainter, "Whether to allow sound effects");
             class MyLabel extends JLabel {
                 public MyLabel(String text) {
                     super(text);
@@ -1380,39 +1373,40 @@ public class MC4DSwing extends JFrame {
             }
             JPanel sliders = new JPanel(new SpringLayout());
             sliders.add(new MyLabel("Twist Speed"));
-            sliders.add(new PropSlider("twistfactor", repainter, 1, .05f, 5));
+            sliders.add(new PropSlider("twistfactor", repainter, 1, .05f, 5, "Speed of twisting animation"));
             sliders.add(new MyLabel("Drag Speed"));
-            sliders.add(new PropSlider("dragfactor", repainter, 1, .05f, 5));
+            sliders.add(new PropSlider("dragfactor", repainter, 1, .05f, 5, "Amount of rotation per drag distance"));
             sliders.add(new MyLabel("View Scale"));
-            JSlider scaler = new PropSlider("scale", repainter, 1, .1f, 5);
+            JSlider scaler = new PropSlider("scale", repainter, 1, .1f, 5, "Size of puzzle in window");
             viewScaleModel = scaler.getModel();
             sliders.add(scaler);
             sliders.add(new MyLabel("Face Shrink"));
-            sliders.add(new PropSlider("faceshrink", repainter, MagicCube.FACESHRINK, .1f, 1.5f));
+            sliders.add(new PropSlider("faceshrink", repainter, MagicCube.FACESHRINK, .1f, 1.5f, "Size of faces within puzzle"));
             sliders.add(new MyLabel("Sticker Shrink"));
-            sliders.add(new PropSlider("stickershrink", repainter, MagicCube.STICKERSHRINK, .1f, 1.5f));
+            sliders.add(new PropSlider("stickershrink", repainter, MagicCube.STICKERSHRINK, .1f, 1.5f, "Size of stickers within faces"));
             sliders.add(new MyLabel("Eye W Scale"));
-            sliders.add(new PropSlider("eyew", repainter, MagicCube.EYEW, .75f, 4));
+            sliders.add(new PropSlider("eyew", repainter, MagicCube.EYEW, .75f, 4, "Focal length of 4D camera"));
             sliders.setMaximumSize(new Dimension(400, 20));
             SpringUtilities.makeCompactGrid(sliders, 6, 2, 0, 0, 0, 0);
             JPanel general = new JPanel();
             general.setLayout(new BoxLayout(general, BoxLayout.Y_AXIS));
             general.add(sliders);
-            general.add(new PropCheckBox("Show Shadows", "shadows", true, repainter));
-            general.add(new PropCheckBox("Allow Auto-Rotation", "autorotate", true, repainter));
-            general.add(new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter));
-            general.add(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter));
+            general.add(new PropCheckBox("Show Shadows", "shadows", true, repainter, null));
+            general.add(new PropCheckBox("Allow Auto-Rotation", "autorotate", true, repainter, "Whether to keep spinning if mouse released while dragging"));
+            general.add(new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter, "Whether to highlight all stickers of hovered piece or just the hovered sticker"));
+            general.add(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles"));
             general.add(mute);
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
             // quick mode controls
-            final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter);
+            final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
             JPanel quickMode = new JPanel();
             quickMode.setLayout(new BoxLayout(quickMode, BoxLayout.X_AXIS));
             quickMode.add(quick);
             quickMode.add(Box.createHorizontalGlue());
             quick.setAlignmentX(Component.LEFT_ALIGNMENT);
             general.add(quickMode);
-            final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter), justMacros = new PropRadioButton("Just Macros", "quickmacros", true, false, repainter);
+            final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
+            final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", true, false, repainter, "No twist animations for macro sequences");
             allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
             justMacros.setEnabled(PropertyManager.getBoolean("quickmoves", false));
             ButtonGroup quickGroup = new ButtonGroup();
@@ -1434,9 +1428,9 @@ public class MC4DSwing extends JFrame {
             // background controls
             ColorButton skyColor = new ColorButton("Sky", "sky.color", MagicCube.SKY, color_repainter, true);
             ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND, color_repainter, true);
-            JCheckBox drawGround = new PropCheckBox("Draw Ground", "ground", true, repainter);
+            JCheckBox drawGround = new PropCheckBox("Draw Ground", "ground", true, repainter, "Whether to draw a ground plane");
             // outlining controls
-            JCheckBox drawOutlines = new PropCheckBox("Draw Outlines", "outlines", false, repainter);
+            JCheckBox drawOutlines = new PropCheckBox("Draw Outlines", "outlines", false, repainter, "Whether to draw sticker edges");
             ColorButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK, color_repainter, true);
             JPanel colors = new JPanel(new SpringLayout());
             colors.add(new JLabel());
