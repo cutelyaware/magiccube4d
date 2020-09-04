@@ -631,7 +631,7 @@ public class PipelineUtils
         int faceIndex = puzzle.getSticker2Face()[stickerIndex];
 
         // If this is not a length-2 puzzle, our life is easy.
-        if(puzzle.getEdgeLength() > 2)
+        if(puzzle.getIntLength() > 2)
         {
             int ret[] = new int[1];
             ret[0] = puzzle.getClosestGrip(stickerCenter, faceIndex, stickerIndex, false);

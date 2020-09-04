@@ -93,19 +93,8 @@ public class PuzzleManager
             pl.puzzleChanged(newPuzzle);
     }
 
-    static String prettyLength(double length) {
-        boolean integralLength = length == (int) length;
-        return integralLength ? "" + (int) length : "" + length;
-    }
-
-    public String getPrettyLength() {
-        return prettyLength(puzzleDescription.getEdgeLength());
-    }
-
-
     public void initPuzzle(final String schlafli, final String lengthString, JProgressBar progressView, final JLabel statusLabel, boolean inBackground) {
         statusLabel.setText("");
-        final String finalLengthString = " " + prettyLength(Double.parseDouble(lengthString));
         ProgressManager builder = new ProgressManager(progressView) {
             private boolean succeeded = false;
             /*
@@ -113,7 +102,7 @@ public class PuzzleManager
              */
             @Override
             public Void doInBackground() {
-                PuzzleDescription newPuzzle = buildPuzzle(schlafli, finalLengthString, this);
+                PuzzleDescription newPuzzle = buildPuzzle(schlafli, lengthString, this);
                 if(newPuzzle != null) {
                     succeeded = true;
                     puzzleDescription = newPuzzle;
@@ -129,7 +118,7 @@ public class PuzzleManager
             @Override
             public void done() {
                 if(succeeded)
-                    statusLabel.setText(schlafli + "  length = " + finalLengthString);
+                    statusLabel.setText(schlafli + "  length = " + lengthString);
                 super.done();
                 if(succeeded)
                     firePuzzleChanged(true);
@@ -141,14 +130,14 @@ public class PuzzleManager
             builder.run();
     }
 
-    public PuzzleManager(String initialSchlafli, double initialLength, JProgressBar progressView)
+    public PuzzleManager(String initialSchlafli, String initialLengthString, JProgressBar progressView)
     {
         super();
         if(verboseLevel >= 1)
             System.out.println("in PuzzleManager ctor");
         if(initialSchlafli != null)
         {
-            initPuzzle(initialSchlafli, "" + initialLength, progressView, new JLabel(), false);
+            initPuzzle(initialSchlafli, initialLengthString, progressView, new JLabel(), false);
         }
         if(verboseLevel >= 1)
             System.out.println("out PuzzleManager ctor");
@@ -190,15 +179,6 @@ public class PuzzleManager
     }
 
     private static PuzzleDescription buildPuzzle(String schlafli, String lengthString, final ProgressManager progressView) {
-        double len;
-        try {
-            len = Double.parseDouble(lengthString);
-        } catch(java.lang.NumberFormatException e)
-        {
-            System.err.println(lengthString + " is not a number");
-            return null;
-        }
-
         PuzzleDescription newPuzzle = null;
         try
         {
@@ -207,7 +187,7 @@ public class PuzzleManager
             // the additional fact that this is in a try block confuses Eclipse
             // and it won't compile the code with it.
             final ProgressManager finalMgr = progressView;
-            newPuzzle = new PolytopePuzzleDescription(schlafli, len, new PolytopePuzzleDescription.ProgressCallbacks() {
+            newPuzzle = new PolytopePuzzleDescription(schlafli + " " + lengthString, new PolytopePuzzleDescription.ProgressCallbacks() {
                 @Override
                 public boolean subtaskInit(String string, int max) {
                     finalMgr.init(string, max);
@@ -701,7 +681,7 @@ public class PuzzleManager
     }
 
     public static void main(String[] args) {
-        PuzzleManager puzzleManager = new PuzzleManager("{3,3,3}", 2, new JProgressBar());
+        PuzzleManager puzzleManager = new PuzzleManager("{3,3,3}", "2", new JProgressBar());
         long start = System.currentTimeMillis();
         int tries = 1000000, solved = 0;
         for(int i = 0; i < tries; i++) {
