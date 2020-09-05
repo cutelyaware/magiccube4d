@@ -1066,7 +1066,8 @@ public class MC4DSwing extends JFrame {
                                     return; // Canceled
                                 }
                                 String schlafliAndLength[] = reply.trim().split("\\s+");
-                                if(schlafliAndLength.length != 2) {
+                                // We validate length here, to avoid an exception in PuzzleManager where it's not handled well.
+                                if(schlafliAndLength.length != 2 || !schlafliAndLength[1].matches("^\\d+$")) {
                                     prompt = "Can not build your invention.\nYou must specify the schlafli product symbol (with no spaces),\nfollowed by a space, followed by the puzzle length. Try again!";
                                     initialInput = reply;
                                     continue;
