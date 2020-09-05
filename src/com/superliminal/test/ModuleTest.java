@@ -28,7 +28,7 @@ public class ModuleTest
         for(int i = 0; i < puzzles.length; ++i)
         {
             final String schlafli = puzzles[i][0];
-            if(schlafli == null)
+            if(schlafli == null || puzzles[i].length < 2)
                 continue;
             String lengthStrings[] = puzzles[i][1].split(",");
 

@@ -32,6 +32,13 @@ public class MagicCube {
     public final static int MIN_SCRAMBLE_TWISTS_FOR_FANFARE = 21;
 
     public final static String DEFAULT_PUZZLE = "{4,3,3}";
+    /*
+     * The puzzle menu spec.
+     * Simple special cases:
+     * - "-" means a horizontal separator in the menu
+     * - any other string by itself means a section header (label) in the menu
+     * - "Invent my own!" is handled specially.
+     */
     public final static String SUPPORTED_PUZZLES[][] = {
         {"{3,3,3}", "1,2,3,4,5,6,7,8,9", "Simplex"},
         {"{3}x{4}", "1,2,3,4,5,6,7", "Triangular Duoprism"},
@@ -55,10 +62,15 @@ public class MagicCube {
         {"{3,3}x{}", "1,2,3,4,5,6,7", "Tetrahedral Prism"},
         {"{5,3}x{}", "1,2,3,4,5,6,7", "Dodecahedral Prism"},
         {"{5,3,3}", "1,2,3", "Hypermegaminx (BIG!)"},
-        {"(1)---(1)-5-(0)x{}", "1,3,4,5", "Truncated-icosahedron (soccer ball) prism"},
-        {"(1)---(1)-4-(0)---(0)", "1,3,4,5", "Truncated 24-cell"},
-        {"(1)---(1)---(1)---(1)", "1,3,4,5", "Omnitruncated simplex"},
-        {"frucht*{}", "1,3,5", "Frucht graph prism (coming attraction)"},
+        {"-"},
+        {"Samples of new puzzles (work in progress):"},
+        {"   (1)---(1)-5-(0)x{}", "1,3,4,5", "Truncated-icosahedron (soccer ball) prism"},
+        {"   (1)---(1)-4-(0)---(0)", "1,3,4,5", "Truncated 24-cell"},
+        {"   (1)---(1)---(1)---(1)", "1,3,4,5", "Omnitruncated simplex"},
+        {"   {3,4}x{}", "1,2,3,4", "Octahedral prism"},
+        {"   {3,4,3}", "1,2,3,4", "24-cell"},
+        {"   frucht*{}", "1,3,5", "Frucht graph prism (coming attraction)"},
+        {"-"},
         {null, "", "Invent my own!"},
     };
 
