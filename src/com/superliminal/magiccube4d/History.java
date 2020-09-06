@@ -309,6 +309,13 @@ public class History {
     /**
      * Only the first "edge-length" bits of slice masks are valid
      * so for example, values like 7, 15, and -1 are all pure rotations on an edge-length 3 puzzle.
+     *
+     * TODO(donhatch): this seems wrong, e.g. edgelength 2 for megaminx actually
+     * has 3 meaningful bits in the slicemask, not 2.
+     * So I think in that case, when this function is given slicemask=3 it will
+     * wrongly return true.  What are the consequences?
+     * I think fixing this will require knowing the per-face cut counts
+     * (available from the PolytopePuzzleDescription).
      * 
      * @return true if given slice mask affects the entire puzzle, false otherwise.
      */

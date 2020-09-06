@@ -13,7 +13,9 @@ package com.superliminal.magiccube4d;
 interface PuzzleDescription {
 
     public String getSchlafliProduct();
-    public double getEdgeLength();
+    public int getIntLength();
+    public double getDoubleLength();
+    public String getLengthString();
     public String getFullPuzzleString();
     public int nDims();
     public int nVerts();

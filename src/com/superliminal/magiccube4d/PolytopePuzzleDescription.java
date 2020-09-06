@@ -187,7 +187,9 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     private CSG.SPolytope slicedPolytope;
 
     private String schlafliProduct;
-    private double edgeLength;
+    private int intLength;
+    private double doubleLength;
+    private String lengthString;
 
     private float _circumRadius;
     private float _inRadius;
@@ -266,15 +268,50 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
      * omnitruncated regular
      */
 
-    public PolytopePuzzleDescription(String schlafliProduct,
-        double length, // usually int but can experiment with different cut depths
-        ProgressCallbacks progress)
+    public PolytopePuzzleDescription(String prescription, ProgressCallbacks progress)
     {
-        this.schlafliProduct = schlafliProduct;
-        this.edgeLength = length;
+        // Caller may have passed us "Grand Antiprism" from a menu,
+        // but the lower level function we're going go call doesn't allow spaces,
+        // and understands Grand_Antiprism as a special case, so convert.
+        prescription = prescription.replaceAll("Grand Antiprism",
+                                               "Grand_Antiprism");
+        java.util.regex.Matcher matcher =
+        java.util.regex.Pattern.compile(
+            "\\s*([^ ]+)\\s+((\\d+)(\\((.*)\\))?)"
+        ).matcher(prescription);
+        if (!matcher.matches())
+            throw new IllegalArgumentException("PolytopePuzzleDescription didn't understand prescription string "+com.donhatchsw.util.Arrays.toStringCompact(prescription)+"");
+	String schlafliProductString = matcher.group(1);
+        String lengthString = matcher.group(2);
+        String intLengthString = matcher.group(3);
+        String doubleLengthString = matcher.group(5);
 
-        if(length < 1)
-            throw new IllegalArgumentException("PolytopePuzzleDescription called with length=" + length + ", min legal length is 1");
+        int intLength = Integer.parseInt(intLengthString);
+        double doubleLength = (double)intLength; // but to be overridden by doubleLengthString if there is one
+        if (doubleLengthString != null)
+        {
+            // Allow fractions
+            int slashIndex = doubleLengthString.lastIndexOf('/');
+            if (slashIndex != -1)
+            {
+                String numeratorString = doubleLengthString.substring(0, slashIndex);
+                String denominatorString = doubleLengthString.substring(slashIndex+1);
+                doubleLength = Double.valueOf(numeratorString).doubleValue()
+                             / Double.valueOf(denominatorString).doubleValue();
+            }
+            else
+                doubleLength = Double.valueOf(doubleLengthString).doubleValue(); //  XXX should catch parse error and throw illegal arg exception
+        }
+
+        this.schlafliProduct = schlafliProductString;
+        this.lengthString = lengthString;
+        this.intLength = intLength;
+        this.doubleLength = doubleLength;
+
+        if (intLength < 1)
+            throw new IllegalArgumentException("PolytopePuzzleDescription called with intLength="+intLength+", min legal intLength is 1");
+        if (doubleLength <= 0)
+            throw new IllegalArgumentException("PolytopePuzzleDescription called with doubleLength="+doubleLength+", doubleLength must be positive");
 
         if(progress != null)
             if (!progress.subtaskInit("Constructing polytope"))
@@ -424,56 +461,63 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 }
                 Assert(fullThickness != 0.); // XXX actually this fails if puzzle dimension <= 1, maybe should disallow
 
-                int ceilLength = (int) Math.ceil(length);
-                int nNearCuts = 0, nFarCuts = 0;
-                double sliceThickness = 0;
+                double sliceThickness = fullThickness / doubleLength;
 
-                boolean isPrismOfThisFace = Math.abs(-1. - faceOffsets[iFace]) < 1e-6;
+                int nNearCuts = intLength / 2;  // (n-1)/2 if odd, n/2 if even
+                int nFarCuts = face2OppositeFace[iFace]==-1 ? 0 : nNearCuts;
 
-                // Special case the simplex puzzles and triangular duoprisms.
-                boolean isSimplex = schlafliProduct.equals("{3,3,3}");
-                boolean isTetrahedralPrism = schlafliProduct.indexOf("{3,3}") != -1;
-                boolean slicingTriangularPrism = (schlafliProduct.indexOf("{3}") != -1 && face.facets.length != 5);
-                boolean isUniformTriangularDuoprism = schlafliProduct.equals("{3}x{3}") || schlafliProduct.equals("{3}*{3}");
-                if(isSimplex || (isTetrahedralPrism && !isPrismOfThisFace) || slicingTriangularPrism || isUniformTriangularDuoprism)
-                {
-                    // Disallow fractional lengths for these puzzles.
-                    length = ceilLength;
-
-                    sliceThickness = fullThickness / length;
-
-                    // There are no opposite faces for the simplex,
-                    // and so we need to do all the cuts on the near side.
-                    nNearCuts = ceilLength - 1;
-                    nFarCuts = 0;
-                }
-                else
-                {
-                    // Fractional lengths are basically a hack for pentagons
-                    // and higher gons
-                    // so that the middle edge width can be controlled
-                    // by the user; we don't want it to apply
-                    // to squares though
-                    if(isPrismOfThisFace)
-                        length = ceilLength;
-
-                    sliceThickness = fullThickness / length;
-
-                    nNearCuts = ceilLength / 2; // (n-1)/2 if odd, n/2 if even
-                    nFarCuts = face2OppositeFace[iFace] == -1 ? 0 :
-                        ceilLength % 2 == 0 && isPrismOfThisFace ? nNearCuts - 1 :
-                            nNearCuts;
-                }
+                // In some cases, notably an even length prism or antiprism of this face,
+                // the middle cut is the same from either side: it goes through the origin.
+                // In that case, we'd like to do it only as a near cut, so nFarCuts
+                // should be nNearCuts-1 instead of nNearCuts.
+                //
+                // HOWEVER, there are other cases where the middle cut is the same from either side,
+                // notably truncated tetrahedron with carefully chosen cut depth: "(1)3(1)3(0) 2(1)"
+                // (and truncated simplex in 4d, too, probably), and there's no way
+                // of predicting when this will happen.
+                // In fact, we can cause similar problems even for odd numbers of slices on standard puzzles:
+                //      "{4,3,3} 7(6)"
+                //      "{4,3,3} 7(4)"
+                // Given that, what we do is as follows: make the list of cuts (even though nFarCuts may
+                // may be too many at this point), then sort and remove dups (and near dups) at the end.
 
                 faceCutOffsets[iFace] = new double[nNearCuts + nFarCuts];
+                for (int iNearCut = 0; iNearCut < nNearCuts; ++iNearCut)
+                    faceCutOffsets[iFace][iNearCut] = faceOffsets[iFace] + (iNearCut+1)*sliceThickness;
+                // We'll fill in the far cuts in another pass
+            }  // for iFace
 
-                for(int iNearCut = 0; iNearCut < nNearCuts; ++iNearCut)
-                    faceCutOffsets[iFace][iNearCut] = faceOffsets[iFace] + (iNearCut + 1) * sliceThickness;
-                for(int iFarCut = 0; iFarCut < nFarCuts; ++iFarCut)
-                    faceCutOffsets[iFace][nNearCuts + nFarCuts - 1 - iFarCut] = -faceOffsets[iFace] // offset of opposite face
-                        - (iFarCut + 1) * sliceThickness;
+            // Fill in far cuts of each face,
+            // from near cuts of the opposite face.
+            // Note the opposite face may have a different
+            // offset from the origin, and different slice thickness
+            // (e.g. the truncated simplex in 3 or 4 dimensions).
+            for(int iFace = 0; iFace < nFaces; ++iFace)
+            {
+                int iOppositeFace = face2OppositeFace[iFace];
+                if (iOppositeFace != -1) {
+                  int nNearCuts = intLength / 2;  // same reason in previous pass
+                  int nFarCuts = faceCutOffsets[iFace].length - nNearCuts;
+                  for (int iFarCut = 0; iFarCut < nFarCuts; ++iFarCut)
+                      faceCutOffsets[iFace][nNearCuts+nFarCuts-1-iFarCut] = -faceCutOffsets[iOppositeFace][iFarCut];
+                }
+	    }
+            // Finally, make sure opposite cut sets are *exactly* opposite.  They might not be,
+            // if de-duping made different choices from the two directions.
+            for (int iFace = 0; iFace < nFaces; ++iFace)
+            {
+                int iOppositeFace = face2OppositeFace[iFace];
+                if (iOppositeFace > iFace)  // so we do this only once per pair, and only if there is an opposite
+                {
+                    int nCuts = faceCutOffsets[iFace].length;
+                    Assert(nCuts == faceCutOffsets[iOppositeFace].length); // careful analysis of the deduping probably would show this can't fail, but check anyway
+                    for (int iCut = 0; iCut < nCuts; ++iCut) {
+                        Assert(Math.abs(faceCutOffsets[iOppositeFace][nCuts-1-iCut] - -faceCutOffsets[iFace][iCut]) < 1e-3);  // rough sanity check, much coarser than the dedup tolerance that was used
+                        faceCutOffsets[iOppositeFace][nCuts-1-iCut] = -faceCutOffsets[iFace][iCut];
+                    }
+                }
             }
-        }
+	}
 
         if(progress != null)
             if (!progress.subtaskDone())  // "Contructing polytope"
@@ -932,12 +976,20 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         return schlafliProduct;
     }
     @Override
-    public double getEdgeLength() {
-        return edgeLength;
+    public String getLengthString() {
+        return lengthString;
+    }
+    @Override
+    public int getIntLength() {
+        return intLength;
+    }
+    @Override
+    public double getDoubleLength() {
+        return doubleLength;
     }
     @Override
     public String getFullPuzzleString() {
-        return schlafliProduct + " " + edgeLength;
+        return schlafliProduct + " " + lengthString;
     }
     @Override
     public int nDims()
@@ -1365,10 +1417,13 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     //
     public static void main(String args[])
     {
-        if(args.length != 2)
+        if(args.length != 1)
         {
             System.err.println();
-            System.err.println("    Usage: PolytopePuzzleDescription \"<schlafliProduct>\" <puzzleLength>");
+            System.err.println("    Usage: PolytopePuzzleDescription \"<schlafliProduct> <length>[(<doubleLength>)]\"");
+            System.err.println("    Example: PolytopePuzzleDescription \"{4,3,3} 3\"");
+            System.err.println("    Example: PolytopePuzzleDescription \"{3,3,3} 3(5.0)\"");
+            System.err.println("    Example: PolytopePuzzleDescription \"{5}x{4} 3\"");
             System.err.println();
             System.exit(1);
         }
@@ -1376,10 +1431,10 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 
         //CSG.verboseLevel = 2;
 
-        String schlafliProduct = args[0];
-        int length = Integer.parseInt(args[1]);
+        String prescription = args[0];
+
         final boolean[] cancelledHolder = {false};
-        PuzzleDescription descr = new PolytopePuzzleDescription(schlafliProduct, length,
+        PuzzleDescription descr = new PolytopePuzzleDescription(prescription,
             new ProgressCallbacks() {
                 private long initTimeNanos = 0;
                 @Override public boolean subtaskInit(String string, int max) {
