@@ -281,7 +281,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         ).matcher(prescription);
         if (!matcher.matches())
             throw new IllegalArgumentException("PolytopePuzzleDescription didn't understand prescription string "+com.donhatchsw.util.Arrays.toStringCompact(prescription)+"");
-	String schlafliProductString = matcher.group(1);
+        String schlafliProductString = matcher.group(1);
         String lengthString = matcher.group(2);
         String intLengthString = matcher.group(3);
         String doubleLengthString = matcher.group(5);
@@ -501,7 +501,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                   for (int iFarCut = 0; iFarCut < nFarCuts; ++iFarCut)
                       faceCutOffsets[iFace][nNearCuts+nFarCuts-1-iFarCut] = -faceCutOffsets[iOppositeFace][iFarCut];
                 }
-	    }
+            }
             // Finally, make sure opposite cut sets are *exactly* opposite.  They might not be,
             // if de-duping made different choices from the two directions.
             for (int iFace = 0; iFace < nFaces; ++iFace)
@@ -517,7 +517,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                     }
                 }
             }
-	}
+        }
 
         if(progress != null)
             if (!progress.subtaskDone())  // "Contructing polytope"
@@ -620,8 +620,8 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                     int indsOfStickersContainingThisRidge[] = allSlicedIncidences[nDims - 2][iSlicedRidge][nDims - 1];
 
                     // NOTE: This assert was a check until we started filtering out slivers.
-                    // 		 Slivers will just make cubies with other slivers though, 
-                    //		 so this should be ok.
+                    //       Slivers will just make cubies with other slivers though,
+                    //       so this should be ok.
                     //Assert(indsOfStickersContainingThisRidge.length == 2);
                     if(indsOfStickersContainingThisRidge.length == 2)
                     {
