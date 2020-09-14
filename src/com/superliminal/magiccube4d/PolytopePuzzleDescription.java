@@ -191,6 +191,9 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     private double doubleLength;
     private String lengthString;
 
+    private String topologicalFingerprintHumanReadable;
+    private String topologicalFingerprintDigest;
+
     private float _circumRadius;
     private float _inRadius;
     private int _nCubies;
@@ -229,6 +232,17 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             throw new Error("Assumption failed");
     }
 
+    // split into lines, indent each line, and re-join.
+    private static String indented(String indent, String text) {
+        String[] lines = text.split("\n");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < lines.length; ++i) {
+            sb.append(indent);
+            sb.append(lines[i]);
+            if (i != lines.length-1) sb.append("\n");
+        }
+        return sb.toString();
+    }
 
     /**
      * The following schlafli product symbols are supported;
@@ -520,11 +534,19 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         }
 
         if(progress != null)
-            if (!progress.subtaskDone())  // "Contructing polytope"
+            if (!progress.subtaskDone())  // "Constructing polytope"
                 return;
 
         //System.out.println("face inward normals = "+com.donhatchsw.util.Arrays.toStringCompact(faceInwardNormals));
         //System.out.println("cut offsets = "+com.donhatchsw.util.Arrays.toStringCompact(faceCutOffsets));
+
+	if(progress != null)
+	    if (!progress.subtaskInit("Computing fingerprint of original polytope"))
+		return;
+        String originalPolytopeTopologicalFingerprintHumanReadable = CSG.computeHumanReadableTopologicalFingerprint(originalPolytope.p);
+        if(progress != null)
+            if (!progress.subtaskDone())  // "Computing fingerprint of original polytope"
+                return;
 
         //
         // Slice!
@@ -580,6 +602,24 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         if(progress != null)
             if (!progress.subtaskDone())  // "Fixing orientations"
                 return;
+
+	if(progress != null)
+	    if (!progress.subtaskInit("Computing fingerprint of sliced polytope"))
+		return;
+        String slicedPolytopeTopologicalFingerprintHumanReadable = CSG.computeHumanReadableTopologicalFingerprint(slicedPolytope.p);
+        if(progress != null)
+            if (!progress.subtaskDone())  // "Computing fingerprint of sliced polytope"
+                return;
+
+        this.topologicalFingerprintHumanReadable =
+            "original polytope:\n" +
+            indented("    ", originalPolytopeTopologicalFingerprintHumanReadable) + "\n" +
+            "sliced polytope:\n" +
+            indented("    ", slicedPolytopeTopologicalFingerprintHumanReadable);
+        this.topologicalFingerprintDigest = CSG.sha1(this.topologicalFingerprintHumanReadable);
+        //System.out.println("topologicalFingerprintHumanReadable = \n"+indented("    ", this.topologicalFingerprintHumanReadable));
+        //System.out.println("topologicalFingerprintDigest = "+this.topologicalFingerprintDigest);
+
 
         CSG.Polytope stickers[] = slicedPolytope.p.getAllElements()[nDims - 1];
         int nStickers = stickers.length;
@@ -970,6 +1010,16 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     // BEGIN GENERICPUZZLEDESCRIPTION INTERFACE METHODS
     //
 
+    @Override
+    public String getTopologicalFingerprintHumanReadable()
+    {
+        return topologicalFingerprintHumanReadable;
+    }
+    @Override
+    public String getTopologicalFingerprintDigest()
+    {
+        return topologicalFingerprintDigest;
+    }
     @Override
     public String getSchlafliProduct()
     {

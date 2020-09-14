@@ -1079,7 +1079,7 @@ public class MC4DSwing extends JFrame {
                             }
                         }
                         progressView.setVisible(true);
-                        System.out.println(newSchlafli + " " + newLengthString);
+                        System.out.println("attempting to change puzzle to " + newSchlafli + " " + newLengthString);
                         puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, label, true);
                         // puzzleManager.puzzleDescription is now being created in background,
                         // so we can't query puzzleManager.puzzleDescription.getIntLength() yet.

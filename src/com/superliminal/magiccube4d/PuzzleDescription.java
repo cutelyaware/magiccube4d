@@ -11,12 +11,17 @@ package com.superliminal.magiccube4d;
  * (They would be const if java had a way to express that.)
  */
 interface PuzzleDescription {
-
     public String getSchlafliProduct();
     public int getIntLength();
     public double getDoubleLength();
     public String getLengthString();
     public String getFullPuzzleString();
+
+    /** A human-readable fingerprint of the topology of the puzzle. */
+    public String getTopologicalFingerprintHumanReadable();
+    /** A fingerprint digest (40-hex-digit SHA-1 string) of getTopologicalFingerprintHumanReadable(). */
+    public String getTopologicalFingerprintDigest();
+
     public int nDims();
     public int nVerts();
     public int nFaces();

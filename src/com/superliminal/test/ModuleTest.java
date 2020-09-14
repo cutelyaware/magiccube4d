@@ -35,13 +35,17 @@ public class ModuleTest
             for(int j = 0; j < lengthStrings.length; ++j)
             {
                 String puzzleString = "" + schlafli + " " + lengthStrings[j];
-                System.out.println(puzzleString);
+                System.out.print(puzzleString + " ... ");
+                System.out.flush();
                 PolytopePuzzleDescription puzzle = new PolytopePuzzleDescription(puzzleString, null);
+                System.out.println(puzzle.getTopologicalFingerprintDigest());
                 writer.write("Puzzle:\t" + puzzleString + sep);
                 writer.write("NumFaces:\t" + puzzle.nFaces() + sep);
                 writer.write("NumCubies:\t" + puzzle.nCubies() + sep);
                 writer.write("NumStickers:\t" + puzzle.nStickers() + sep);
                 writer.write("NumGrips:\t" + puzzle.nGrips() + sep);
+                writer.write("Topological fingerprint human readable:\t" + puzzle.getTopologicalFingerprintHumanReadable() + sep);
+                writer.write("Topological fingerprint digest:\t" + puzzle.getTopologicalFingerprintDigest() + sep);
                 writer.write(sep);
 
                 /*
