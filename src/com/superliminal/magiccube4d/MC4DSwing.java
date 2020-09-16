@@ -987,7 +987,7 @@ public class MC4DSwing extends JFrame {
         contents.add(viewcontainer, "Center");
         contents.add(statusBar, "South");
 
-        puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, ""+MagicCube.DEFAULT_LENGTH, progressBar);
+        puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, "" + MagicCube.DEFAULT_LENGTH, progressBar);
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
             @Override
             public void puzzleChanged(boolean newPuzzle) {
@@ -1017,8 +1017,8 @@ public class MC4DSwing extends JFrame {
     private void initPuzzleMenu(JMenu puzzlemenu, final JLabel label, final JProgressBar progressView) {
         final String[][] table = MagicCube.SUPPORTED_PUZZLES;
         for(int i = 0; i < table.length; ++i) {
-            if (table[i].length == 1) {
-                if (table[i][0].equals("-"))
+            if(table[i].length == 1) {
+                if(table[i][0].equals("-"))
                 {
                     // "-" means a horizontal separator in the menu.
                     puzzlemenu.addSeparator();
