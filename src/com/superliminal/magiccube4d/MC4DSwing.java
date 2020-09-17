@@ -55,6 +55,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -942,7 +943,14 @@ public class MC4DSwing extends JFrame {
         helpmenu.add(new JMenuItem("About Puzzle...")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                JOptionPane pane = new JOptionPane(puzzleManager.puzzleDescription.getTopologicalFingerprintHumanReadable(), JOptionPane.INFORMATION_MESSAGE);
+                // We use a non-editable JTextArea instead of the default JLabel,
+                // so that the text will be copyable.
+                JTextArea textArea = new JTextArea(
+                    puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.puzzleDescription.getLengthString() + "\n\n"
+                  + puzzleManager.puzzleDescription.getTopologicalFingerprintHumanReadable() + "\n\n"
+                  + "fingerprint: " + puzzleManager.puzzleDescription.getTopologicalFingerprintDigest());
+                textArea.setEditable(false);
+                JOptionPane pane = new JOptionPane(textArea, JOptionPane.INFORMATION_MESSAGE);
                 JDialog dialog = pane.createDialog(MC4DSwing.this, puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.puzzleDescription.getLengthString());
                 dialog.setModal(false);
                 dialog.setVisible(true);
