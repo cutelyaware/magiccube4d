@@ -434,44 +434,46 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 
                 double fullThickness = 0.;
                 {
-                    // iVert = index of some vertex on face iFace
-                    int iVert = originalIncidences[nDims - 1][iFace][0][0];
-                    // iVertEdges = indices of all edges incident on vert iVert
-                    int iVertsEdges[] = originalIncidences[0][iVert][1];
-                    // Find an edge incident on vertex iVert
-                    // that is NOT incident on face iFace..
-                    for(int i = 0; i < iVertsEdges.length; ++i)
-                    {
-                        int iEdge = iVertsEdges[i];
-                        int iEdgesFaces[] = originalIncidences[1][iEdge][nDims - 1];
-                        int j;
-                        for(j = 0; j < iEdgesFaces.length; ++j)
-                            if(iEdgesFaces[j] == iFace)
-                                break; // iEdge is incident on iFace-- no good
-                        if(j == iEdgesFaces.length)
-                        {
-                            // iEdge is not incident on iFace-- good!
-                            int jVert0 = originalIncidences[1][iEdge][0][0];
-                            int jVert1 = originalIncidences[1][iEdge][0][1];
-                            Assert((jVert0 == iVert) != (jVert1 == iVert));
+                    // In case of nonuniformity (e.g. pseudorhombicuboctahedron or frucht),
+                    // we need to do check *all* vertices on this facet, not just one.
+		    for (int iVert : originalIncidences[nDims-1][iFace][0]) {
+			// iVertEdges = indices of all edges incident on vert iVert
+			int iVertsEdges[] = originalIncidences[0][iVert][1];
+			// Find an edge incident on vertex iVert
+			// that is NOT incident on face iFace..
+			for(int i = 0; i < iVertsEdges.length; ++i)
+			{
+			    int iEdge = iVertsEdges[i];
+			    int iEdgesFaces[] = originalIncidences[1][iEdge][nDims - 1];
+			    int j;
+			    for(j = 0; j < iEdgesFaces.length; ++j)
+				if(iEdgesFaces[j] == iFace)
+				    break; // iEdge is incident on iFace-- no good
+			    if(j == iEdgesFaces.length)
+			    {
+				// iEdge is not incident on iFace-- good!
+				int jVert0 = originalIncidences[1][iEdge][0][0];
+				int jVert1 = originalIncidences[1][iEdge][0][1];
+				Assert((jVert0 == iVert) != (jVert1 == iVert));
 
-                            double edgeVec[] = VecMath.vmv(
-                                originalVerts[jVert1].getCoords(),
-                                originalVerts[jVert0].getCoords());
-                            double thisThickness = VecMath.dot(edgeVec, faceInwardNormals[iFace]);
-                            if(thisThickness < 0.)
-                                thisThickness *= -1.;
+				double edgeVec[] = VecMath.vmv(
+				    originalVerts[jVert1].getCoords(),
+				    originalVerts[jVert0].getCoords());
+				double thisThickness = VecMath.dot(edgeVec, faceInwardNormals[iFace]);
+				if(thisThickness < 0.)
+				    thisThickness *= -1.;
 
-                            // If there are more than one neighbor vertex
-                            // that's not on this face, pick one that's
-                            // closest to the face plane.  This can only
-                            // happen if the vertex figure is NOT a simplex
-                            // (e.g. it happens for the icosahedron).
-                            if(thisThickness > 1e-6
-                                && (fullThickness == 0. || thisThickness < fullThickness))
-                                fullThickness = thisThickness;
-                        }
-                    }
+				// If there are more than one neighbor vertex
+				// that's not on this face, pick one that's
+				// closest to the face plane.  This can only
+				// happen if the vertex figure is NOT a simplex
+				// (e.g. it happens for the icosahedron).
+				if(thisThickness > 1e-6
+				    && (fullThickness == 0. || thisThickness < fullThickness))
+				    fullThickness = thisThickness;
+			    }
+			}
+		    }
                 }
                 Assert(fullThickness != 0.); // XXX actually this fails if puzzle dimension <= 1, maybe should disallow
 
