@@ -1458,10 +1458,31 @@ public class MC4DSwing extends JFrame {
             addLeftJustified(general, 0, new PropCheckBox("Show Shadows", "shadows", true, repainter, null));
             addLeftJustified(general, 0, new PropCheckBox("Allow Auto-Rotation", "autorotate", true, repainter, "Whether to keep spinning if mouse released while dragging"));
             addLeftJustified(general, 0, new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter, "Whether to highlight all stickers of hovered piece or just the hovered sticker"));
-            addLeftJustified(general, 0, new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles"));
+
+            // antialiasing controls
+            final PropCheckBox allowAntialiasing = new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges - Warning: Can be expensive on large puzzles");
+            // note that these two radio buttons do *not* need to be passed the repainter;
+            // doing so would slow them down unnecessarily.
+            final JRadioButton antialiasingModeWhenStill = new PropRadioButton("when still", "antialiasingmeansalways", false, true, null, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
+            final JRadioButton antialiasingModeAlways = new PropRadioButton("always", "antialiasingmeansalways", false, false, null, "Antialias every frame - Warning: can be very slow on large puzzles");
+            ButtonGroup antialiasingModeGroup = new ButtonGroup();
+            antialiasingModeGroup.add(antialiasingModeWhenStill);
+            antialiasingModeGroup.add(antialiasingModeAlways);
+            allowAntialiasing.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    antialiasingModeWhenStill.setEnabled(allowAntialiasing.isSelected());
+                    antialiasingModeAlways.setEnabled(allowAntialiasing.isSelected());
+                }
+            });
+            int radioButtonsIndentPixels = 30;
+            addLeftJustified(general, 0, allowAntialiasing);
+            addLeftJustified(general, radioButtonsIndentPixels, antialiasingModeWhenStill);
+            addLeftJustified(general, radioButtonsIndentPixels, antialiasingModeAlways);
 
             addLeftJustified(general, 0, mute);
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
+
             // quick mode controls
             final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
             addLeftJustified(general, 0, quick);
@@ -1479,13 +1500,16 @@ public class MC4DSwing extends JFrame {
                     justMacros.setEnabled(quick.isSelected());
                 }
             });
-            int radioButtonsIndentPixels = 30;
             addLeftJustified(general, radioButtonsIndentPixels, allMoves);
             addLeftJustified(general, radioButtonsIndentPixels, justMacros);
+
+            // ctrl-click controls
             addLeftJustified(general, 0, ctrlClickLabel);
             addLeftJustified(general, radioButtonsIndentPixels, ctrlRotateByFace);
             addLeftJustified(general, radioButtonsIndentPixels, ctrlRotateByCubie);
+
             general.add(Box.createVerticalGlue());  // seems to be needed to make sliders box expand vertically
+
             // background controls
             ColorButton skyColor = new ColorButton("Sky", "sky.color", MagicCube.SKY, color_repainter, true);
             ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND, color_repainter, true);

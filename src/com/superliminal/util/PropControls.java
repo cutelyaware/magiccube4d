@@ -38,7 +38,7 @@ public class PropControls {
                 public void stateChanged(ChangeEvent e) {
                     PropertyManager.userprefs.setProperty(propname, "" + (float) getFloatValue());
                     //System.out.println(propname + ": " + (float)getFloatValue());
-                    dependent.repaint();
+                    if (dependent != null) dependent.repaint();
                 }
             });
         }
@@ -55,7 +55,7 @@ public class PropControls {
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
                     PropertyManager.userprefs.setProperty(propname, "" + isSelected());
-                    dependent.repaint();
+                    if (dependent != null) dependent.repaint();
                 }
             });
         }
@@ -79,7 +79,7 @@ public class PropControls {
                     if(invert)
                         is_on = !is_on;
                     PropertyManager.userprefs.setProperty(propname, "" + is_on);
-                    dependent.repaint();
+                    if (dependent != null) dependent.repaint();
                 }
             });
         }

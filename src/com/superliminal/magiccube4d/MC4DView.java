@@ -384,7 +384,8 @@ public class MC4DView extends Component {
             Graphics2D g2d = (Graphics2D) g;
             // antialiasing makes for a beautiful image but can also be expensive to draw therefore
             // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
-            boolean okToAntialias = !isInMotion() && PropertyManager.getBoolean("antialiasing", true);
+            boolean okToAntialias = PropertyManager.getBoolean("antialiasing", true)
+                                 && (!isInMotion() || PropertyManager.getBoolean("antialiasingmeansalways", false));
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
             // Voodoo to remove 1/2 pixel lower-right bias so that all four modes match up:
