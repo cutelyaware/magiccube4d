@@ -1383,6 +1383,18 @@ public class MC4DSwing extends JFrame {
         }
     }
 
+    // Hack to get a control to appear on the left
+    // instead of center of the `general` panel in PreferencesEditor.
+    // setAlignmentX() didn't seem to do it.
+    private static void addLeftJustified(Container C, int indentPixels, Component c)
+    {
+        JPanel holder = new JPanel();
+        holder.setLayout(new BoxLayout(holder, BoxLayout.X_AXIS));
+        if (indentPixels != 0) holder.add(Box.createHorizontalStrut(indentPixels));
+        holder.add(c);
+        holder.add(Box.createHorizontalGlue());
+        C.add(holder);
+    }
 
     /**
      * Editor for user preferences.
@@ -1415,11 +1427,7 @@ public class MC4DSwing extends JFrame {
             ctrlRotateGroup.add(ctrlRotateByFace);
             ctrlRotateGroup.add(ctrlRotateByCubie);
             JLabel ctrlClickLabel = new JLabel("Ctrl-Click Rotates:");
-            JPanel rotateMode = new JPanel();
-            rotateMode.setLayout(new BoxLayout(rotateMode, BoxLayout.X_AXIS));
-            rotateMode.add(ctrlClickLabel);
-            rotateMode.add(Box.createHorizontalGlue());
-            ctrlClickLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
             JCheckBox mute = new PropCheckBox("Mute Sound Effects", MagicCube.MUTED, false, repainter, "Whether to allow sound effects");
             class MyLabel extends JLabel {
                 public MyLabel(String text) {
@@ -1447,20 +1455,16 @@ public class MC4DSwing extends JFrame {
             JPanel general = new JPanel();
             general.setLayout(new BoxLayout(general, BoxLayout.Y_AXIS));
             general.add(sliders);
-            general.add(new PropCheckBox("Show Shadows", "shadows", true, repainter, null));
-            general.add(new PropCheckBox("Allow Auto-Rotation", "autorotate", true, repainter, "Whether to keep spinning if mouse released while dragging"));
-            general.add(new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter, "Whether to highlight all stickers of hovered piece or just the hovered sticker"));
-            general.add(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles"));
-            general.add(mute);
+            addLeftJustified(general, 0, new PropCheckBox("Show Shadows", "shadows", true, repainter, null));
+            addLeftJustified(general, 0, new PropCheckBox("Allow Auto-Rotation", "autorotate", true, repainter, "Whether to keep spinning if mouse released while dragging"));
+            addLeftJustified(general, 0, new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter, "Whether to highlight all stickers of hovered piece or just the hovered sticker"));
+            addLeftJustified(general, 0, new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles"));
+
+            addLeftJustified(general, 0, mute);
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
             // quick mode controls
             final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
-            JPanel quickMode = new JPanel();
-            quickMode.setLayout(new BoxLayout(quickMode, BoxLayout.X_AXIS));
-            quickMode.add(quick);
-            quickMode.add(Box.createHorizontalGlue());
-            quick.setAlignmentX(Component.LEFT_ALIGNMENT);
-            general.add(quickMode);
+            addLeftJustified(general, 0, quick);
             final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
             final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", false, false, repainter, "No twist animations for macro sequences");
             allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
@@ -1475,12 +1479,13 @@ public class MC4DSwing extends JFrame {
                     justMacros.setEnabled(quick.isSelected());
                 }
             });
-            general.add(allMoves);
-            general.add(justMacros);
-            general.add(rotateMode);
-            general.add(ctrlRotateByFace);
-            general.add(ctrlRotateByCubie);
-            general.add(Box.createVerticalGlue());
+            int radioButtonsIndentPixels = 30;
+            addLeftJustified(general, radioButtonsIndentPixels, allMoves);
+            addLeftJustified(general, radioButtonsIndentPixels, justMacros);
+            addLeftJustified(general, 0, ctrlClickLabel);
+            addLeftJustified(general, radioButtonsIndentPixels, ctrlRotateByFace);
+            addLeftJustified(general, radioButtonsIndentPixels, ctrlRotateByCubie);
+            general.add(Box.createVerticalGlue());  // seems to be needed to make sliders box expand vertically
             // background controls
             ColorButton skyColor = new ColorButton("Sky", "sky.color", MagicCube.SKY, color_repainter, true);
             ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND, color_repainter, true);
