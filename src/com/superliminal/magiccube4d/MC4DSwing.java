@@ -1465,6 +1465,8 @@ public class MC4DSwing extends JFrame {
             // doing so would slow them down unnecessarily.
             final JRadioButton antialiasingModeWhenStill = new PropRadioButton("when still", "antialiasingmeansalways", false, true, null, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
             final JRadioButton antialiasingModeAlways = new PropRadioButton("always", "antialiasingmeansalways", false, false, null, "Antialias every frame - Warning: can be very slow on large puzzles");
+            antialiasingModeWhenStill.setEnabled(PropertyManager.getBoolean("antialiasing", true));
+            antialiasingModeAlways.setEnabled(PropertyManager.getBoolean("antialiasing", true));
             ButtonGroup antialiasingModeGroup = new ButtonGroup();
             antialiasingModeGroup.add(antialiasingModeWhenStill);
             antialiasingModeGroup.add(antialiasingModeAlways);
