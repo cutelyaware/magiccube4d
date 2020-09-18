@@ -1460,7 +1460,7 @@ public class MC4DSwing extends JFrame {
             addLeftJustified(general, 0, new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter, "Whether to highlight all stickers of hovered piece or just the hovered sticker"));
 
             // antialiasing controls
-            final PropCheckBox allowAntialiasing = new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges - Warning: Can be expensive on large puzzles");
+            addLeftJustified(general, 0, new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges - Warning: Can be expensive on large puzzles"));
             // note that these two radio buttons do *not* need to be passed the repainter;
             // doing so would slow them down unnecessarily.
             final JRadioButton antialiasingModeWhenStill = new PropRadioButton("when still", "antialiasingmeansalways", false, true, null, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
@@ -1470,15 +1470,15 @@ public class MC4DSwing extends JFrame {
             ButtonGroup antialiasingModeGroup = new ButtonGroup();
             antialiasingModeGroup.add(antialiasingModeWhenStill);
             antialiasingModeGroup.add(antialiasingModeAlways);
-            allowAntialiasing.addActionListener(new ActionListener() {
+            PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
                 @Override
-                public void actionPerformed(ActionEvent e) {
-                    antialiasingModeWhenStill.setEnabled(allowAntialiasing.isSelected());
-                    antialiasingModeAlways.setEnabled(allowAntialiasing.isSelected());
+                public void propertyChanged(String property, String newval) {
+                    boolean enabled = PropertyManager.getBoolean("antialiasing", true);
+                    antialiasingModeWhenStill.setEnabled(enabled);
+                    antialiasingModeAlways.setEnabled(enabled);
                 }
-            });
+            }, "antialiasing");
             int radioButtonsIndentPixels = 30;
-            addLeftJustified(general, 0, allowAntialiasing);
             addLeftJustified(general, radioButtonsIndentPixels, antialiasingModeWhenStill);
             addLeftJustified(general, radioButtonsIndentPixels, antialiasingModeAlways);
 
@@ -1486,8 +1486,7 @@ public class MC4DSwing extends JFrame {
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
 
             // quick mode controls
-            final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
-            addLeftJustified(general, 0, quick);
+            addLeftJustified(general, 0, new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation"));
             final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
             final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", false, false, repainter, "No twist animations for macro sequences");
             allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
@@ -1495,13 +1494,14 @@ public class MC4DSwing extends JFrame {
             ButtonGroup quickGroup = new ButtonGroup();
             quickGroup.add(allMoves);
             quickGroup.add(justMacros);
-            quick.addActionListener(new ActionListener() {
+            PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
                 @Override
-                public void actionPerformed(ActionEvent e) {
-                    allMoves.setEnabled(quick.isSelected());
-                    justMacros.setEnabled(quick.isSelected());
+                public void propertyChanged(String property, String newval) {
+                    boolean enabled = PropertyManager.getBoolean("quickmoves", true);
+                    allMoves.setEnabled(enabled);
+                    justMacros.setEnabled(enabled);
                 }
-            });
+            }, "quickmoves");
             addLeftJustified(general, radioButtonsIndentPixels, allMoves);
             addLeftJustified(general, radioButtonsIndentPixels, justMacros);
 
