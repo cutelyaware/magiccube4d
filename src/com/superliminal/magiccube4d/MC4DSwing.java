@@ -53,6 +53,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
+import javax.swing.JSplitPane;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -982,8 +983,11 @@ public class MC4DSwing extends JFrame {
 
         Container contents = getContentPane();
         contents.setLayout(new BorderLayout());
-        contents.add(macroControlsContainer, "West");
-        contents.add(viewcontainer, "Center");
+        contents.add(new JSplitPane(/*orientation=*/JSplitPane.HORIZONTAL_SPLIT,
+                                    /*continuousLayout=*/true,
+                                    /*leftComponent=*/macroControlsContainer,
+                                    /*rightComponent=*/viewcontainer),
+                     "Center");
         contents.add(statusBar, "South");
 
         puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
