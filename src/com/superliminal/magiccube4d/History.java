@@ -14,11 +14,11 @@ import java.util.Queue;
 /**
  * Maintains a sequence of twists, rotates, and marks applied to a MagicCube4D puzzle.
  * Supports undo/redo and macro moves and is able to save and restore from log files.
- * 
+ *
  * <p>
  * DESIGN
  * </p>
- * 
+ *
  * <pre>
  * - Twists and rotates are called "moves". Rotates are represented internally as twists that affect all slices (-1) but are logically considered a different kind of move.
  * - Marks are single character delimiters that can be inserted between moves like bookmarks. Note: there can be any number of marks between moves.
@@ -27,9 +27,9 @@ import java.util.Queue;
  * - There is a reference to a "current" move which may be any node and can be accessed via getCurrent() and controlled with the various goToXxxx() methods. Internally, a null current refers to last.
  * - Notification of changes to the current node can be listened to.
  * </pre>
- * 
+ *
  * Copyright 2005 - Superliminal Software
- * 
+ *
  * @author Don Hatch
  * @author Melinda Green
  */
@@ -316,7 +316,7 @@ public class History {
      * wrongly return true.  What are the consequences?
      * I think fixing this will require knowing the per-face cut counts
      * (available from the PolytopePuzzleDescription).
-     * 
+     *
      * @return true if given slice mask affects the entire puzzle, false otherwise.
      */
     private boolean isRotate(int slicemask) {
@@ -379,7 +379,7 @@ public class History {
     }
     /**
      * Looks either forwards or backwards for a given mark and makes it the current node if found.
-     * 
+     *
      * @param mark Mark to search for.
      * @param backwards Direction to search.
      * @return true if found and current changed, false otherwise.
@@ -401,7 +401,7 @@ public class History {
 
     /**
      * Back up one move in the history.
-     * 
+     *
      * @return A move that would undo the last move or null if nothing to undo.
      */
     public MagicCube.TwistData undo() {
@@ -475,7 +475,7 @@ public class History {
 
     /**
      * @return next history node whether actual move or not.
-     * 
+     *
      *         private HistoryNode getNext() {
      *         return (current!=null ? current.next : null);
      *         }
@@ -491,7 +491,7 @@ public class History {
 
     /**
      * Deletes the first given mark at or before the current node.
-     * 
+     *
      * @return true if found, false otherwise.
      */
     public boolean removeLastMark(char mark) {
@@ -503,7 +503,7 @@ public class History {
 
     /**
      * Deletes the next given mark at or after the current node.
-     * 
+     *
      * @return true if found, false otherwise.
      */
     public boolean removeNextMark(char mark) {
@@ -641,7 +641,7 @@ public class History {
 
     /**
      * Reads a simple decimal integer.
-     * 
+     *
      * @param pr PushbackReader to read from.
      * @return integer value of parsed number.
      * @throws NumberFormatException
@@ -724,7 +724,7 @@ public class History {
 
     /**
      * Converts a list of twists into an equivalent and possibly shorter list.
-     * 
+     *
      * @param inmoves input array of moves to compress.
      * @param len edge edgeLength of the puzzle. Note: <i>not</i> the edgeLength of the moves array.
      * @return possibly reduced list of moves that produce the same effect as the input moves.
@@ -739,7 +739,7 @@ public class History {
 
     /**
      * Reverses both the order of the history moves and their directions.
-     * 
+     *
      * Note: Also kills current, if any, just due to laziness.
      */
     public void reverse() {
@@ -759,9 +759,9 @@ public class History {
     /**
      * Meant to squeeze out all redundancies and filler.
      * This is usually done in preparation for a "cheat" solve.
-     * 
+     *
      * <li>Truncate (i.e. delete everything past current),</li> <li>Remove non-moves (marks),</li> <li>Merge same-face twists,</li> <li>Sweeping rotates to the beginning.</li>
-     * 
+     *
      * If sweepRotatesForward is set, does it in the opposite
      * direction. In this case it's assumed to not be a real history,
      * and current is not allowed to be set.
@@ -770,8 +770,8 @@ public class History {
         // TODO: Uncomment the body below and fix.
     }
 //
-//    	//int startCount = this.countMoves(false);
-//    	
+//      //int startCount = this.countMoves(false);
+//
 //        if (sweepRotatesForward)
 //        {
 //            Assert(current == null);
@@ -976,7 +976,7 @@ public class History {
 //                    MagicCube.Stickerspec grip = scratchGrip;
 //                    grip.face = face;
 //                    for (grip.id_within_face = 0;
-//                         grip.id_within_face < MagicCube.GRIPS_PER_FACE; // TODO: need way to know how many 
+//                         grip.id_within_face < MagicCube.GRIPS_PER_FACE; // TODO: need way to know how many
 //                         grip.id_within_face++)
 //                    {
 //                        PolygonManager.fillStickerspecFromFaceAndIdAndLength(grip, 3);
@@ -1040,7 +1040,7 @@ public class History {
 //        //int endCount = this.countMoves(false);
 //        //System.out.println("compressed " + startCount+ " twist sequence to " + endCount + " (" + (startCount - endCount)*100f/startCount + "%)");
 //    } // end compress
-//    
+//
 //
 //    private static void randomPermutation(int perm[])
 //    {
@@ -1058,7 +1058,7 @@ public class History {
 //        }
 //    }
 //
-//    
+//
 //    public void oldcompress() {
 //        // TODO: perform on the fly, as the cheat-solve is happening, otherwise long wait if the history is long.
 //        HistoryNode node, nodeptr;

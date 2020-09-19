@@ -150,7 +150,7 @@ public class PuzzleManager
     }
 
     // XXX - Should we move this to an interface method on the generic puzzle,
-    //		 and implement inside there?
+    //           and implement inside there?
     public boolean isSolved()
     {
         int nFaces = puzzleDescription.nFaces();

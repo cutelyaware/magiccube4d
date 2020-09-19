@@ -604,8 +604,8 @@ public class PipelineUtils
 
         // Comparison vectors.
         // NOTE: The commented out check is for the sticker facets not on the cell boundary.
-        //		 The behavior for these facets needs to be worked out further, so for now
-        //		 we will simply make those work in the traditional fashion (as a clicked corner).
+        //               The behavior for these facets needs to be worked out further, so for now
+        //               we will simply make those work in the traditional fashion (as a clicked corner).
         float c1 = VecMath.normsqrd(VecMath.vmv(stickerCenter, faceCenter));
         float c2 = VecMath.normsqrd(VecMath.vmv(polyCenter, faceCenter));
         boolean itsProbablyThe2 =
