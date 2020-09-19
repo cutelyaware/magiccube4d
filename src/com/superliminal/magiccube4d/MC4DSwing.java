@@ -957,19 +957,20 @@ public class MC4DSwing extends JFrame {
                 dialog.setVisible(true);
             }
         });
-        final JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", MagicCube.DEBUGGING, false, helpmenu, "Whether to print diagnostic information to the console");
-        debug_checkbox.addChangeListener(new ChangeListener() {
+        JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", MagicCube.DEBUGGING, false, helpmenu, "Whether to print diagnostic information to the console");
+        PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
             @Override
-            public void stateChanged(ChangeEvent ce) {
-                History.setDebugging(debug_checkbox.isSelected());
+            public void propertyChanged(String property, String newval) {
+                History.setDebugging(PropertyManager.getBoolean(MagicCube.DEBUGGING, false));
                 view.repaint();
             }
-        });
+        }, MagicCube.DEBUGGING);
+
         helpmenu.add(new JMenuItem("Debugging Console")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 Console.show("MC4D Debugging Console");
-                if(Console.getLineCount() <= 1 && !debug_checkbox.isSelected())
+                if(Console.getLineCount() <= 1 && !PropertyManager.getBoolean(MagicCube.DEBUGGING, false))
                     System.out.println("Output text and error messages are redirected here when this window is showing. \nYou'll probably need to also turn on Help > debugging to see much.");
             }
         });
