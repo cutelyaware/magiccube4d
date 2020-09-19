@@ -1383,6 +1383,16 @@ public class MC4DSwing extends JFrame {
         }
     }
 
+    private static void setEnabledWhenPropertyIsTrue(final Component c, final String propname, final boolean dflt) {
+      PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
+          @Override
+          public void propertyChanged(String property, String newval) {
+              c.setEnabled(PropertyManager.getBoolean(propname, dflt));
+          }
+      }, propname);
+      c.setEnabled(PropertyManager.getBoolean(propname, dflt));
+    }
+
     // Hack to get a control to appear on the left
     // instead of center of the `general` panel in PreferencesEditor.
     // setAlignmentX() didn't seem to do it.
@@ -1465,19 +1475,11 @@ public class MC4DSwing extends JFrame {
             // doing so would slow them down unnecessarily.
             final JRadioButton antialiasingModeWhenStill = new PropRadioButton("when still", "antialiasingmeansalways", false, true, null, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
             final JRadioButton antialiasingModeAlways = new PropRadioButton("always", "antialiasingmeansalways", false, false, null, "Antialias every frame - Warning: can be very slow on large puzzles");
-            antialiasingModeWhenStill.setEnabled(PropertyManager.getBoolean("antialiasing", true));
-            antialiasingModeAlways.setEnabled(PropertyManager.getBoolean("antialiasing", true));
+            setEnabledWhenPropertyIsTrue(antialiasingModeWhenStill, "antialiasing", true);
+            setEnabledWhenPropertyIsTrue(antialiasingModeAlways, "antialiasing", true);
             ButtonGroup antialiasingModeGroup = new ButtonGroup();
             antialiasingModeGroup.add(antialiasingModeWhenStill);
             antialiasingModeGroup.add(antialiasingModeAlways);
-            PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
-                @Override
-                public void propertyChanged(String property, String newval) {
-                    boolean enabled = PropertyManager.getBoolean("antialiasing", true);
-                    antialiasingModeWhenStill.setEnabled(enabled);
-                    antialiasingModeAlways.setEnabled(enabled);
-                }
-            }, "antialiasing");
             int radioButtonsIndentPixels = 30;
             addLeftJustified(general, radioButtonsIndentPixels, antialiasingModeWhenStill);
             addLeftJustified(general, radioButtonsIndentPixels, antialiasingModeAlways);
@@ -1489,19 +1491,11 @@ public class MC4DSwing extends JFrame {
             addLeftJustified(general, 0, new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation"));
             final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
             final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", false, false, repainter, "No twist animations for macro sequences");
-            allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
-            justMacros.setEnabled(PropertyManager.getBoolean("quickmoves", false));
+            setEnabledWhenPropertyIsTrue(allMoves, "quickmoves", false);
+            setEnabledWhenPropertyIsTrue(justMacros, "quickmoves", false);
             ButtonGroup quickGroup = new ButtonGroup();
             quickGroup.add(allMoves);
             quickGroup.add(justMacros);
-            PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
-                @Override
-                public void propertyChanged(String property, String newval) {
-                    boolean enabled = PropertyManager.getBoolean("quickmoves", true);
-                    allMoves.setEnabled(enabled);
-                    justMacros.setEnabled(enabled);
-                }
-            }, "quickmoves");
             addLeftJustified(general, radioButtonsIndentPixels, allMoves);
             addLeftJustified(general, radioButtonsIndentPixels, justMacros);
 
