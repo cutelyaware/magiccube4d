@@ -918,7 +918,7 @@ public class MC4DSwing extends JFrame {
 
         // Help
         //
-        final JMenu helpmenu = new JMenu("Help");
+        JMenu helpmenu = new JMenu("Help");
         helpmenu.add(new JMenuItem("About " + MagicCube.TITLE + "...")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
@@ -1431,8 +1431,8 @@ public class MC4DSwing extends JFrame {
                 }
             };
             removeAll();
-            final JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", true, false, repainter, "Control-click will rotate clicked face to the center");
-            final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", true, true, repainter, "Control-click will rotate clicked cubie to the center");
+            JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", true, false, repainter, "Control-click will rotate clicked face to the center");
+            JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", true, true, repainter, "Control-click will rotate clicked cubie to the center");
             ButtonGroup ctrlRotateGroup = new ButtonGroup();
             ctrlRotateGroup.add(ctrlRotateByFace);
             ctrlRotateGroup.add(ctrlRotateByCubie);
@@ -1473,8 +1473,8 @@ public class MC4DSwing extends JFrame {
             addLeftJustified(general, 0, new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges - Warning: Can be expensive on large puzzles"));
             // note that these two radio buttons do *not* need to be passed the repainter;
             // doing so would slow them down unnecessarily.
-            final JRadioButton antialiasingModeWhenStill = new PropRadioButton("when still", "antialiasingmeansalways", false, true, null, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
-            final JRadioButton antialiasingModeAlways = new PropRadioButton("always", "antialiasingmeansalways", false, false, null, "Antialias every frame - Warning: can be very slow on large puzzles");
+            JRadioButton antialiasingModeWhenStill = new PropRadioButton("when still", "antialiasingmeansalways", false, true, null, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
+            JRadioButton antialiasingModeAlways = new PropRadioButton("always", "antialiasingmeansalways", false, false, null, "Antialias every frame - Warning: can be very slow on large puzzles");
             setEnabledWhenPropertyIsTrue(antialiasingModeWhenStill, "antialiasing", true);
             setEnabledWhenPropertyIsTrue(antialiasingModeAlways, "antialiasing", true);
             ButtonGroup antialiasingModeGroup = new ButtonGroup();
@@ -1489,8 +1489,8 @@ public class MC4DSwing extends JFrame {
 
             // quick mode controls
             addLeftJustified(general, 0, new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation"));
-            final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
-            final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", false, false, repainter, "No twist animations for macro sequences");
+            JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
+            JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", false, false, repainter, "No twist animations for macro sequences");
             setEnabledWhenPropertyIsTrue(allMoves, "quickmoves", false);
             setEnabledWhenPropertyIsTrue(justMacros, "quickmoves", false);
             ButtonGroup quickGroup = new ButtonGroup();
