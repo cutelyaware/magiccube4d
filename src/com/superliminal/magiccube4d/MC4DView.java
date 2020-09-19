@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
@@ -262,7 +263,9 @@ public class MC4DView extends Component {
                 super.mouseMoved(me);
                 if(puzzleManager != null) {
                     if(!isInMotion() && puzzleManager.updateStickerHighlighting(me.getX(), me.getY(), getSlicemask(), me.isControlDown()))
+                    {
                         repaint();
+                    }
                 }
             }
         });
@@ -368,10 +371,32 @@ public class MC4DView extends Component {
     }
 
     private int numPaints = 0;
+    private Image yetAnotherBackBuffer = null;
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Graphics componentGraphics) {
         frames++;
+
+        Graphics g = componentGraphics;
+        if (PropertyManager.getBoolean("useyetanotherbackbuffer", false))
+        {
+            // Make sure this.yetAnotherBackBuffer exists and matches our size.
+            int w = getWidth(), h = getHeight();
+            if (this.yetAnotherBackBuffer == null
+             || w != this.yetAnotherBackBuffer.getWidth(null)
+             || h != this.yetAnotherBackBuffer.getHeight(null))
+            {
+                System.out.println("    creating back buffer of size "+w+"x"+h);
+                this.yetAnotherBackBuffer = this.createImage(w, h);
+            }
+
+            // Now make it so the rest of this function renders
+            // into this.yetAnotherBackBuffer instead of directly to the component
+            // (and when I say "directly to the component", I probably mean
+            // to the back buffer that swing provides by default).
+            g = this.yetAnotherBackBuffer.getGraphics();
+        }
+
         if(animationQueue.isAnimating() && puzzleManager.iTwist == puzzleManager.nTwist) {
             // time to stop the animation
             animationQueue.finishedTwist(); // end animation
@@ -401,6 +426,7 @@ public class MC4DView extends Component {
         if(lastDrag == null && rotationHandler.continueSpin()) { // keep spinning
             repaint();
         }
+
         if(g instanceof Graphics2D) {
             Graphics2D g2d = (Graphics2D) g;
             // antialiasing makes for a beautiful image but can also be expensive to draw therefore
@@ -439,6 +465,7 @@ public class MC4DView extends Component {
                 PropertyManager.getBoolean("shadows", true),
                 do3DStepsOnly,
                 this);
+            long t0 = System.nanoTime();
             puzzleManager.paintFrame(g,
                 frame,
                 PropertyManager.getBoolean("shadows", true),
@@ -446,6 +473,8 @@ public class MC4DView extends Component {
                 PropertyManager.getBoolean("highlightbycubie", false),
                 PropertyManager.getBoolean("outlines", false) ? PropertyManager.getColor("outlines.color") : null,
                 PropertyManager.getFloat("twistfactor", 1));
+            long t1 = System.nanoTime();
+            //System.out.println("  paintFrame "+numPaints+" took "+(t1-t0)/1e9+"s), "+((Graphics2D)g).getRenderingHint(RenderingHints.KEY_ANTIALIASING)+", "+(g==componentGraphics ? "direct to component" : "to yetAnotherBackBuffer"));
             if(FPSTimer.isRunning() && rotationHandler.continueSpin() && lastDrag == null) {
                 StringBuffer sb = new StringBuffer();
                 for(int i = 0; i < FPS; i++)
@@ -463,6 +492,12 @@ public class MC4DView extends Component {
             g.drawString(text,
                 /* x= */getWidth() - 2 - fontMetrics.stringWidth(text),
                 /* y= */g.getFontMetrics().getAscent());
+        }
+
+        // If we've been rendering into this.yetAnotherBackBuffer,
+        // then copy that into this component's graphics now.
+        if (g != componentGraphics) {
+            componentGraphics.drawImage(this.yetAnotherBackBuffer, 0, 0, /*imageObserver=*/this);
         }
     } // end paint()
 

@@ -1384,6 +1384,16 @@ public class MC4DSwing extends JFrame {
         }
     }
 
+    private static void setVisibleWhenPropertyIsTrue(final Component c, final String propname, final boolean dflt) {
+      PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
+          @Override
+          public void propertyChanged(String property, String newval) {
+              c.setVisible(PropertyManager.getBoolean(propname, dflt));
+          }
+      }, propname);
+      c.setVisible(PropertyManager.getBoolean(propname, dflt));
+    }
+
     private static void setEnabledWhenPropertyIsTrue(final Component c, final String propname, final boolean dflt) {
       PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
           @Override
@@ -1484,6 +1494,10 @@ public class MC4DSwing extends JFrame {
             int radioButtonsIndentPixels = 30;
             addLeftJustified(general, radioButtonsIndentPixels, antialiasingModeWhenStill);
             addLeftJustified(general, radioButtonsIndentPixels, antialiasingModeAlways);
+            // "Use back buffer" checkbox is visible only in Debugging mode.
+            JCheckBox useBackBuffer = new PropCheckBox("Use back buffer (EXPERIMENTAL)", "useyetanotherbackbuffer", false, repainter, "Whether to use yet another back buffer.  Seems to speed up antialiasing tremendously on some platforms.");
+            setVisibleWhenPropertyIsTrue(useBackBuffer, MagicCube.DEBUGGING, false);
+            addLeftJustified(general, 0, useBackBuffer);
 
             addLeftJustified(general, 0, mute);
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
