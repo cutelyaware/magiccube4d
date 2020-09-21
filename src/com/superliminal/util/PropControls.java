@@ -51,7 +51,7 @@ public class PropControls {
      */
     public static class PropCheckBox extends JCheckBox {
         public PropCheckBox(String title, final String propname, final boolean dflt, final Component dependent, String tooltip) {
-            super(title, PropertyManager.getBoolean(propname, dflt));
+            super(title);
             setToolTipText(tooltip);
             addActionListener(new ActionListener() {
                 @Override
@@ -66,6 +66,7 @@ public class PropControls {
                     setSelected(PropertyManager.getBoolean(propname, dflt));
                 }
             }, propname);
+            setSelected(PropertyManager.getBoolean(propname, dflt));
         }
     }
 
@@ -76,8 +77,6 @@ public class PropControls {
         public PropRadioButton(String title, final String propname, final boolean dflt, final boolean invert, final Component dependent, String tooltip) {
             super(title);
             setToolTipText(tooltip);
-            boolean is_on = PropertyManager.getBoolean(propname, dflt);
-            setSelected(invert ? !is_on : is_on);
             addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -93,6 +92,8 @@ public class PropControls {
                     setSelected(invert ? !is_on : is_on);
                 }
             }, propname);
+            boolean is_on = PropertyManager.getBoolean(propname, dflt);
+            setSelected(invert ? !is_on : is_on);
         }
     }
 
