@@ -1422,14 +1422,12 @@ public class MC4DSwing extends JFrame {
             rotateMode.add(Box.createHorizontalGlue());
             ctrlClickLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             JCheckBox mute = new PropCheckBox("Mute Sound Effects", MagicCube.MUTED, false, repainter, "Whether to allow sound effects");
-            final JCheckBox blindfoldbox = new PropCheckBox("Blindfold", MagicCube.BLINDFOLD, false, repainter, "Whether to gray out sticker colors");
+            JCheckBox blindfoldbox = new PropCheckBox("Blindfold", MagicCube.BLINDFOLD, false, repainter, "Whether to gray out sticker colors");
             StaticUtils.addHotKey(KeyEvent.VK_D, blindfoldbox, MagicCube.BLINDFOLD, new ProbableAction("Blind") {
                 @Override
                 public void doit(ActionEvent ae) {
-                    // All the below seems like it should happen automatically. Maybe needs Don's 2-way PropControls.
                     boolean is_checked = PropertyManager.getBoolean(MagicCube.BLINDFOLD, false);
                     PropertyManager.userprefs.setProperty(MagicCube.BLINDFOLD, !is_checked + "");
-                    blindfoldbox.setSelected(!is_checked);
                     view.repaint();
                 }
             });
