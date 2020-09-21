@@ -31,6 +31,7 @@ public class PuzzleManager
     public PuzzleDescription puzzleDescription = null;
     public int puzzleState[] = null;
     public Color faceColors[];
+    private Color gray[] = {new Color(128, 128, 128)};
 
     /**
      * Reinitializes the puzzleState array of color indices.
@@ -248,7 +249,7 @@ public class PuzzleManager
             return null;
         }
 
-        System.out.println("    successfully built \""+schlafli + " " + lengthString + "\" -> topological fingerprint = "+newPuzzle.getTopologicalFingerprintDigest());
+        System.out.println("    successfully built \"" + schlafli + " " + lengthString + "\" -> topological fingerprint = " + newPuzzle.getTopologicalFingerprintDigest());
 
         return newPuzzle;
     }
@@ -556,6 +557,7 @@ public class PuzzleManager
         Color ground,
         boolean highlightByCubie,
         Color outlineColor,
+        boolean blindfolded,
         float twistFactor)
     {
         PipelineUtils.paintFrame(
@@ -565,7 +567,7 @@ public class PuzzleManager
             puzzleState,
             showShadows,
             ground,
-            faceColors,
+            blindfolded ? gray : faceColors,
             highlit ? iStickerUnderMouse : -1,
             highlightByCubie,
             outlineColor);

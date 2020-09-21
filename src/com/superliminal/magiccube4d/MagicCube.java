@@ -176,7 +176,8 @@ public class MagicCube {
         FACE_COLORS_FILE = "facecolors.txt", // relative to executable
         MAGIC_NUMBER = "MagicCube4D", // 1st string in log and macro files for sanity checking
         DEBUGGING = "debugging", // Shared Property Manager key for toggling debugging code.
-        MUTED = "muted"; // Whether to play sounds.
+        MUTED = "muted", // Whether to play sounds.
+        BLINDFOLD = "blindfold"; // Whether to gray out sticker colors.
 
     public final static Color
         SKY = new Color(20, 170, 235),

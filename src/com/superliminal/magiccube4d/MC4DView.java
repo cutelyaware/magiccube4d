@@ -423,6 +423,7 @@ public class MC4DView extends Component {
                 PropertyManager.getBoolean("ground", true) ? PropertyManager.getColor("ground.color") : null,
                 PropertyManager.getBoolean("highlightbycubie", false),
                 PropertyManager.getBoolean("outlines", false) ? PropertyManager.getColor("outlines.color") : null,
+                PropertyManager.getBoolean("blindfold", false),
                 PropertyManager.getFloat("twistfactor", 1));
             if(FPSTimer.isRunning() && rotationHandler.continueSpin() && lastDrag == null) {
                 StringBuffer sb = new StringBuffer();
