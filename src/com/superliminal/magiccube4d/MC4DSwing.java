@@ -1467,7 +1467,7 @@ public class MC4DSwing extends JFrame {
             general.add(blindfoldbox);
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
             // quick mode controls
-            final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
+            PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
             JPanel quickMode = new JPanel();
             quickMode.setLayout(new BoxLayout(quickMode, BoxLayout.X_AXIS));
             quickMode.add(quick);
@@ -1481,13 +1481,14 @@ public class MC4DSwing extends JFrame {
             ButtonGroup quickGroup = new ButtonGroup();
             quickGroup.add(allMoves);
             quickGroup.add(justMacros);
-            quick.addActionListener(new ActionListener() {
+            PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
                 @Override
-                public void actionPerformed(ActionEvent e) {
-                    allMoves.setEnabled(quick.isSelected());
-                    justMacros.setEnabled(quick.isSelected());
+                public void propertyChanged(String property, String newval) {
+                    boolean enabled = PropertyManager.getBoolean("quickmoves", true);
+                    allMoves.setEnabled(enabled);
+                    justMacros.setEnabled(enabled);
                 }
-            });
+            }, "quickmoves");
             general.add(allMoves);
             general.add(justMacros);
             general.add(rotateMode);
