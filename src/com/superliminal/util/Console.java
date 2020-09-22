@@ -64,8 +64,6 @@ public class Console {
                 dependent.repaint();
         }
     };
-    // TODO: get rid of this when PropRadioButton can accept dependent=null without throwing
-    private static Component mDummyRepainter = new Component() { @Override public void repaint() {}; };
 
     private static void setEnabledWhenPropertyIsTrue(final Component c, final String propname, final boolean dflt) {
         PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
@@ -128,8 +126,8 @@ public class Console {
                         setBorder(new TitledBorder("EXPERIMENTAL NEW CONTROLS"));
                         // TODO: investigate why all the views are getting repainted before the controls get enabled/disabled!  that's not friendly!
                         addLeftJustified(0, new PropCheckBox("Allow Antialiasing", "antialiasing", true, mRepainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles"));
-                        final JRadioButton whenstill = new PropRadioButton("when still", "antialiasingmeansalways", /*dflt=*/false, /*invert=*/true, mDummyRepainter, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
-                        final JRadioButton always = new PropRadioButton("always (NOT HOOKED UP YET: AWAITING CODE REVIEW)", "antialiasingmeansalways", /*dflt=*/false, /*invert=*/false, mDummyRepainter, "Antialias every frame - Warning: can be very slow on large puzzles");
+                        final JRadioButton whenstill = new PropRadioButton("when still", "antialiasingmeansalways", /*dflt=*/false, /*invert=*/true, /*dependent=*/null, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
+                        final JRadioButton always = new PropRadioButton("always (NOT HOOKED UP YET: AWAITING CODE REVIEW)", "antialiasingmeansalways", /*dflt=*/false, /*invert=*/false, /*dependent=*/null, "Antialias every frame - Warning: can be very slow on large puzzles");
                         setEnabledWhenPropertyIsTrue(whenstill, "antialiasing", true);
                         setEnabledWhenPropertyIsTrue(always, "antialiasing", true);
                         new ButtonGroup() {{
