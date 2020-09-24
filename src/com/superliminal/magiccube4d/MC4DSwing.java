@@ -1410,8 +1410,8 @@ public class MC4DSwing extends JFrame {
                 }
             };
             removeAll();
-            final JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", /*dflt=*/true, /*invert=*/false, repainter, "Control-click will rotate clicked face to the center");
-            final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", /*dflt=*/true, /*invert=*/true, repainter, "Control-click will rotate clicked cubie to the center");
+            final JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", /* dflt= */true, /* invert= */false, repainter, "Control-click will rotate clicked face to the center");
+            final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", /* dflt= */true, /* invert= */true, repainter, "Control-click will rotate clicked cubie to the center");
             ButtonGroup ctrlRotateGroup = new ButtonGroup();
             ctrlRotateGroup.add(ctrlRotateByFace);
             ctrlRotateGroup.add(ctrlRotateByCubie);
@@ -1465,6 +1465,8 @@ public class MC4DSwing extends JFrame {
             general.add(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles"));
             general.add(mute);
             general.add(blindfoldbox);
+//            for(Component comp : general.getComponents())
+//                ((JComponent) comp).setAlignmentX(Component.LEFT_ALIGNMENT);
             //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
             // quick mode controls
             PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
@@ -1474,8 +1476,8 @@ public class MC4DSwing extends JFrame {
             quickMode.add(Box.createHorizontalGlue());
             quick.setAlignmentX(Component.LEFT_ALIGNMENT);
             general.add(quickMode);
-            final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", /*dflt=*/false, /*invert=*/true, repainter, "No twist animations at all");
-            final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", /*dflt=*/false, /*invert=*/false, repainter, "No twist animations for macro sequences");
+            final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", /* dflt= */false, /* invert= */true, repainter, "No twist animations at all");
+            final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", /* dflt= */false, /* invert= */false, repainter, "No twist animations for macro sequences");
             allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
             justMacros.setEnabled(PropertyManager.getBoolean("quickmoves", false));
             ButtonGroup quickGroup = new ButtonGroup();
