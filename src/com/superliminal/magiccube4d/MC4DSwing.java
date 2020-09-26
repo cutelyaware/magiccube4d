@@ -17,6 +17,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -41,6 +43,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -73,6 +76,9 @@ import com.superliminal.util.PropertyManager;
 import com.superliminal.util.ResourceUtils;
 import com.superliminal.util.SpringUtilities;
 import com.superliminal.util.StaticUtils;
+
+//import de.javasoft.plaf.synthetica.SyntheticaLookAndFeel;
+
 
 /**
  * The main desktop application.
@@ -113,8 +119,8 @@ public class MC4DSwing extends JFrame {
     private Color
         normalStatus = statusLabel.getForeground(),
         warningStatus = Color.red.darker();
-    private JPanel viewcontainer = new JPanel(new BorderLayout()); // Can use as addHotKey target when no MenuItem available.
-    private JPanel macroControlsContainer = new JPanel(new BorderLayout());
+    private JPanel mainViewContainer = new JPanel(new BorderLayout()); // Can use as addHotKey target when no MenuItem available.
+    private JPanel mainTabsContainer = new JPanel(new BorderLayout());
     private JFileChooser
         logFileChooser = new JFileChooser(),
         macroFileChooser = new JFileChooser();
@@ -794,7 +800,7 @@ public class MC4DSwing extends JFrame {
         saveasitem.addActionListener(saveas);
 
         // for debugging
-        StaticUtils.addHotKey(KeyEvent.VK_I, viewcontainer, "Ident View", new ProbableAction("Identity View") {
+        StaticUtils.addHotKey(KeyEvent.VK_I, mainViewContainer, "Ident View", new ProbableAction("Identity View") {
             @Override
             public void doit(ActionEvent ae) {
                 rotations.set4dView(null);
@@ -832,11 +838,15 @@ public class MC4DSwing extends JFrame {
 
             @Override
             public void doit(ActionEvent e) {
-                if(puzzleManager.puzzleDescription.getEdgeLength() == 1) {
+                int maxOrder = 0;
+                for(int order : puzzleManager.puzzleDescription.getGripSymmetryOrders())
+                    maxOrder = Integer.max(order, maxOrder);
+                if(maxOrder < 2) {
                     // Avoids issue 102 (Scrambling length-1 puzzles locks up the program).
-                    setStatus("Can't scramble puzzles with edge length 1.", true);
+                    setStatus("Can't scramble puzzles with edge length < 2", true);
                     return;
                 }
+                System.out.println("Max order " + maxOrder);
                 scrambleState = SCRAMBLE_NONE; // do first to avoid issue 62 (fanfare on scramble).
                 reset.actionPerformed(e);
                 int previous_face = -1;
@@ -849,7 +859,7 @@ public class MC4DSwing extends JFrame {
                     // select a random grip that is unrelated to the last one (if any)
                     int iGrip, iFace, order;
                     do {
-                        iGrip = puzzleManager.getRandomGrip();
+                        iGrip = rand.nextInt(puzzleManager.puzzleDescription.nGrips());
                         iFace = puzzleManager.puzzleDescription.getGrip2Face()[iGrip];
                         order = puzzleManager.puzzleDescription.getGripSymmetryOrders()[iGrip];
                     } while(order < 2 || // don't use 360 degree twists
@@ -976,20 +986,28 @@ public class MC4DSwing extends JFrame {
         statusBar.add(twistLabel);
         statusBar.add(Box.createRigidArea(new Dimension(10, 25))); // height is so view won't jump as progress bar is shown/hidden
 
-        viewcontainer.setBorder(new BevelBorder(BevelBorder.LOWERED));
+        mainViewContainer.setBorder(new BevelBorder(BevelBorder.LOWERED));
         statusBar.setBorder(new BevelBorder(BevelBorder.LOWERED));
 
-        // layout the components
-
-        Container contents = getContentPane();
-        contents.setLayout(new BorderLayout());
-        contents.add(new JSplitPane(
+        // Layout top-level components
+        //
+        final JSplitPane splitter = new JSplitPane(
             /* orientation= */JSplitPane.HORIZONTAL_SPLIT,
             /* continuousLayout= */true,
-            /* leftComponent= */macroControlsContainer,
-            /* rightComponent= */viewcontainer),
-            "Center");
-        contents.add(statusBar, "South");
+            /* leftComponent= */mainTabsContainer,
+            /* rightComponent= */mainViewContainer);
+        splitter.setDividerLocation(PropertyManager.getInt("divider", 300));
+        splitter.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
+            new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    PropertyManager.userprefs.setProperty("divider", "" + splitter.getDividerLocation());
+                }
+            });
+        Container contentPane = getContentPane();
+        contentPane.setLayout(new BorderLayout());
+        contentPane.add(splitter, "Center");
+        contentPane.add(statusBar, "South");
 
         puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
@@ -1016,8 +1034,6 @@ public class MC4DSwing extends JFrame {
         // Do this after loading initial puzzle to avoid console spam while loading long log file.
         History.setDebugging(debug_checkbox.isSelected());
     } // end MC4DSwing
-
-
     private void initPuzzleMenu(JMenu puzzlemenu, final JLabel label, final JProgressBar progressView) {
         final String[][] table = MagicCube.SUPPORTED_PUZZLES;
         for(int i = 0; i < table.length; ++i) {
@@ -1151,9 +1167,9 @@ public class MC4DSwing extends JFrame {
         tabs.add("Macros", macroControls);
         tabs.setSelectedIndex(PropertyManager.getInt("lasttab", 0));
         tabs.addChangeListener(tabListener);
-        macroControlsContainer.removeAll();
-        macroControlsContainer.add(tabs);
-        macroControlsContainer.validate();
+        mainTabsContainer.removeAll();
+        mainTabsContainer.add(tabs);
+        mainTabsContainer.validate();
     }
 
     private void initPuzzle(String log) {
@@ -1260,8 +1276,8 @@ public class MC4DSwing extends JFrame {
         });
         hist.setHistoryListener(history_listener);
         updateEditMenuItems();
-        viewcontainer.removeAll();
-        viewcontainer.add(view, "Center");
+        mainViewContainer.removeAll();
+        mainViewContainer.add(view, "Center");
     } // end initPuzzle
 
     /**
@@ -1337,13 +1353,24 @@ public class MC4DSwing extends JFrame {
      * Editor for user preferences.
      */
     private class PreferencesEditor extends JPanel {
-
         public PreferencesEditor() {
             init();
         }
 
+        // Wrapper class that left-aligns a component when added to a BoxLayout.
+        private class LeftAlignedRow extends JPanel {
+            public LeftAlignedRow(JComponent comp, int indent) {
+                setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+                add(Box.createRigidArea(new Dimension(indent, 0)));
+                add(comp);
+                add(Box.createHorizontalGlue());
+            }
+            public LeftAlignedRow(JComponent comp) {
+                this(comp, 0);
+            }
+        }
         private void init() {
-            // a component that simply forwards all repaint calls to the current view object.
+            // a component that forwards all repaint calls to the current view object.
             Component repainter = new Component() {
                 @Override
                 public void repaint() {
@@ -1368,8 +1395,6 @@ public class MC4DSwing extends JFrame {
             rotateMode.setLayout(new BoxLayout(rotateMode, BoxLayout.X_AXIS));
             rotateMode.add(ctrlClickLabel);
             rotateMode.add(Box.createHorizontalGlue());
-            ctrlClickLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            JCheckBox mute = new PropCheckBox("Mute Sound Effects", MagicCube.MUTED, false, repainter, "Whether to allow sound effects");
             final JCheckBox blindfoldbox = new PropCheckBox("Blindfold", MagicCube.BLINDFOLD, false, repainter, "Whether to gray out sticker colors");
             StaticUtils.addHotKey(KeyEvent.VK_D, blindfoldbox, MagicCube.BLINDFOLD, new ProbableAction("Blind") {
                 @Override
@@ -1384,10 +1409,11 @@ public class MC4DSwing extends JFrame {
             class MyLabel extends JLabel {
                 public MyLabel(String text) {
                     super(text);
-                    setPreferredSize(new Dimension(80, super.getPreferredSize().height));
+                    setPreferredSize(new Dimension(100, super.getPreferredSize().height));
                 }
             }
             JPanel sliders = new JPanel(new SpringLayout());
+            sliders.setBorder(new TitledBorder("Adjustments"));
             sliders.add(new MyLabel("Twist Speed"));
             sliders.add(new PropSlider("twistfactor", repainter, 1, .05f, 5, "Speed of twisting animation"));
             sliders.add(new MyLabel("Drag Speed"));
@@ -1402,26 +1428,17 @@ public class MC4DSwing extends JFrame {
             sliders.add(new PropSlider("stickershrink", repainter, MagicCube.STICKERSHRINK, .1f, 1.5f, "Size of stickers within faces"));
             sliders.add(new MyLabel("Eye W Scale"));
             sliders.add(new PropSlider("eyew", repainter, MagicCube.EYEW, .75f, 4, "Focal length of 4D camera"));
-            sliders.setMaximumSize(new Dimension(400, 20));
             SpringUtilities.makeCompactGrid(sliders, 6, 2, 0, 0, 0, 0);
-            JPanel general = new JPanel();
-            general.setLayout(new BoxLayout(general, BoxLayout.Y_AXIS));
-            general.add(sliders);
-            general.add(new PropCheckBox("Show Shadows", "shadows", true, repainter, null));
-            general.add(new PropCheckBox("Allow Auto-Rotation", "autorotate", true, repainter, "Whether to keep spinning if mouse released while dragging"));
-            general.add(new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter, "Whether to highlight all stickers of hovered piece or just the hovered sticker"));
-            general.add(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles"));
-            general.add(mute);
-            general.add(blindfoldbox);
-            //general.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
-            // quick mode controls
+            JPanel modes = new JPanel();
+            modes.setLayout(new BoxLayout(modes, BoxLayout.Y_AXIS));
+            modes.add(new LeftAlignedRow(new PropCheckBox("Show Shadows", "shadows", true, repainter, null)));
+            modes.add(new LeftAlignedRow(new PropCheckBox("Allow Auto-Rotation", "autorotate", true, repainter, "Whether to keep spinning if mouse released while dragging")));
+            modes.add(new LeftAlignedRow(new PropCheckBox("Highlight by Cubie", "highlightbycubie", false, repainter, "Whether to highlight all stickers of hovered piece or just the hovered sticker")));
+            modes.add(new LeftAlignedRow(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles")));
+            modes.add(new LeftAlignedRow(new PropCheckBox("Mute Sound Effects", MagicCube.MUTED, false, repainter, "Whether to allow sound effects")));
+            modes.add(new LeftAlignedRow(blindfoldbox));
             final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
-            JPanel quickMode = new JPanel();
-            quickMode.setLayout(new BoxLayout(quickMode, BoxLayout.X_AXIS));
-            quickMode.add(quick);
-            quickMode.add(Box.createHorizontalGlue());
-            quick.setAlignmentX(Component.LEFT_ALIGNMENT);
-            general.add(quickMode);
+            modes.add(new LeftAlignedRow(quick));
             final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
             final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", true, false, repainter, "No twist animations for macro sequences");
             allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
@@ -1436,17 +1453,17 @@ public class MC4DSwing extends JFrame {
                     justMacros.setEnabled(quick.isSelected());
                 }
             });
-            general.add(allMoves);
-            general.add(justMacros);
-            general.add(rotateMode);
-            general.add(ctrlRotateByFace);
-            general.add(ctrlRotateByCubie);
-            general.add(Box.createVerticalGlue());
-            // background controls
+            final int indent = 50;
+            modes.add(new LeftAlignedRow(allMoves, indent));
+            modes.add(new LeftAlignedRow(justMacros, indent));
+            modes.add(rotateMode);
+            modes.add(new LeftAlignedRow(ctrlRotateByFace, indent));
+            modes.add(new LeftAlignedRow(ctrlRotateByCubie, indent));
+            //modes.add(contigiousCubies); // Uncomment when we can make it work immediately and correctly.
+            // color controls
             ColorButton skyColor = new ColorButton("Sky", "sky.color", MagicCube.SKY, color_repainter, true);
             ColorButton ground = new ColorButton("Ground", "ground.color", MagicCube.GROUND, color_repainter, true);
             JCheckBox drawGround = new PropCheckBox("Draw Ground", "ground", true, repainter, "Whether to draw a ground plane");
-            // outlining controls
             JCheckBox drawOutlines = new PropCheckBox("Draw Outlines", "outlines", false, repainter, "Whether to draw sticker edges");
             ColorButton outlinesColor = new ColorButton("Outlines", "outlines.color", Color.BLACK, color_repainter, true);
             JPanel colors = new JPanel(new SpringLayout());
@@ -1456,7 +1473,7 @@ public class MC4DSwing extends JFrame {
             colors.add(ground);
             colors.add(drawOutlines);
             colors.add(outlinesColor);
-            SpringUtilities.makeCompactGrid(colors, 3, 2, 0, 0, 0, 5);
+            SpringUtilities.makeCompactGrid(colors, 3, 2, 0, 0, 10, 4);
             JButton reset_button = new JButton("Reset To Defaults");
             reset_button.addActionListener(new ActionListener() {
                 @Override
@@ -1469,17 +1486,23 @@ public class MC4DSwing extends JFrame {
                     initPuzzle(fname);
                     scrambleState = SCRAMBLE_NONE;
                     init(); // to sync the controls with the default prefs.
-                    viewcontainer.validate();
+                    mainViewContainer.validate();
                     view.repaint();
                 }
             });
-            general.setBorder(new TitledBorder("General"));
-            colors.setBorder(new TitledBorder("Colors"));
+            modes.setBorder(new TitledBorder("Modes"));
             setPreferredSize(new Dimension(200, 600));
-            // layout the components
-            setLayout(new BorderLayout());
-            add(general, "North");
-            add(colors, "Center");
+            // layout the top-level components
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            add(sliders);
+            add(modes);
+            JPanel colors_holder = new JPanel();
+            colors_holder.setBorder(new TitledBorder("Colors"));
+            colors_holder.setLayout(new BoxLayout(colors_holder, BoxLayout.X_AXIS));
+            colors_holder.add(colors);
+            colors_holder.add(Box.createHorizontalGlue());
+            add(colors_holder);
+            add(Box.createVerticalGlue());
             //JPanel tmp = new JPanel();
             //tmp.add(reset); // commented out until we can make this work well
             //add(tmp, "South");
@@ -1557,7 +1580,7 @@ public class MC4DSwing extends JFrame {
                 System.out.println("version " + System.getProperty("java.version"));
                 PropertyManager.loadProps(args, PropertyManager.top);
                 try {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    UIManager.setLookAndFeel("de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel");
                 }
                 catch(Exception e) {
                     e.printStackTrace();
