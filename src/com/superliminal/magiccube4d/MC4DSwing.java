@@ -996,6 +996,7 @@ public class MC4DSwing extends JFrame {
             /* continuousLayout= */true,
             /* leftComponent= */mainTabsContainer,
             /* rightComponent= */mainViewContainer);
+        splitter.setOneTouchExpandable(true);
         splitter.setDividerLocation(PropertyManager.getInt("divider", 300));
         splitter.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
             new PropertyChangeListener() {
