@@ -1059,10 +1059,83 @@ public class MC4DSwing extends JFrame {
               @Override
               public void keyPressed(KeyEvent e) {
                   int keyCode = e.getKeyCode();
+                  char keyChar = e.getKeyChar();
                   if (keyCode == java.awt.event.KeyEvent.VK_LEFT) {
                       splitter.setDividerLocation(splitter.getDividerLocation()-1);
                   } else if (keyCode == java.awt.event.KeyEvent.VK_RIGHT) {
                       splitter.setDividerLocation(splitter.getDividerLocation()+1);
+                  } else {
+                      // Pressing a key on the numeric keypad
+                      // moves the upper-left (more problematic) corner of the
+                      // window by 1 pixel in the given direction.
+                      // Or, if Alt is down, moves the lower-right (more
+                      // well-behaved) corner instead.
+                      //
+                      // What I see on linux: if any of these is done in
+                      // isolation, then exactly one paint happens.
+                      // But, if two are done in rapid succession (either
+                      // double-tap, or press two different keys at once) then
+                      // sometimes 3 paints happen instead of 2. (?)
+                      // And, motions of the upper-left corner cause puzzle
+                      // shake, as always (see
+                      // https://stackoverflow.com/questions/64084888/shakiness-when-resizing-a-window-by-dragging-left-or-top-border )
+                      int dx = 0;
+                      int dy = 0;
+                      if (keyChar == '7')
+                      {
+                          dx--;
+                          dy--;
+                      } else if (keyChar == '8')
+                      {
+                          dy--;
+                      } else if (keyChar == '9')
+                      {
+                          dx++;
+                          dy--;
+                      } else if (keyChar == '4')
+                      {
+                          dx--;
+                      } else if (keyChar == '5')
+                      {
+                          // nothing
+                      } else if (keyChar == '6')
+                      {
+                          dx++;
+                      } else if (keyChar == '1')
+                      {
+                          dx--;
+                          dy++;
+                      } else if (keyChar == '2')
+                      {
+                          dy++;
+                      } else if (keyChar == '3')
+                      {
+                          dx++;
+                          dy++;
+                      }
+
+                      int x0 = getX();
+                      int y0 = getY();
+                      int x1 = x0 + getWidth();
+                      int y1 = y0 + getHeight();
+
+                      if (e.isAltDown()) {
+                          // move lower-right corner
+                          x1 += dx;
+                          y1 += dy;
+                      } else {
+                          // move upper-left corner
+                          x0 += dx;
+                          y0 += dy;
+                      }
+
+                      // NOTE: I've observed, in a different program, that
+                      // setting location before size can be bad (paints 2 or 3
+                      // times), whereas size then location is more consistently
+                      // good (paints once) (except once in a while,
+                      // paints certain components again).
+                      setSize(x1-x0, y1-y0);
+                      setLocation(x0, y0);
                   }
               }
           });
