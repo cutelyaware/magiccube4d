@@ -83,6 +83,7 @@ public class Console {
           /*leftComponent= */children[startIndex],
           /*rightComponent= */multiHorizontalSplitPane(children, startIndex+1)) {{
           setResizeWeight(1./(children.length-startIndex));
+          setOneTouchExpandable(true);
       }};
     }
 
@@ -149,16 +150,18 @@ public class Console {
                     }});
                 }},
 
-                /*rightComponent= */multiHorizontalSplitPane(
-                    new Component[] {
-                        makePuzzle("{3,3}x{}", "3(4)"),
-                        makePuzzle("{4,3}x{}", "3"),
-                        makePuzzle("{3,4}x{}", "3(4)"),
-                        makePuzzle("{5,3}x{}", "3(2.5)"),
-                        makePuzzle("{3,5}x{}", "3(4)"),
-                    }, 0)
-                ),
-            /*bottomComponent= */scroller));
+                /*rightComponent= */new JCol() {{
+                    add(new JLabel("Some gratuitous puzzles:"));
+                    add(multiHorizontalSplitPane(
+                        new Component[] {
+                            makePuzzle("{3,3}x{}", "3(4)"),
+                            makePuzzle("{4,3}x{}", "3"),
+                            makePuzzle("{3,4}x{}", "3(4)"),
+                            makePuzzle("{5,3}x{}", "3(2.5)"),
+                            makePuzzle("{3,5}x{}", "3(4)"),
+                        }, 0)); }}
+                ) {{ setOneTouchExpandable(true); }},
+            /*bottomComponent= */scroller) {{ setOneTouchExpandable(true); }});
     }
 
     private static Component makePuzzle(String schlafli, String lengthString) {
@@ -180,23 +183,23 @@ public class Console {
                 }, propname);
             };
         }};
-        if (false)  // this is good example code but it's surprising so don't do it
-        {
-            view.addStickerListener(new MC4DView.StickerListener() {
-                @Override
-                public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
-                    view.animate(twisted, new ItemCompleteCallback() {
-                        @Override
-                        public void onItemComplete(MagicCube.TwistData twist) {
-                            System.out.println("Num Twists: " + ++num_twists[0]);
-                        }
-                    });
+        view.addStickerListener(new MC4DView.StickerListener() {
+            @Override
+            public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {
+                view.animate(twisted, new ItemCompleteCallback() {
+                    @Override
+                    public void onItemComplete(MagicCube.TwistData twist) {
+                        System.out.println("Num Twists: " + ++num_twists[0]);
+                    }
+                });
+                if (false)  // this is good example code but it's surprising so don't do it
+                {
                     boolean is_checked = PropertyManager.getBoolean(MagicCube.BLINDFOLD, false);
                     PropertyManager.userprefs.setProperty(MagicCube.BLINDFOLD, !is_checked + "");
                     dependent.repaint();
                 }
-            });
-        }
+            }
+        });
         return view;
     }
 
