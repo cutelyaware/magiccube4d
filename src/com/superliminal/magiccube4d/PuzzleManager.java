@@ -426,8 +426,8 @@ public class PuzzleManager
         float eyeW,
         float eyeZ,
         float viewScale,
-        int xOff,
-        int yOff,
+        float xOff,
+        float yOff,
         float towardsSunVec[], // used if showShadows is true
         boolean showShadows,
         boolean do3dStepsOnly,

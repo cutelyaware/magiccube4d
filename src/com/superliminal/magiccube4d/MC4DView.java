@@ -39,7 +39,6 @@ import com.superliminal.util.StaticUtils;
  */
 @SuppressWarnings("serial")
 public class MC4DView extends Component {
-
     // Sticker click listener support
     public static interface StickerListener {
         public void stickerClicked(InputEvent e, MagicCube.TwistData twisted);
@@ -76,7 +75,7 @@ public class MC4DView extends Component {
         return slicemask == 0 ? 1 : slicemask;
     }
     private Color skyOverride = null; // null means use the user's preference from the PropertyManager.
-    private int xOff, yOff;
+    private int minpixOfViewFactors = -1;  // min(width,height) that fed into the most recently computed polys2pixelsSF value.
     private float polys2pixelsSF = .01f; // screen transform data
     private Point lastDrag; // non-null == dragging
     private long lastDragTime; // timestamp of last drag event
@@ -273,30 +272,32 @@ public class MC4DView extends Component {
             public void puzzleChanged(boolean newPuzzle) {
                 if(newPuzzle)
                     rotationHandler.set4dView(MagicCube.NICE_VIEW);
-                updateViewFactors(); // affects puzzle size
+                updateViewFactors(/* shouldCallRepaint= */true); // affects puzzle size
             }
         });
         PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
             @Override
             public void propertyChanged(String property, String newval) {
-                updateViewFactors(); // properties listed below affect puzzle size
+                updateViewFactors(/* shouldCallRepaint= */true); // properties listed below affect puzzle size
             }
         }, new String[]{"eyew", "faceshrink", "stickershrink"});
-        this.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) { // affects xOff & yOff
-                updateViewFactors();
-            }
-        });
+        // Note that view param polys2pixelsSF is affected by component size
+        // (more specifically, by min(width,height)).
+        // However, we do *not* listen for componentResized events,
+        // since we've found that those events sometimes happen in an unhelpful
+        // order, maybe only on some platforms (Linux): that is, *after* a paint
+        // has already happened with the new size.  So, instead, we now call
+        // updateViewFactors(shouldCallPrepaint=false) at the beginning of
+        // paint(), to ensure it is working with up-to-date view factors.
     } // end MC4DView()
 
 
-    private void updateViewFactors() {
+    private void updateViewFactors(boolean shouldCallRepaint) {
         int W = getWidth(), H = getHeight(), minpix = Math.min(W, H);
         if(minpix == 0)
             return;
-        xOff = ((W > H) ? (W - H) / 2 : 0) + minpix / 2;
-        yOff = ((H > W) ? (H - W) / 2 : 0) + minpix / 2;
+        minpixOfViewFactors = minpix;
+
         // Generate view-independent vertices for the current puzzle in its original 4D orientation, centered at the origin.
         final boolean do3DStepsOnly = true;
         PipelineUtils.AnimFrame frame = puzzleManager.computeFrame(
@@ -327,7 +328,9 @@ public class MC4DView extends Component {
         // This is what corrects the view scale for changes in puzzle and puzzle geometry.
         // To remove this correction, just set polys2pixelSF = minpix.
         polys2pixelsSF = minpix / (1.25f * radius3d);
-        repaint(); // Needed when a puzzle is read via Ctrl-O.
+        if (shouldCallRepaint) {
+          repaint();
+        }
     } // end updateViewFactors()
 
 
@@ -372,6 +375,13 @@ public class MC4DView extends Component {
     @Override
     public void paint(Graphics g) {
         frames++;
+
+        if (Math.min(getWidth(), getHeight()) != minpixOfViewFactors) {
+          // View has been reshaped in a way that matters,
+          // so view factors are now stale.  Update them.
+          updateViewFactors(/* shouldCallRepaint= */false);
+        }
+
         if(animationQueue.isAnimating() && puzzleManager.iTwist == puzzleManager.nTwist) {
             // time to stop the animation
             animationQueue.finishedTwist(); // end animation
@@ -432,8 +442,8 @@ public class MC4DView extends Component {
                 PropertyManager.getFloat("eyew", MagicCube.EYEW),
                 MagicCube.EYEZ * PropertyManager.getFloat("scale", 1),
                 polys2pixelsSF,
-                xOff,
-                yOff,
+                /* xOff = */getWidth()/2.f,
+                /* yOff = */getHeight()/2.f,
                 MagicCube.SUNVEC,
                 PropertyManager.getBoolean("shadows", true),
                 do3DStepsOnly,

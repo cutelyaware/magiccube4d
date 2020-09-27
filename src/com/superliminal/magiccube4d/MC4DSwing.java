@@ -1023,6 +1023,7 @@ public class MC4DSwing extends JFrame {
                     PropertyManager.userprefs.setProperty("divider", "" + splitter.getDividerLocation());
                 }
             });
+
         Container contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
         contentPane.add(splitter, "Center");
@@ -1049,6 +1050,23 @@ public class MC4DSwing extends JFrame {
         initTabs(); // to show controls
         initPuzzleMenu(puzzlemenu, statusLabel, progressBar);
         initPuzzle(PropertyManager.top.getProperty("logfile"));
+
+        if (true) {  // EXPERIMENTAL - DO NOT SUBMIT TO MASTER
+          // There's now a view, so we can add a key listener to it.
+          // Make it so left/right arrow key moves the splitpane divider
+          // left or right by 1 pixel.
+          view.addKeyListener(new KeyAdapter() {
+              @Override
+              public void keyPressed(KeyEvent e) {
+                  int keyCode = e.getKeyCode();
+                  if (keyCode == java.awt.event.KeyEvent.VK_LEFT) {
+                      splitter.setDividerLocation(splitter.getDividerLocation()-1);
+                  } else if (keyCode == java.awt.event.KeyEvent.VK_RIGHT) {
+                      splitter.setDividerLocation(splitter.getDividerLocation()+1);
+                  }
+              }
+          });
+        }
 
         // Do this after loading initial puzzle to avoid console spam while loading long log file.
         History.setDebugging(debug_checkbox.isSelected());
