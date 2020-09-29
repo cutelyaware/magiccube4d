@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -1039,22 +1038,6 @@ public class MC4DSwing extends JFrame {
     private void initPuzzleMenu(JMenu puzzlemenu, final JLabel label, final JProgressBar progressView) {
         final String[][] table = MagicCube.SUPPORTED_PUZZLES;
         for(int i = 0; i < table.length; ++i) {
-            if(table[i].length == 1) {
-                if(table[i][0].equals("-"))
-                {
-                    // "-" means a horizontal separator in the menu.
-                    puzzlemenu.addSeparator();
-                }
-                else
-                {
-                    // Any other single string means a section header (label)
-                    // in the menu.
-                    JMenuItem sectionHeaderLabel = puzzlemenu.add(table[i][0]);
-                    Font font = sectionHeaderLabel.getFont();
-                    sectionHeaderLabel.setFont(font.deriveFont(font.getStyle() | Font.BOLD));
-                }
-                continue;
-            }
             final String schlafli = table[i][0];
             String lengthStrings[] = table[i][1].split(",");
             final String name = (schlafli == null ? table[i][2] :
