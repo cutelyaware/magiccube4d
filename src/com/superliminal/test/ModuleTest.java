@@ -15,8 +15,7 @@ public class ModuleTest
             testInternal(MagicCube.SUPPORTED_PUZZLES);
         } catch(Exception e)
         {
-            System.out.println("Module test failed: " + e);
-            e.printStackTrace();
+            System.out.println("Module test failed.");
         }
     }
 
@@ -37,9 +36,9 @@ public class ModuleTest
                 final String lengthString = lengthStrings[j];
                 double len = Double.parseDouble(lengthString);
 
+                PolytopePuzzleDescription puzzle = new PolytopePuzzleDescription(schlafli, len, null);
                 String puzzleString = "" + schlafli + " " + len;
                 System.out.println(puzzleString);
-                PolytopePuzzleDescription puzzle = new PolytopePuzzleDescription(schlafli, len, null);
                 writer.write("Puzzle:\t" + puzzleString + sep);
                 writer.write("NumFaces:\t" + puzzle.nFaces() + sep);
                 writer.write("NumCubies:\t" + puzzle.nCubies() + sep);
