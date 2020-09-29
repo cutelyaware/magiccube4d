@@ -1155,7 +1155,7 @@ public class NdSolve {
                 for(int sign = -1; sign <= 1; sign += 2) {
                     stickerCoords[iDim] = sign * (n + 1);
                     cubieCoords[iDim] = sign * (n - 1);
-                    Character letter = Character.valueOf(
+                    Character letter = new Character(
                         colors[iDim][(sign + 1) / 2]);
                     Assert(!Character.isWhitespace(letter.charValue()));
                     Assert(!letterToFaceCenterCubieCoords.containsKey(letter));
@@ -4891,10 +4891,10 @@ public class NdSolve {
             for(int iIndex = 0; iIndex < nIndices; ++iIndex) {
                 int index[] = Arrays.unFlatIndex(iIndex, n + 2, d);
                 if(PuzzleManipulation.isStickerIndex(n, d, index))
-                    Arrays.set(puz, index, Character.valueOf(nonSpaces
+                    Arrays.set(puz, index, new Character(nonSpaces
                         .charAt(iNonSpace++)));
                 else
-                    Arrays.set(puz, index, Character.valueOf(' '));
+                    Arrays.set(puz, index, new Character(' '));
             }
             Assert(iNonSpace == nNonSpacesExpected);
             return puz;
@@ -4908,7 +4908,7 @@ public class NdSolve {
 
             java.util.HashMap<Character, int[]> colorCounts = new java.util.HashMap<Character, int[]>();
             for(int i = 0; i < s.length(); ++i) {
-                Character c = Character.valueOf(s.charAt(i));
+                Character c = new Character(s.charAt(i));
                 if(!colorCounts.containsKey(c))
                     colorCounts.put(c, new int[]{0});
                 colorCounts.get(c)[0]++;
@@ -4941,7 +4941,7 @@ public class NdSolve {
 
             // now call the version where we know n and d.
             // XXX need to do more sanity checking on colorCounts!
-            return new Object[]{Integer.valueOf(n), Integer.valueOf(d),
+            return new Object[]{new Integer(n), new Integer(d),
                 puzzleFromString(n, d, s, debugLevel)};
         } // puzzleFromString
 
@@ -4997,7 +4997,7 @@ public class NdSolve {
                     if(line.length() == 0)
                         continue;
                     for(int i = 0; i < line.length(); ++i) {
-                        Character c = Character.valueOf(line.charAt(i));
+                        Character c = new Character(line.charAt(i));
                         if(!colorCounts.containsKey(c))
                             colorCounts.put(c, new int[]{0});
                         (colorCounts.get(c))[0]++;
@@ -5039,7 +5039,7 @@ public class NdSolve {
                     System.out.println("    n = " + n);
                 if(debugLevel >= 2)
                     System.out.println("    d = " + d);
-                return new Object[]{Integer.valueOf(n), Integer.valueOf(d),
+                return new Object[]{new Integer(n), new Integer(d),
                     puzzleFromString(n, d, sb.toString(), debugLevel)};
             }
         } // puzzleFromReader
@@ -5130,7 +5130,7 @@ public class NdSolve {
                 }
                 for(int iDim = 0; iDim < d; ++iDim) {
                     char color = colors[iDim][0];
-                    char oppositeColor = (colorToPossibleOpposites.get(Character.valueOf(color)))[0];
+                    char oppositeColor = (colorToPossibleOpposites.get(new Character(color)))[0];
                     if(n % 2 == 1) {
                         Assert(colors[iDim][1] == oppositeColor);
                     } else {
@@ -6198,7 +6198,7 @@ class Arrays {
     // all the time...
     //
     public static int[] insert(int array[], int index, int itemToInsert) {
-        return (int[]) insert(array, index, Integer.valueOf(itemToInsert));
+        return (int[]) insert(array, index, new Integer(itemToInsert));
     }
 
     public static int[][] insert(int array[][], int index, int itemToInsert[]) {
@@ -6216,7 +6216,7 @@ class Arrays {
     }
 
     public static int[] append(int array[], int itemToAppend) {
-        return (int[]) append(array, Integer.valueOf(itemToAppend));
+        return (int[]) append(array, new Integer(itemToAppend));
     }
 
     public static int[][] append(int array[][], int itemToAppend[]) {
