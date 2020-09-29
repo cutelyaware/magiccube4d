@@ -45,7 +45,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -953,10 +952,10 @@ public class MC4DSwing extends JFrame {
         helpmenu.add(new JMenuItem("About Puzzle...")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                JOptionPane pane = new JOptionPane(puzzleManager.puzzleDescription.getTopologicalFingerprintHumanReadable(), JOptionPane.INFORMATION_MESSAGE);
-                JDialog dialog = pane.createDialog(MC4DSwing.this, puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.puzzleDescription.getLengthString());
-                dialog.setModal(false);
-                dialog.setVisible(true);
+                JOptionPane.showMessageDialog(null,
+                    puzzleManager.puzzleDescription.getTopologicalFingerprintHumanReadable(),
+                    puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.puzzleDescription.getLengthString(),
+                    JOptionPane.INFORMATION_MESSAGE);
             }
         });
         final JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", MagicCube.DEBUGGING, false, helpmenu, "Whether to print diagnostic information to the console");
