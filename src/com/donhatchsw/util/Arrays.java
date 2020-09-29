@@ -1194,7 +1194,7 @@ public final class Arrays
     }
     private static String escapify(String s)
     {
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         int n = s.length();
         for (int i = 0; i < n; ++i)
             sb.append(escapify(s.charAt(i), '"'));
@@ -1224,7 +1224,7 @@ public final class Arrays
         String suffix = preSepSuf[indexIntoPSS][2];
 
         int n = java.lang.reflect.Array.getLength(array);
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         sb.append(prefix);
         for (int i = 0; (i) < (n); ++i)
         {
@@ -1329,7 +1329,7 @@ public final class Arrays
         // Required by java.text.Format...
         // XXX JAVADOC GROUP
         //
-            @Override public StringBuffer format(Object obj, StringBuffer toAppendTo, java.text.FieldPosition pos)
+            public StringBuffer format(Object obj, StringBuffer toAppendTo, java.text.FieldPosition pos)
             {
                 toAppendTo.append(toStringCompact(obj));
                 // XXX I don't understand FieldPosition
@@ -1365,7 +1365,7 @@ public final class Arrays
 
             private String removeComments(String in)
             {
-                StringBuilder sb = new StringBuilder();
+                StringBuffer sb = new StringBuffer();
                 boolean inSlashSlashComment = false;
                 int nIn = in.length();
                 for (int iIn = 0; (iIn) < (nIn); ++iIn)
