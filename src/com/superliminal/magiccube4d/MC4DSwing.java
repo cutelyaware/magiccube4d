@@ -1490,7 +1490,8 @@ public class MC4DSwing extends JFrame {
             modes.add(new LeftAlignedRow(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles")));
             modes.add(new LeftAlignedRow(new PropCheckBox("Mute Sound Effects", MagicCube.MUTED, false, repainter, "Whether to allow sound effects")));
             modes.add(new LeftAlignedRow(blindfoldbox));
-            modes.add(new LeftAlignedRow(new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation")));
+            final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
+            modes.add(new LeftAlignedRow(quick));
             final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
             final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", false, false, repainter, "No twist animations for macro sequences");
             allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
@@ -1498,14 +1499,13 @@ public class MC4DSwing extends JFrame {
             ButtonGroup quickGroup = new ButtonGroup();
             quickGroup.add(allMoves);
             quickGroup.add(justMacros);
-            PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
+            quick.addActionListener(new ActionListener() {
                 @Override
-                public void propertyChanged(String property, String newval) {
-                    boolean enabled = PropertyManager.getBoolean("quickmoves", true);
-                    allMoves.setEnabled(enabled);
-                    justMacros.setEnabled(enabled);
+                public void actionPerformed(ActionEvent e) {
+                    allMoves.setEnabled(quick.isSelected());
+                    justMacros.setEnabled(quick.isSelected());
                 }
-            }, "quickmoves");
+            });
             final int indent = 50;
             modes.add(new LeftAlignedRow(allMoves, indent));
             modes.add(new LeftAlignedRow(justMacros, indent));
