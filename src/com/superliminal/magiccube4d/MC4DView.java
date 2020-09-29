@@ -380,10 +380,10 @@ public class MC4DView extends Component {
         if(lastDrag == null && rotationHandler.continueSpin()) { // keep spinning
             repaint();
         }
+        // antialiasing makes for a beautiful image but can also be expensive to draw therefore
+        // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
         if(g instanceof Graphics2D) {
             Graphics2D g2d = (Graphics2D) g;
-            // antialiasing makes for a beautiful image but can also be expensive to draw therefore
-            // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
             boolean okToAntialias = !isInMotion() && PropertyManager.getBoolean("antialiasing", true);
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
