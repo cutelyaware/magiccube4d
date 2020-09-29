@@ -926,8 +926,8 @@ public class MC4DSwing extends JFrame {
 
         // Help
         //
-        final JMenu helpmenu = new JMenu("Help");
-        helpmenu.add(new JMenuItem("About " + MagicCube.TITLE + "...")).addActionListener(new ActionListener() {
+        JMenu helpmenu = new JMenu("Help");
+        helpmenu.add(new JMenuItem("About...")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 // Get the minor version from our resource.
@@ -947,15 +947,6 @@ public class MC4DSwing extends JFrame {
                         "and the members of the MC4D mailing list." +
                         "<br>http://superliminal.com/cube/cube.htm" +
                         "</html>");
-            }
-        });
-        helpmenu.add(new JMenuItem("About Puzzle...")).addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-                JOptionPane.showMessageDialog(null,
-                    puzzleManager.puzzleDescription.getTopologicalFingerprintHumanReadable(),
-                    puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.puzzleDescription.getLengthString(),
-                    JOptionPane.INFORMATION_MESSAGE);
             }
         });
         final JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", MagicCube.DEBUGGING, false, helpmenu, "Whether to print diagnostic information to the console");
