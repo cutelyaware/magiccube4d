@@ -84,6 +84,13 @@ package com.superliminal.magiccube4d;
 
  - bleah, dodecahedron is not face first! (noticable in {}x{5,3})
 
+ - {5}x{5} 2 has sliver polygons-- I think the isPrismOfThisFace
+ hack isn't adequate.  Also it doesnt work for {5}x{} (but that's 3d).
+ I think I need to remove the slivers after the fact instead.
+ OH hmm... the slivers are kinda cool because they are
+ rotation handles!  Think about this... maybe draw them smaller
+ and white, or something!
+
  - 2x2x2x2 does corner twists, should do face (I think)
  - why is scale different before I touch the slider??
  - scale doesn't quite match original
@@ -183,6 +190,13 @@ import com.donhatchsw.util.*; // XXX get rid
 import com.superliminal.util.PropertyManager;
 
 public class PolytopePuzzleDescription implements PuzzleDescription {
+
+    // Warning! edit with caution (sliver removal heuristic is tuned to these values).
+    // If you edit, you should rerun the module test at a minimum.
+    private final static double SLICE_MULTIPLIER = 0.99999;
+    private final static double SLICE_MULTIPLIER_SIMPLEX = 0.995; // Special case because too close to 1 affecting drawing and too far from 1 was affecting grip detection.
+    private final static double SLIVER_VOLUME_PERCENT = 15; // Cull stickers with volumes < this % of average.
+
     private CSG.SPolytope originalPolytope;
     private CSG.SPolytope slicedPolytope;
 
@@ -279,9 +293,8 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         if(progress != null)
             progress.init("Constructing polytope");
 
-        originalPolytope = CSG.makeRegularStarPolytopeProductJoinFromString(schlafliProduct);
-        CSG.orientDeepFunctional(originalPolytope); // XXX shouldn't be necessary!!!!
-        CSG.orientDeepCosmetic(originalPolytope); // XXX shouldn't be necessary!!!!
+        originalPolytope = CSG.makeRegularStarPolytopeCrossProductFromString(schlafliProduct);
+        CSG.orientDeep(originalPolytope); // XXX shouldn't be necessary!!!!
 
         int nDims = originalPolytope.p.dim; // == originalPolytope.fullDim
 
@@ -298,7 +311,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         {
             for(int iDim = 0; iDim < originalElements.length; ++iDim)
                 for(int iElt = 0; iElt < originalElements[iDim].length; ++iElt)
-                    originalElements[iDim][iElt].setAux(new Integer(iElt));
+                    originalElements[iDim][iElt].aux = new Integer(iElt);
         }
 
         //
@@ -359,7 +372,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             {
                 VecMath.vxs(oppositeNormalScratch, faceInwardNormals[iFace], -1.);
                 CSG.Polytope opposite = (CSG.Polytope) table.get(oppositeNormalScratch);
-                face2OppositeFace[iFace] = opposite == null ? -1 : ((Integer) opposite.getAux()).intValue();
+                face2OppositeFace[iFace] = opposite == null ? -1 : ((Integer) opposite.aux).intValue();
                 //System.err.print("("+iFace+":"+face2OppositeFace[iFace]+")");
             }
         }
@@ -374,6 +387,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         // the corresponding cut offsets will be in increasing order,
         // for sanity.
         //
+        boolean needSliverRemoval = false;
         faceCutOffsets = new double[nFaces][];
         {
             for(int iFace = 0; iFace < nFaces; ++iFace)
@@ -441,6 +455,13 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 
                     sliceThickness = fullThickness / length;
 
+                    // We need the sliver hack for these because the slicer can't handle it otherwise.
+                    if(isSimplex || isTetrahedralPrism)
+                        sliceThickness *= SLICE_MULTIPLIER_SIMPLEX;
+                    else
+                        sliceThickness *= SLICE_MULTIPLIER;
+                    needSliverRemoval = true;
+
                     // There are no opposite faces for the simplex,
                     // and so we need to do all the cuts on the near side.
                     nNearCuts = ceilLength - 1;
@@ -457,6 +478,19 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                         length = ceilLength;
 
                     sliceThickness = fullThickness / length;
+
+                    // If even length and *not* a prism of this face,
+                    // then the middle-most cuts will meet,
+                    // but the slice function can't handle that.
+                    // So back off a little so they don't meet,
+                    // so we'll get tiny invisible sliver faces there instead.
+                    if(length == ceilLength
+                        && ceilLength % 2 == 0
+                        && !isPrismOfThisFace)
+                    {
+                        needSliverRemoval = true;
+                        sliceThickness *= SLICE_MULTIPLIER;
+                    }
 
                     nNearCuts = ceilLength / 2; // (n-1)/2 if odd, n/2 if even
                     nFarCuts = face2OppositeFace[iFace] == -1 ? 0 :
@@ -508,7 +542,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                             faceInwardNormals[iFace],
                             faceCutOffsets[iFace][iCut]);
                         Object auxOfCut = null; // we don't set any aux on the cut for now
-                        slicedPolytope = CSG.sliceElements(slicedPolytope, slicedPolytope.p.dim-1, cutHyperplane, auxOfCut, /*sizes=*/null);
+                        slicedPolytope = CSG.sliceFacets(slicedPolytope, cutHyperplane, auxOfCut);
 
                         if(progress != null)
                             progress.updateProgress(cut);
@@ -520,8 +554,44 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 
         if(progress != null)
             progress.init("Fixing orientations");
-        CSG.orientDeepFunctional(slicedPolytope); // XXX shouldn't be necessary!!!!
-        CSG.orientDeepCosmetic(slicedPolytope); // XXX shouldn't be necessary!!!!
+        CSG.orientDeep(slicedPolytope); // XXX shouldn't be necessary!!!!
+
+        // Remove slivers
+        // XXX - This is a hack for a hack.
+        // A better long term approach would be to improve the slice function.
+        if(needSliverRemoval)
+        {
+            CSG.SPolytope facets[] = slicedPolytope.p.facets;
+            CSG.SPolytope validFacets[] = new CSG.SPolytope[facets.length];
+
+            // Calculate a volume cutoff for slivers.
+            // Note: we needed to make this depend on the full volume of the puzzle.
+            // We'll make our cutoff a small percentage of the average volume of a sticker.
+            double fullVolume = Math.abs(slicedPolytope.volume());
+            double cutoff = (fullVolume / facets.length) * SLIVER_VOLUME_PERCENT / 100;
+            //System.out.println( "sliver cutoff = " + cutoff );
+
+            int nValidFacets = 0;
+            for(int i = 0; i < facets.length; i++)
+            {
+                double volume = Math.abs(facets[i].volume());
+                if(volume > cutoff)
+                    validFacets[nValidFacets++] = facets[i];
+
+                // Warn if close to the cutoff.
+                double fraction = volume / cutoff;
+                if(0.5 < fraction && fraction < 2)
+                {
+                    System.out.println("Warning! Sliver removal heuristic is cutting it too close (pun intended). v = " + volume + " c = " + cutoff);
+                }
+            }
+            validFacets = (CSG.SPolytope[]) com.donhatchsw.util.Arrays.subarray(
+                validFacets, 0, nValidFacets); // resize
+
+            // Setup the polytope with the valid facets.
+            slicedPolytope.p.facets = validFacets;
+            slicedPolytope.p.resetAllElements();
+        }
 
         CSG.Polytope stickers[] = slicedPolytope.p.getAllElements()[nDims - 1];
         int nStickers = stickers.length;
@@ -532,7 +602,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         sticker2face = new int[nStickers];
         {
             for(int iSticker = 0; iSticker < nStickers; ++iSticker)
-                sticker2face[iSticker] = ((Integer) stickers[iSticker].getAux()).intValue();
+                sticker2face[iSticker] = ((Integer) stickers[iSticker].aux).intValue();
         }
         sticker2faceShadow = VecMath.copyvec(sticker2face);
 
@@ -555,7 +625,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             for(int iSlicedRidge = 0; iSlicedRidge < slicedRidges.length; ++iSlicedRidge)
             {
                 CSG.Polytope ridge = slicedRidges[iSlicedRidge];
-                boolean ridgeIsFromOriginal = (ridge.getAux() != null);
+                boolean ridgeIsFromOriginal = (ridge.aux != null);
                 if(ridgeIsFromOriginal) // if it's not a cut
                 {
                     // Find the two stickers that meet at this ridge...
@@ -628,7 +698,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             CSG.Polytope allElements[][] = slicedPolytope.p.getAllElements();
             for(int iDim = 0; iDim < allElements.length; ++iDim)
                 for(int iElt = 0; iElt < allElements[iDim].length; ++iElt)
-                    allElements[iDim][iElt].setAux(null);
+                    allElements[iDim][iElt].aux = null;
         }
 
         //
@@ -804,7 +874,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                     for(int iElt = 0; iElt < allElementsOfCell[iDim].length; ++iElt)
                     {
                         CSG.Polytope elt = allElementsOfCell[iDim][iElt];
-                        gripSymmetryOrders[iGrip] = CSG.calcRotationGroupOrderDEPRECATED(
+                        gripSymmetryOrders[iGrip] = CSG.calcRotationGroupOrder(
                             originalPolytope.p, cell, elt,
                             gripUsefulMats[iGrip]);
 

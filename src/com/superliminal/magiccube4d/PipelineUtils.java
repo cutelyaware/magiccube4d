@@ -499,7 +499,7 @@ public class PipelineUtils
             }
 
             final float finalPolyCentersZ[][] = polyCentersZ;
-            com.donhatchsw.util.SortStuff.sort(drawList, 0, drawListSize - 1, new com.donhatchsw.util.SortStuff.Comparator() { // XXX ALLOCATION! (need to make sort smarter)
+            com.donhatchsw.util.SortStuff.sortRange(drawList, 0, drawListSize - 1, new com.donhatchsw.util.SortStuff.Comparator() { // XXX ALLOCATION! (need to make sort smarter)
                 @Override
                 public int compare(Object i, Object j)
                 {

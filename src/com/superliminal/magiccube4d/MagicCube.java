@@ -52,13 +52,9 @@ public class MagicCube {
         {"{8}x{8}", "1,2,3,4,5", ""},
         {"{9}x{9}", "1,2,3,4", ""},
         {"{10}x{10}", "1,2,3", ""},
-        {"{3,3}x{}", "1,2,3,4,5,6,7", "Tetrahedral Prism"},
+        //{"{3,3}x{}", "1,2,3,4,5,6,7",		"Tetrahedral Prism"}, // FIX: Simply fails.
         {"{5,3}x{}", "1,2,3,4,5,6,7", "Dodecahedral Prism"},
         {"{5,3,3}", "1,2,3", "Hypermegaminx (BIG!)"},
-        {"(1)---(1)-5-(0)x{}", "1,3,4,5", "Truncated-icosahedron (soccer ball) prism"},
-        {"(1)---(1)-4-(0)---(0)", "1,3,4,5", "Truncated 24-cell"},
-        {"(1)---(1)---(1)---(1)", "1,3,4,5", "Omnitruncated simplex"},
-        {"frucht*{}", "1,3,5", "Frucht graph prism (coming attraction)"},
         {null, "", "Invent my own!"},
     };
 
