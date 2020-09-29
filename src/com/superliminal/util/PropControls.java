@@ -38,8 +38,7 @@ public class PropControls {
                 public void stateChanged(ChangeEvent e) {
                     PropertyManager.userprefs.setProperty(propname, "" + (float) getFloatValue());
                     //System.out.println(propname + ": " + (float)getFloatValue());
-                    if(dependent != null)
-                        dependent.repaint();
+                    dependent.repaint();
                 }
             });
             // Currently only 1-way binding,
@@ -58,8 +57,7 @@ public class PropControls {
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
                     PropertyManager.userprefs.setProperty(propname, "" + isSelected());
-                    if(dependent != null)
-                        dependent.repaint();
+                    dependent.repaint();
                 }
             });
             PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
@@ -84,8 +82,7 @@ public class PropControls {
                 public void actionPerformed(ActionEvent e) {
                     boolean is_selected = isSelected();
                     PropertyManager.userprefs.setProperty(propname, "" + (invert ? !is_selected : is_selected));
-                    if(dependent != null)
-                        dependent.repaint();
+                    dependent.repaint();
                 }
             });
             PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
