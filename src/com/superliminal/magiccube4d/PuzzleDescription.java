@@ -161,35 +161,4 @@ interface PuzzleDescription {
         int gripIndex,
         int dir,
         int slicemask);
-
-    // Callbacks provided by the caller to the concrete subclass (e.g. PolytopePuzzleDescription)
-    // constructor, so that the contructor may inform the caller of progress,
-    // and the caller may reply whether the constructor should keep going.
-    // NOTE: if the constructor is cancelled (by one of these callbacks returning false),
-    // the constructed polytope will be in a bad state, and should not be used.
-    public static interface ProgressCallbacks {
-        /**
-         * Called to initialize progress bar (or equivalent) in determinate mode;
-         * return false to cancel.
-         */
-        public boolean subtaskInit(String string, int max);
-        /**
-         * Called to initialize the progress bar (or equivalent) in indeterminate mode;
-         * return false to cancel.
-         */
-        public boolean subtaskInit(String string);
-
-        /**
-         * Called to update progress (out of max previously given to subtaskInit());
-         * return false to cancel.
-         */
-        public boolean updateProgress(int progress);
-
-        /**
-         * Called when done with subtask;
-         * return false to cancel.
-         */
-        public boolean subtaskDone();
-    }
-
 } // interface PuzzleDescription
