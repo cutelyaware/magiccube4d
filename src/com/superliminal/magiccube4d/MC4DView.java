@@ -375,27 +375,6 @@ public class MC4DView extends Component {
         if(animationQueue.isAnimating() && puzzleManager.iTwist == puzzleManager.nTwist) {
             // time to stop the animation
             animationQueue.finishedTwist(); // end animation
-            // Probable bug/inefficiency: This repaint() seems to be unnecessary,
-            // and results in an expensive extra paint() again (here at the end of a twist).
-            // Note that we do intentionally draw the final frame of a twist
-            // or rotation twice-ish, for a couple of reasons:
-            //  - We have higher confidence in the correctness of the rest frame
-            //    (both in color permutation and in geometry) than in the
-            //    final frame of a twist animation, even though those two things
-            //    *should* look the same.
-            //    Therefore, when an animation completes, we draw the final frame both ways:
-            //    first, we compute and draw the final frame
-            //    with the old permutation and fracIntoTwist=1.0,
-            //    then we compute and draw the rest frame
-            //    with the new permutation and fracIntoTwist=0.0.
-            //  - If antialias-when-still, the final frame needs to get drawn first non-antialiased
-            //    (to avoid a perceptible pause just before the animation ends),
-            //    and then antialiased.
-            // But, during that second-ish final frame of a twist (not rotate),
-            // we get here and call this repaint(),
-            // which causes yet a third draw of the same picture,
-            // completely identical to the second one
-            // (in particular, it's antialiased again, if antialias-when-still is on).
             repaint();
         }
         if(lastDrag == null && rotationHandler.continueSpin()) { // keep spinning
