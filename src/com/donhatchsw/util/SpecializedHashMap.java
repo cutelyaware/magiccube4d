@@ -101,7 +101,54 @@
 // 102 # 1 "com/donhatchsw/util/SpecializedHashMap.prejava"
 // 103 # 1 "<built-in>"
 // 104 # 1 "<command-line>"
-// 105 # 1 "com/donhatchsw/util/SpecializedHashMap.prejava"
+// 105 # 1 "/usr/include/stdc-predef.h" 1 3 4
+
+// 107 # 1 "/usr/include/stdc-predef.h" 3 4
+/* Copyright (C) 1991-2019 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
+
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with the GNU C Library; if not, see
+   <http://www.gnu.org/licenses/>.  */
+
+
+
+
+/* This header is separate from features.h so that the compiler can
+   include it implicitly at the start of every compilation.  It must
+   not itself include <features.h> or any other header that includes
+   <features.h> because the implicit include comes before any feature
+   test macros that may be defined in a source file before it first
+   explicitly includes a system header.  GCC knows the name of this
+   header in order to preinclude it.  */
+
+/* glibc's intent is to support the IEC 559 math functionality, real
+   and complex.  If the GCC (4.9 and later) predefined macros
+   specifying compiler intent are available, use them to determine
+   whether the overall intent is to support these features; otherwise,
+   presume an older compiler has intent to support these features and
+   define these macros by default.  */
+// 142 # 52 "/usr/include/stdc-predef.h" 3 4
+/* wchar_t uses Unicode 10.0.0.  Version 10.0 of the Unicode Standard is
+   synchronized with ISO/IEC 10646:2017, fifth edition, plus
+   the following additions from Amendment 1 to the fifth edition:
+   - 56 emoji characters
+   - 285 hentaigana
+   - 3 additional Zanabazar Square characters */
+// 149 # 1 "<command-line>" 2
+// 150 # 1 "com/donhatchsw/util/SpecializedHashMap.prejava"
+
+// 152 # 1 "com/donhatchsw/util/SpecializedHashMap.prejava"
 /* vim: set filetype=java: */
 /*
 * Copyright (c) 2019 Don Hatch Software
@@ -109,18 +156,18 @@
 
 package com.donhatchsw.util;
 
-// 113 # 1 "com/donhatchsw/util/macros.h" 1
+// 160 # 1 "com/donhatchsw/util/macros.h" 1
 //
 // macros.h
 //
-// 117 # 14 "com/donhatchsw/util/macros.h"
+// 164 # 14 "com/donhatchsw/util/macros.h"
 // NOTE: this causes a,b to be evaluated twice on failure, so is not ideal. might be better to do a block... ?
-// 119 # 30 "com/donhatchsw/util/macros.h"
+// 166 # 30 "com/donhatchsw/util/macros.h"
 // Note: the additional "(a)==(b)||" is to make it work correctly for infinities...
 // and causes the args to be evaluated twice.
-// 122 # 67 "com/donhatchsw/util/macros.h"
+// 169 # 67 "com/donhatchsw/util/macros.h"
 // XXX ... what a mess
-// 124 # 9 "com/donhatchsw/util/SpecializedHashMap.prejava" 2
+// 171 # 9 "com/donhatchsw/util/SpecializedHashMap.prejava" 2
 
 /**
 *  HashMap with custom keyEquals and keyHashCode.
