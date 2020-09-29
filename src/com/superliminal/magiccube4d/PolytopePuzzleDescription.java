@@ -227,6 +227,36 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             throw new Error("Assumption failed");
     }
 
+    // Callbacks provided by the caller to the PolytopePuzzleDescription
+    // constructor, so that the contructor may inform the caller of progress,
+    // and the caller may reply whether the constructor should keep going.
+    // NOTE: if the constructor is cancelled (by one of these callbacks returning false),
+    // the constructed polytope will be in a bad state, and should not be used.
+    public static interface ProgressCallbacks {
+        /**
+         * Called to initialize progress bar (or equivalent) in determinate mode;
+         * return false to cancel.
+         */
+        public boolean subtaskInit(String string, int max);
+        /**
+         * Called to initialize the progress bar (or equivalent) in indeterminate mode;
+         * return false to cancel.
+         */
+        public boolean subtaskInit(String string);
+
+        /**
+         * Called to update progress (out of max previously given to subtaskInit());
+         * return false to cancel.
+         */
+        public boolean updateProgress(int progress);
+
+        /**
+         * Called when done with subtask;
+         * return false to cancel.
+         */
+        public boolean subtaskDone();
+    }
+
 
     /**
      * The following schlafli product symbols are supported;
@@ -268,7 +298,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 
     public PolytopePuzzleDescription(String schlafliProduct,
         double length, // usually int but can experiment with different cut depths
-        ProgressManager progress)
+        ProgressCallbacks progress)
     {
         this.schlafliProduct = schlafliProduct;
         this.edgeLength = length;
@@ -277,7 +307,8 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             throw new IllegalArgumentException("PolytopePuzzleDescription called with length=" + length + ", min legal length is 1");
 
         if(progress != null)
-            progress.init("Constructing polytope");
+            if (!progress.subtaskInit("Constructing polytope"))
+                return;
 
         originalPolytope = CSG.makeRegularStarPolytopeProductJoinFromString(schlafliProduct);
         CSG.orientDeepFunctional(originalPolytope); // XXX shouldn't be necessary!!!!
@@ -474,6 +505,10 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             }
         }
 
+        if(progress != null)
+            if (!progress.subtaskDone())  // "Contructing polytope"
+                return;
+
         //System.out.println("face inward normals = "+com.donhatchsw.util.Arrays.toStringCompact(faceInwardNormals));
         //System.out.println("cut offsets = "+com.donhatchsw.util.Arrays.toStringCompact(faceCutOffsets));
 
@@ -492,7 +527,8 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 }
 
                 if(progress != null)
-                    progress.init("Slicing", totalCuts);
+                    if (!progress.subtaskInit("Slicing", totalCuts))
+                        return;
             }
             // Now do the actual work, updating the progress worker as we go.
             {
@@ -511,17 +547,25 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                         slicedPolytope = CSG.sliceElements(slicedPolytope, slicedPolytope.p.dim-1, cutHyperplane, auxOfCut, /*sizes=*/null);
 
                         if(progress != null)
-                            progress.updateProgress(cut);
+                            if (!progress.updateProgress(cut))
+                                return;
                         cut++;
                     }
                 }
             }
+            if(progress != null)
+                if (!progress.subtaskDone())  // "Slicing"
+                    return;
         }
 
         if(progress != null)
-            progress.init("Fixing orientations");
+            if (!progress.subtaskInit("Fixing orientations"))
+                return;
         CSG.orientDeepFunctional(slicedPolytope); // XXX shouldn't be necessary!!!!
         CSG.orientDeepCosmetic(slicedPolytope); // XXX shouldn't be necessary!!!!
+        if(progress != null)
+            if (!progress.subtaskDone())  // "Fixing orientations"
+                return;
 
         CSG.Polytope stickers[] = slicedPolytope.p.getAllElements()[nDims - 1];
         int nStickers = stickers.length;
@@ -785,7 +829,8 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                     nGrips += allElementsOfCell[iDim].length;
             }
             if(progress != null)
-                progress.init("Calculating possible twists", nGrips);
+                if (!progress.subtaskInit("Calculating possible twists", nGrips))
+                    return;
 
             // Now do the actual work, updating the progress manager as we go.
             gripSymmetryOrders = new int[nGrips];
@@ -821,13 +866,17 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                         grip2face[iGrip] = iFace;
 
                         if(progress != null)
-                            progress.updateProgress(iGrip);
+                            if (!progress.updateProgress(iGrip))
+                                return;
                         //System.out.println("("+iDim+":"+gripSymmetryOrders[iGrip]+")");
 
                         iGrip++;
                     }
                 }
             }
+            if(progress != null)
+                if (!progress.subtaskDone())  // "Calculating possible twists"
+                    return;
             Assert(iGrip == nGrips);
 
             /*
@@ -1359,16 +1408,54 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 
         String schlafliProduct = args[0];
         int length = Integer.parseInt(args[1]);
+        final boolean[] cancelledHolder = {false};
         PuzzleDescription descr = new PolytopePuzzleDescription(schlafliProduct, length,
-            new ProgressManager(new javax.swing.JProgressBar()) {
-                @Override
-                protected Void doInBackground() throws Exception {
-                    // TODO Auto-generated method stub
-                    return null;
+            new ProgressCallbacks() {
+                private long initTimeNanos = 0;
+                @Override public boolean subtaskInit(String string, int max) {
+                    System.out.print(string+" ("+max+") ...");
+                    initTimeNanos = System.nanoTime();
+                    return true;  // keep going
+                }
+                @Override public boolean subtaskInit(String string) {
+                    System.out.println(string+"...");
+                    initTimeNanos = System.nanoTime();
+                    return true;  // keep going
+                }
+                @Override public boolean updateProgress(int progress) {
+                    System.out.print("..."+progress);
+                    System.out.flush();
+                    // Silly and disruptive exercise of the cancellation feature
+                    if (progress == 1000) {
+                        System.out.println();
+                        System.out.print("This is taking a while.  Want to keep going? (y/n)[Y] ");
+                        System.out.flush();
+                        try {
+                            char c = (char)System.in.read();
+                            if (c == 'n') {
+                                cancelledHolder[0] = true;
+                                return false;  // cancel
+                            }
+                        } catch (java.io.IOException e) {
+                            System.out.println("Caught: "+e);
+                            cancelledHolder[0] = true;
+                            return false;  // cancel
+                        }
+                    }
+                    return true;  // keep going
+                }
+                @Override public boolean subtaskDone() {
+                    long doneTimeNanos = System.nanoTime();
+                    System.out.printf("  done (%.4gs).\n", (doneTimeNanos-initTimeNanos)/1e9);
+                    return true;  // keep going (done with subtask)
                 }
             }
             );
-        System.out.println("description = " + descr);
+        if (cancelledHolder[0]) {
+            System.out.println("Cancelled!");
+        } else {
+            System.out.println("description = " + descr);
+        }
 
         System.out.println("out main");
     } // main
