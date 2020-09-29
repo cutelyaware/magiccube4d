@@ -248,9 +248,6 @@ public class PuzzleManager
             // XXX Lame, should try to get back in the loop and prompt again instead
             return null;
         }
-
-        System.out.println("    successfully built \"" + schlafli + " " + lengthString + "\" -> topological fingerprint = " + newPuzzle.getTopologicalFingerprintDigest());
-
         return newPuzzle;
     }
 
