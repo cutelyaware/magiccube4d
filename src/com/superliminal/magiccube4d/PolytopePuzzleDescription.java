@@ -603,29 +603,26 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             if (!progress.subtaskDone())  // "Fixing orientations"
                 return;
 
-        CSG.Polytope stickers[] = slicedPolytope.p.getAllElements()[nDims - 1];
-        int nStickers = stickers.length;
+	if(progress != null)
+	    if (!progress.subtaskInit("Computing fingerprint of sliced polytope"))
+		return;
+        String slicedPolytopeTopologicalFingerprintHumanReadable = CSG.computeHumanReadableTopologicalFingerprint(slicedPolytope.p);
+        if(progress != null)
+            if (!progress.subtaskDone())  // "Computing fingerprint of sliced polytope"
+                return;
 
-        // Now that we know the number of stickers,
-        // we can make the topological fingerprint, consisting of the following:
-        // - fingerprint of original polytope
-        // - nStickers
-        // - "number of cuts" parallel to each face; that is, floor(intLength/2).
-        // Note that, in particular, this correctly recognizes that:
-        //     "{5,3,3} 2" == "{5,3,3} 3"
-        //     "{4,3,3} 2" != "{4,3,3} 3"
-        // Note: this isn't completely principled;
-        // I bet there are cases where two different puzzles can get the same fingerprint.
-        // But I don't know of any cases like that in practice at the moment.
         this.topologicalFingerprintHumanReadable =
             "original polytope:\n" +
             indented("    ", originalPolytopeTopologicalFingerprintHumanReadable) + "\n" +
-            "number of stickers: " + nStickers + "\n" +
-            "floor(intLength/2) = " + (intLength / 2);
+            "sliced polytope:\n" +
+            indented("    ", slicedPolytopeTopologicalFingerprintHumanReadable);
         this.topologicalFingerprintDigest = CSG.sha1(this.topologicalFingerprintHumanReadable);
         //System.out.println("topologicalFingerprintHumanReadable = \n"+indented("    ", this.topologicalFingerprintHumanReadable));
         //System.out.println("topologicalFingerprintDigest = "+this.topologicalFingerprintDigest);
 
+
+        CSG.Polytope stickers[] = slicedPolytope.p.getAllElements()[nDims - 1];
+        int nStickers = stickers.length;
 
         //
         // Figure out the mapping from sticker to face.
