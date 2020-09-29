@@ -203,23 +203,7 @@ public class PuzzleManager
         PuzzleDescription newPuzzle = null;
         try
         {
-            newPuzzle = new PolytopePuzzleDescription(schlafli, len, new PolytopePuzzleDescription.ProgressCallbacks() {
-                @Override public boolean subtaskInit(String string, int max) {
-                    progressView.init(string, max);
-                    return true;  // keep going
-                }
-                @Override public boolean subtaskInit(String string) {
-                    progressView.init(string);
-                    return true;  // keep going
-                }
-                @Override public boolean updateProgress(int progress) {
-                    progressView.updateProgress(progress);
-                    return true;  // keep going
-                }
-                @Override public boolean subtaskDone() {
-                    return true;  // keep going
-                }
-            });
+            newPuzzle = new PolytopePuzzleDescription(schlafli, len, progressView);
         } catch(Throwable t)
         {
             //t.printStacktrace();
