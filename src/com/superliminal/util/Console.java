@@ -87,46 +87,6 @@ public class Console {
       }};
     }
 
-    private static class JRow extends JPanel {{ setLayout(new BoxLayout(this, BoxLayout.X_AXIS)); }};
-    private static class JCol extends JPanel {{ setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); }
-        public void addLeftJustified(final int indentPixels, final Component c) {
-            add(new JRow() {{
-                if (indentPixels != 0) add(Box.createHorizontalStrut(indentPixels));
-                add(c);
-                add(Box.createHorizontalGlue());
-            }});
-        }
-    };
-    private static class ExpertControlPanel extends JCol {
-        public ExpertControlPanel() {
-            addLeftJustified(0, new JCol() {{  // extra level is necessary to prevent spreading out of controls when stretched vertically
-                setBorder(new TitledBorder("EXPERIMENTAL NEW CONTROLS"));
-                // TODO: investigate why all the views are getting repainted before the controls get enabled/disabled!  that's not friendly!
-                addLeftJustified(0, new PropCheckBox("Allow Antialiasing", "antialiasing", true, mRepainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles"));
-                final JRadioButton whenstill = new PropRadioButton("when still", "antialiasingmeansalways", /*dflt=*/false, /*invert=*/true, /*dependent=*/null, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
-                final JRadioButton always = new PropRadioButton("always (NOT HOOKED UP YET: AWAITING CODE REVIEW)", "antialiasingmeansalways", /*dflt=*/false, /*invert=*/false, /*dependent=*/null, "Antialias every frame - Warning: can be very slow on large puzzles");
-                setEnabledWhenPropertyIsTrue(whenstill, "antialiasing", true);
-                setEnabledWhenPropertyIsTrue(always, "antialiasing", true);
-                new ButtonGroup() {{
-                    add(whenstill);
-                    add(always);
-                }};
-                addLeftJustified(30, whenstill);
-                addLeftJustified(30, always);
-                addLeftJustified(0, new PropCheckBox("Use back buffer (NOT HOOKED UP YET: AWAITING CODE REVIEW)", "useyetanotherbackbuffer", false, mRepainter, "Whether to use yet another back buffer.  Seems to speed up antialiasing tremendously on some platforms."));
-                addLeftJustified(0, new JButton("Just repaint the main view") {{
-                    addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent ae) {
-                            dependent.repaint();
-                        }
-                    });
-                }});
-                setMaximumSize(getPreferredSize());  // necessary to prevent spreading out of controls when stretched vertically
-            }});
-        }
-    };  // class ExpertControlPanel
-
     static {
         mTextArea.setWrapStyleWord(true);
         JScrollPane scroller = new JScrollPane(mTextArea);
@@ -145,13 +105,51 @@ public class Console {
         menubar.add(menu);
         menu.add(new JMenuItem("Click me please!"));
 
+        class JRow extends JPanel {{ setLayout(new BoxLayout(this, BoxLayout.X_AXIS)); }};
+        class JCol extends JPanel {{ setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); }
+            public void addLeftJustified(final int indentPixels, final Component c) {
+                add(new JRow() {{
+                    if (indentPixels != 0) add(Box.createHorizontalStrut(indentPixels));
+                    add(c);
+                    add(Box.createHorizontalGlue());
+                }});
+            }
+        };
         mInstance.getContentPane().add(new JSplitPane(
             /*orientation= */JSplitPane.VERTICAL_SPLIT,
             /*continuoutLayout= */true,
             /*topComponent= */new JSplitPane(
                 /*orientation= */JSplitPane.HORIZONTAL_SPLIT,
                 /*continuousLayout= */true,
-                /*leftComponent= */new ExpertControlPanel(),
+
+                /*leftComponent= */new JCol() {{
+                    add(new JCol() {{
+                        setBorder(new TitledBorder("EXPERIMENTAL NEW CONTROLS"));
+                        // TODO: investigate why all the views are getting repainted before the controls get enabled/disabled!  that's not friendly!
+                        addLeftJustified(0, new PropCheckBox("Allow Antialiasing", "antialiasing", true, mRepainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles"));
+                        final JRadioButton whenstill = new PropRadioButton("when still", "antialiasingmeansalways", /*dflt=*/false, /*invert=*/true, /*dependent=*/null, "Antialias only when no animation is in progress - Warning: Can interfere with interaction on large puzzles");
+                        final JRadioButton always = new PropRadioButton("always (NOT HOOKED UP YET: AWAITING CODE REVIEW)", "antialiasingmeansalways", /*dflt=*/false, /*invert=*/false, /*dependent=*/null, "Antialias every frame - Warning: can be very slow on large puzzles");
+                        setEnabledWhenPropertyIsTrue(whenstill, "antialiasing", true);
+                        setEnabledWhenPropertyIsTrue(always, "antialiasing", true);
+                        new ButtonGroup() {{
+                            add(whenstill);
+                            add(always);
+                        }};
+                        addLeftJustified(30, whenstill);
+                        addLeftJustified(30, always);
+                        addLeftJustified(0, new PropCheckBox("Use back buffer (NOT HOOKED UP YET: AWAITING CODE REVIEW)", "useyetanotherbackbuffer", false, mRepainter, "Whether to use yet another back buffer.  Seems to speed up antialiasing tremendously on some platforms."));
+                        addLeftJustified(0, new JButton("Just repaint the main view") {{
+                            addActionListener(new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent ae) {
+                                    dependent.repaint();
+                                }
+                            });
+                        }});
+                        setMaximumSize(getPreferredSize());  // so the controls don't spread out when the panel is stretched vertically
+                    }});
+                }},
+
                 /*rightComponent= */new JCol() {{
                     add(new JLabel("Some gratuitous puzzles:"));
                     add(multiHorizontalSplitPane(
