@@ -122,61 +122,9 @@ public class Console {
                         }
                     });
                 }});
-                addLeftJustified(0, new JButton("undock") {{
-                  setFont(getFont().deriveFont(10.f));  // assumes default is 12
-                  setBorder(javax.swing.BorderFactory.createEmptyBorder());
-                  addActionListener(new ActionListener() {
-                      @Override
-                      public void actionPerformed(ActionEvent ae) {
-                        toggleDocking();
-                        setLabel(parentForRedocking != null ? "redock" : "undock");
-                      }
-                  });
-                }});
                 setMaximumSize(getPreferredSize());  // necessary to prevent spreading out of controls when stretched vertically
             }});
         }
-        private void toggleDocking() {
-            if (parentForRedocking == null)
-            {
-                // Undock.
-                Container parent = ExpertControlPanel.this.getParent();
-                parent.remove(ExpertControlPanel.this);
-                parent.revalidate();
-                parent.repaint();
-                parentForRedocking = parent;
-
-                JFrame frame = new JFrame("Expert Control Panel");
-                frame.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosing(WindowEvent e) {
-                        toggleDocking();
-                    }
-                });
-                frame.getContentPane().add(ExpertControlPanel.this);
-                frame.pack();
-                frame.setVisible(true);
-            }
-            else
-            {
-                // Redock.
-                Container frame = ExpertControlPanel.this.getParent();
-                while (!(frame instanceof JFrame))
-                {
-                    frame = frame.getParent();
-                }
-
-                parentForRedocking.add(ExpertControlPanel.this);
-                parentForRedocking.revalidate();
-                parentForRedocking.repaint();
-
-                parentForRedocking = null;
-
-                ((JFrame)frame).dispose();
-            }
-        }
-
-        private Container parentForRedocking = null;
     };  // class ExpertControlPanel
 
     static {
