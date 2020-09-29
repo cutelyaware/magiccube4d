@@ -18,9 +18,9 @@ public class MagicCube {
     /**
      * Version constants
      */
-    public final static String PUZZLE_MAJOR_VERSION = "4.4";
-    public final static int LOG_FILE_VERSION = 4;
-    public final static int MACRO_FILE_VERSION = 3;
+    public final static String PUZZLE_MAJOR_VERSION = "4.3";
+    public final static int LOG_FILE_VERSION = 3;
+    public final static int MACRO_FILE_VERSION = 2;
 
     /*
      * Constants that probably shouldn't be changed
@@ -32,16 +32,9 @@ public class MagicCube {
     public final static int MIN_SCRAMBLE_TWISTS_FOR_FANFARE = 21;
 
     public final static String DEFAULT_PUZZLE = "{4,3,3}";
-    /*
-     * The puzzle menu spec.
-     * Simple special cases:
-     * - "-" means a horizontal separator in the menu
-     * - any other string by itself means a section header (label) in the menu
-     * - "Invent my own!" is handled specially.
-     */
     public final static String SUPPORTED_PUZZLES[][] = {
-        {"{3,3,3}", "1,2,3,3(4.0),3(5.0),4,5,6,7,8,9", "Simplex"},
-        {"{3}x{4}", "1,2,3,3(4.0),4,5,6,7", "Triangular Duoprism"},
+        {"{3,3,3}", "1,2,3,4,5,6,7,8,9", "Simplex"},
+        {"{3}x{4}", "1,2,3,4,5,6,7", "Triangular Duoprism"},
         {"{4,3,3}", "1,2,3,4,5,6,7,8,9", "Hypercube"},
         {"{5}x{4}", "1,2,3,4,5,6,7", "Pentagonal Duoprism"},
         {"{6}x{4}", "1,2,3,4,5,6,7", "Hexagonal Duoprism"},
@@ -50,8 +43,8 @@ public class MagicCube {
         {"{9}x{4}", "1,2,3,4,5,6,7", "Nonagonal Duoprism"},
         {"{10}x{4}", "1,2,3,4,5,6,7", "Decagonal Duoprism"},
         {"{100}x{4}", "1,3", "Onehundredagonal Duoprism"},
-        {"{3}x{3}", "1,2,3,3(4.0),4,5,6,7", ""},
-        {"{3}x{5}", "1,2,3,3(4.0),4,5,6,7", ""},
+        {"{3}x{3}", "1,2,3,4,5,6,7", ""},
+        {"{3}x{5}", "1,2,3,4,5,6,7", ""},
         {"{5}x{10}", "1,2,3", ""},
         {"{5}x{5}", "1,2,3,4,5,6,7", ""}, // TODO: look at twisting on 2 for all uniform duoprisms.
         {"{6}x{6}", "1,2,3,4,5,6,7", ""},
@@ -59,19 +52,9 @@ public class MagicCube {
         {"{8}x{8}", "1,2,3,4,5", ""},
         {"{9}x{9}", "1,2,3,4", ""},
         {"{10}x{10}", "1,2,3", ""},
-        {"{3,3}x{}", "1,2,3,3(4.0),3(5.0),4,5,6,7", "Tetrahedral Prism"},
-        {"{5,3}x{}", "1,2,3(2.5),3,4,5,6,7", "Dodecahedral Prism"},
-        {"{5,3,3}", "1,2,3(2.5),3", "Hypermegaminx (BIG!)"},
-        {"-"},
-        {"Samples of new puzzles (work in progress):"},
-        {"   (1)---(1)-5-(0)x{}", "1,3,4,5", "Truncated-icosahedron (soccer ball) prism"},
-        {"   (1)---(1)-4-(0)---(0)", "1,3,4,5", "Truncated 24-cell"},
-        {"   (1)---(1)---(1)---(1)", "1,3,4,5", "Omnitruncated simplex"},
-        {"   {4,3,3}", "3(10.0)", "Hypercube with shallow cuts"},
-        {"   {3,4}x{}", "1,2,3,3(4.0),4", "Octahedral prism"},
-        {"   {3,4,3}", "1,2,3,3(4.0),4", "24-cell"},
-        {"   frucht*{}", "1,3,5", "Frucht graph prism (coming attraction)"},
-        {"-"},
+        //{"{3,3}x{}", "1,2,3,4,5,6,7",		"Tetrahedral Prism"}, // FIX: Simply fails.
+        {"{5,3}x{}", "1,2,3,4,5,6,7", "Dodecahedral Prism"},
+        {"{5,3,3}", "1,2,3", "Hypermegaminx (BIG!)"},
         {null, "", "Invent my own!"},
     };
 

@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -45,7 +44,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -57,9 +55,8 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
-import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
+import javax.swing.JSplitPane;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -217,7 +214,7 @@ public class MC4DSwing extends JFrame {
              * 2 - Scramble State
              * 3 - Twist Count
              * 4 - Schlafli Product
-             * 5 - Edge Length String
+             * 5 - Edge Length
              */
             writer.write(
                 MagicCube.MAGIC_NUMBER + " " +
@@ -225,7 +222,7 @@ public class MC4DSwing extends JFrame {
                     scrambleState + " " +
                     hist.countTwists() + " " +
                     puzzleManager.puzzleDescription.getSchlafliProduct() + " " +
-                    puzzleManager.puzzleDescription.getLengthString());
+                    puzzleManager.getPrettyLength());
             writer.write(sep);
             rotations.write(writer);
             //writer.write(sep + puzzle.toString());
@@ -457,7 +454,7 @@ public class MC4DSwing extends JFrame {
 //                    setStatus("No solution", true);
 //                    return;
 //                }
-//                solution = History.compress(solution, puzzleManager.puzzleDescription.getIntLength(), true);
+//                solution = History.compress(solution, (int)puzzleManager.puzzleDescription.getEdgeLength(), true);
 //                view.animate(solution, applyToHistory, false);
 //                scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
 //                setStatus("Twists to solve = " + solution.length);
@@ -928,8 +925,8 @@ public class MC4DSwing extends JFrame {
 
         // Help
         //
-        final JMenu helpmenu = new JMenu("Help");
-        helpmenu.add(new JMenuItem("About " + MagicCube.TITLE + "...")).addActionListener(new ActionListener() {
+        JMenu helpmenu = new JMenu("Help");
+        helpmenu.add(new JMenuItem("About...")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 // Get the minor version from our resource.
@@ -951,22 +948,6 @@ public class MC4DSwing extends JFrame {
                         "</html>");
             }
         });
-        helpmenu.add(new JMenuItem("About Puzzle...")).addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-                // We use a non-editable JTextArea instead of the default JLabel,
-                // so that the text will be copyable.
-                JTextArea textArea = new JTextArea(
-                    puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.puzzleDescription.getLengthString() + "\n\n"
-                        + puzzleManager.puzzleDescription.getTopologicalFingerprintHumanReadable() + "\n\n"
-                        + "fingerprint: " + puzzleManager.puzzleDescription.getTopologicalFingerprintDigest());
-                textArea.setEditable(false);
-                JOptionPane pane = new JOptionPane(textArea, JOptionPane.INFORMATION_MESSAGE);
-                JDialog dialog = pane.createDialog(MC4DSwing.this, puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.puzzleDescription.getLengthString());
-                dialog.setModal(false);
-                dialog.setVisible(true);
-            }
-        });
         final JCheckBox debug_checkbox = new PropControls.PropCheckBox("Debugging", MagicCube.DEBUGGING, false, helpmenu, "Whether to print diagnostic information to the console");
         debug_checkbox.addChangeListener(new ChangeListener() {
             @Override
@@ -978,7 +959,7 @@ public class MC4DSwing extends JFrame {
         helpmenu.add(new JMenuItem("Debugging Console")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                Console.show("MC4D Debugging Console", view);
+                Console.show("MC4D Debugging Console");
                 if(Console.getLineCount() <= 1 && !debug_checkbox.isSelected())
                     System.out.println("Output text and error messages are redirected here when this window is showing. \nYou'll probably need to also turn on Help > debugging to see much.");
             }
@@ -1029,13 +1010,13 @@ public class MC4DSwing extends JFrame {
         contentPane.add(splitter, "Center");
         contentPane.add(statusBar, "South");
 
-        puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, "" + MagicCube.DEFAULT_LENGTH, progressBar);
+        puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
             @Override
             public void puzzleChanged(boolean newPuzzle) {
                 initTabs(); // to properly enable/disable the buttons
                 progressBar.setVisible(false);
-                hist.clear(puzzleManager.puzzleDescription.getIntLength());
+                hist.clear((int) puzzleManager.puzzleDescription.getEdgeLength());
                 updateTwistsLabel();
                 Color[] userColors = findColors(
                     puzzleManager.puzzleDescription.getSchlafliProduct(),
@@ -1057,22 +1038,6 @@ public class MC4DSwing extends JFrame {
     private void initPuzzleMenu(JMenu puzzlemenu, final JLabel label, final JProgressBar progressView) {
         final String[][] table = MagicCube.SUPPORTED_PUZZLES;
         for(int i = 0; i < table.length; ++i) {
-            if(table[i].length == 1) {
-                if(table[i][0].equals("-"))
-                {
-                    // "-" means a horizontal separator in the menu.
-                    puzzlemenu.addSeparator();
-                }
-                else
-                {
-                    // Any other single string means a section header (label)
-                    // in the menu.
-                    JMenuItem sectionHeaderLabel = puzzlemenu.add(table[i][0]);
-                    Font font = sectionHeaderLabel.getFont();
-                    sectionHeaderLabel.setFont(font.deriveFont(font.getStyle() | Font.BOLD));
-                }
-                continue;
-            }
             final String schlafli = table[i][0];
             String lengthStrings[] = table[i][1].split(",");
             final String name = (schlafli == null ? table[i][2] :
@@ -1099,16 +1064,14 @@ public class MC4DSwing extends JFrame {
                         String newLengthString = lengthString;
                         if(schlafli == null) {
                             String prompt = "Enter your invention:";
-                            String initialInput = puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.puzzleDescription.getLengthString();
+                            String initialInput = puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.getPrettyLength();
                             while(true) {
                                 String reply = JOptionPane.showInputDialog(prompt, initialInput);
                                 if(reply == null) {
                                     return; // Canceled
                                 }
                                 String schlafliAndLength[] = reply.trim().split("\\s+");
-                                // We validate length here to some extent here,
-                                // to avoid an exception in PuzzleManager when it doesn't begin with an int.
-                                if(schlafliAndLength.length != 2 || !schlafliAndLength[1].matches("^\\d+(\\(.*\\))?$")) {
+                                if(schlafliAndLength.length != 2) {
                                     prompt = "Can not build your invention.\nYou must specify the schlafli product symbol (with no spaces),\nfollowed by a space, followed by the puzzle length. Try again!";
                                     initialInput = reply;
                                     continue;
@@ -1119,11 +1082,9 @@ public class MC4DSwing extends JFrame {
                             }
                         }
                         progressView.setVisible(true);
-                        System.out.println("attempting to change puzzle to " + newSchlafli + " " + newLengthString);
+                        System.out.println(newSchlafli + " " + newLengthString);
                         puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, label, true);
-                        // puzzleManager.puzzleDescription is now being created in background,
-                        // so we can't query puzzleManager.puzzleDescription.getIntLength() yet.
-                        hist.clear(predictIntLengthFromLengthString(newLengthString));
+                        hist.clear((int) Double.parseDouble(newLengthString));
                         updateTwistsLabel();
                         scrambleState = SCRAMBLE_NONE;
                         cancel(); // To at least assure we start in normal mode.
@@ -1134,17 +1095,6 @@ public class MC4DSwing extends JFrame {
         }
     } // initPuzzleMenu
 
-    // Quick hack for figuring out what puzzleManager.puzzleDescription.getIntLength()
-    // is going to be, before we can query it (that is, while puzzleManager.puzzleDescription
-    // is being computed in the background).
-    // That is, just peel off an int from the beginning of the length string.
-    // E.g. "4"->4,  "3(9.0)"->3.
-    // Note that this will throw if there is no int at the beginning.
-    private static int predictIntLengthFromLengthString(String lengthString)
-    {
-        String intLengthString = lengthString.replaceAll("[^\\d].*", "");
-        return Integer.parseInt(intLengthString);
-    }
 
     /**
      * Called whenever macro list in manager changes to keep "Apply" submenu up-to-date.
@@ -1225,8 +1175,8 @@ public class MC4DSwing extends JFrame {
 
     private void initPuzzle(String log) {
         scrambleState = SCRAMBLE_NONE;
-        String initial_edge_length_string = "" + MagicCube.DEFAULT_LENGTH;
-        int int_edge_length = MagicCube.DEFAULT_LENGTH;
+        double initial_edge_length = MagicCube.DEFAULT_LENGTH;
+        int int_edge_length = (int) Math.ceil(initial_edge_length);
         if(hist != null) // Stop listening to last History.
             hist.setHistoryListener(null);
         hist = new History(int_edge_length);
@@ -1249,7 +1199,7 @@ public class MC4DSwing extends JFrame {
                      * 2 - Scramble State
                      * 3 - Twist Count
                      * 4 - Schlafli Product
-                     * 5 - Edge Length String
+                     * 5 - Edge Length
                      */
                     if(firstline.length != 6 || !MagicCube.MAGIC_NUMBER.equals(firstline[0])) {
                         reader.close();
@@ -1264,11 +1214,9 @@ public class MC4DSwing extends JFrame {
                     scrambleState = Integer.parseInt(firstline[2]);
                     // int numTwists = Integer.parseInt(firstline[3]);
                     String schlafli = firstline[4];
-                    initial_edge_length_string = firstline[5];
-                    puzzleManager.initPuzzle(schlafli, initial_edge_length_string, progressBar, statusLabel, false);
-                    // Note: puzzleManager.puzzleDescription is now being created in background,
-                    // so we can't query puzzleManager.puzzleDescription.getIntLength() yet.
-                    int_edge_length = predictIntLengthFromLengthString(initial_edge_length_string);
+                    initial_edge_length = Double.parseDouble(firstline[5]);
+                    puzzleManager.initPuzzle(schlafli, "" + initial_edge_length, progressBar, statusLabel, false);
+                    int_edge_length = (int) Math.round(initial_edge_length);
                     hist = new History(int_edge_length);
                     String title = MagicCube.TITLE;
                     rotations.read(reader);
@@ -1342,7 +1290,7 @@ public class MC4DSwing extends JFrame {
             updateEditMenuItems();
             updateTwistsLabel();
             if((scrambleState == SCRAMBLE_PARTIAL || scrambleState == SCRAMBLE_FULL) && puzzleManager.isSolved()) {
-                int intlen = puzzleManager.puzzleDescription.getIntLength();
+                int intlen = (int) puzzleManager.puzzleDescription.getEdgeLength();
                 if(intlen <= 1)
                     return; // No soup for you!
                 switch(scrambleState) {
@@ -1438,8 +1386,8 @@ public class MC4DSwing extends JFrame {
                 }
             };
             removeAll();
-            final JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", /* dflt= */true, /* invert= */false, repainter, "Control-click will rotate clicked face to the center");
-            final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", /* dflt= */true, /* invert= */true, repainter, "Control-click will rotate clicked cubie to the center");
+            final JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", true, false, repainter, "Control-click will rotate clicked face to the center");
+            final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", false, true, repainter, "Control-click will rotate clicked cubie to the center");
             ButtonGroup ctrlRotateGroup = new ButtonGroup();
             ctrlRotateGroup.add(ctrlRotateByFace);
             ctrlRotateGroup.add(ctrlRotateByCubie);
@@ -1490,22 +1438,22 @@ public class MC4DSwing extends JFrame {
             modes.add(new LeftAlignedRow(new PropCheckBox("Allow Antialiasing", "antialiasing", true, repainter, "Whether to smooth polygon edges when still - Warning: Can be expensive on large puzzles")));
             modes.add(new LeftAlignedRow(new PropCheckBox("Mute Sound Effects", MagicCube.MUTED, false, repainter, "Whether to allow sound effects")));
             modes.add(new LeftAlignedRow(blindfoldbox));
-            modes.add(new LeftAlignedRow(new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation")));
-            final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", /* dflt= */false, /* invert= */true, repainter, "No twist animations at all");
-            final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", /* dflt= */false, /* invert= */false, repainter, "No twist animations for macro sequences");
+            final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
+            modes.add(new LeftAlignedRow(quick));
+            final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
+            final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", true, false, repainter, "No twist animations for macro sequences");
             allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
             justMacros.setEnabled(PropertyManager.getBoolean("quickmoves", false));
             ButtonGroup quickGroup = new ButtonGroup();
             quickGroup.add(allMoves);
             quickGroup.add(justMacros);
-            PropertyManager.top.addPropertyListener(new PropertyManager.PropertyListener() {
+            quick.addActionListener(new ActionListener() {
                 @Override
-                public void propertyChanged(String property, String newval) {
-                    boolean enabled = PropertyManager.getBoolean("quickmoves", true);
-                    allMoves.setEnabled(enabled);
-                    justMacros.setEnabled(enabled);
+                public void actionPerformed(ActionEvent e) {
+                    allMoves.setEnabled(quick.isSelected());
+                    justMacros.setEnabled(quick.isSelected());
                 }
-            }, "quickmoves");
+            });
             final int indent = 50;
             modes.add(new LeftAlignedRow(allMoves, indent));
             modes.add(new LeftAlignedRow(justMacros, indent));

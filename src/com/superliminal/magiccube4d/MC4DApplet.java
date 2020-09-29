@@ -36,7 +36,7 @@ public class MC4DApplet extends Applet {
             System.out.println("couldn't read history file");
         else
             hist.read(new PushbackReader(new StringReader(ResourceUtils.readFileFromURL(histurl))));
-        final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", "3", new JProgressBar()), new RotationHandler());
+        final MC4DView view = new MC4DView(new PuzzleManager("{4,3,3}", 3, new JProgressBar()), new RotationHandler());
         final MC4DView.ItemCompleteCallback applyToHistory = new MC4DView.ItemCompleteCallback() {
             @Override
             public void onItemComplete(MagicCube.TwistData twist) {

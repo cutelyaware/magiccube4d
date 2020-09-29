@@ -15,8 +15,7 @@ public class ModuleTest
             testInternal(MagicCube.SUPPORTED_PUZZLES);
         } catch(Exception e)
         {
-            System.out.println("Module test failed: " + e);
-            e.printStackTrace();
+            System.out.println("Module test failed.");
         }
     }
 
@@ -28,24 +27,23 @@ public class ModuleTest
         for(int i = 0; i < puzzles.length; ++i)
         {
             final String schlafli = puzzles[i][0];
-            if(schlafli == null || puzzles[i].length < 2)
+            if(schlafli == null)
                 continue;
             String lengthStrings[] = puzzles[i][1].split(",");
 
             for(int j = 0; j < lengthStrings.length; ++j)
             {
-                String puzzleString = "" + schlafli + " " + lengthStrings[j];
-                System.out.print(puzzleString + " ... ");
-                System.out.flush();
-                PolytopePuzzleDescription puzzle = new PolytopePuzzleDescription(puzzleString, null);
-                System.out.println(puzzle.getTopologicalFingerprintDigest());
+                final String lengthString = lengthStrings[j];
+                double len = Double.parseDouble(lengthString);
+
+                PolytopePuzzleDescription puzzle = new PolytopePuzzleDescription(schlafli, len, null);
+                String puzzleString = "" + schlafli + " " + len;
+                System.out.println(puzzleString);
                 writer.write("Puzzle:\t" + puzzleString + sep);
                 writer.write("NumFaces:\t" + puzzle.nFaces() + sep);
                 writer.write("NumCubies:\t" + puzzle.nCubies() + sep);
                 writer.write("NumStickers:\t" + puzzle.nStickers() + sep);
                 writer.write("NumGrips:\t" + puzzle.nGrips() + sep);
-                writer.write("Topological fingerprint human readable:\t" + puzzle.getTopologicalFingerprintHumanReadable() + sep);
-                writer.write("Topological fingerprint digest:\t" + puzzle.getTopologicalFingerprintDigest() + sep);
                 writer.write(sep);
 
                 /*
