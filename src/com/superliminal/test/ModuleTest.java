@@ -34,9 +34,12 @@ public class ModuleTest
 
             for(int j = 0; j < lengthStrings.length; ++j)
             {
-                String puzzleString = "" + schlafli + " " + lengthStrings[j];
+                final String lengthString = lengthStrings[j];
+                double len = Double.parseDouble(lengthString);
+
+                String puzzleString = "" + schlafli + " " + len;
                 System.out.println(puzzleString);
-                PolytopePuzzleDescription puzzle = new PolytopePuzzleDescription(puzzleString, null);
+                PolytopePuzzleDescription puzzle = new PolytopePuzzleDescription(schlafli, len, null);
                 writer.write("Puzzle:\t" + puzzleString + sep);
                 writer.write("NumFaces:\t" + puzzle.nFaces() + sep);
                 writer.write("NumCubies:\t" + puzzle.nCubies() + sep);
