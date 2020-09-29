@@ -562,11 +562,11 @@ public class MC4DView extends Component {
      */
     public static void main(String[] args) throws java.io.IOException {
         final String SCHLAFLI = "{4,3,3}";
-        final String LENGTHSTRING = "3";
+        final int LENGTH = 3;
         final int[] num_twists = new int[1];
         System.out.println("version " + System.getProperty("java.version"));
         JFrame frame = new StaticUtils.QuickFrame("test");
-        final MC4DView view = new MC4DView(new PuzzleManager(SCHLAFLI, LENGTHSTRING, new JProgressBar()), new RotationHandler());
+        final MC4DView view = new MC4DView(new PuzzleManager(SCHLAFLI, LENGTH, new JProgressBar()), new RotationHandler());
         view.addStickerListener(new MC4DView.StickerListener() {
             @Override
             public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {

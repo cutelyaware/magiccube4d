@@ -215,7 +215,7 @@ public class MC4DSwing extends JFrame {
              * 2 - Scramble State
              * 3 - Twist Count
              * 4 - Schlafli Product
-             * 5 - Edge Length String
+             * 5 - Edge Length
              */
             writer.write(
                 MagicCube.MAGIC_NUMBER + " " +
@@ -223,7 +223,7 @@ public class MC4DSwing extends JFrame {
                     scrambleState + " " +
                     hist.countTwists() + " " +
                     puzzleManager.puzzleDescription.getSchlafliProduct() + " " +
-                    puzzleManager.puzzleDescription.getLengthString());
+                    puzzleManager.getPrettyLength());
             writer.write(sep);
             rotations.write(writer);
             //writer.write(sep + puzzle.toString());
@@ -455,7 +455,7 @@ public class MC4DSwing extends JFrame {
 //                    setStatus("No solution", true);
 //                    return;
 //                }
-//                solution = History.compress(solution, puzzleManager.puzzleDescription.getIntLength(), true);
+//                solution = History.compress(solution, (int)puzzleManager.puzzleDescription.getEdgeLength(), true);
 //                view.animate(solution, applyToHistory, false);
 //                scrambleState = SCRAMBLE_NONE; // no user credit for automatic solutions.
 //                setStatus("Twists to solve = " + solution.length);
@@ -1011,13 +1011,13 @@ public class MC4DSwing extends JFrame {
         contentPane.add(splitter, "Center");
         contentPane.add(statusBar, "South");
 
-        puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, "" + MagicCube.DEFAULT_LENGTH, progressBar);
+        puzzleManager = new PuzzleManager(MagicCube.DEFAULT_PUZZLE, MagicCube.DEFAULT_LENGTH, progressBar);
         puzzleManager.addPuzzleListener(new PuzzleManager.PuzzleListener() {
             @Override
             public void puzzleChanged(boolean newPuzzle) {
                 initTabs(); // to properly enable/disable the buttons
                 progressBar.setVisible(false);
-                hist.clear(puzzleManager.puzzleDescription.getIntLength());
+                hist.clear((int) puzzleManager.puzzleDescription.getEdgeLength());
                 updateTwistsLabel();
                 Color[] userColors = findColors(
                     puzzleManager.puzzleDescription.getSchlafliProduct(),
@@ -1081,16 +1081,15 @@ public class MC4DSwing extends JFrame {
                         String newLengthString = lengthString;
                         if(schlafli == null) {
                             String prompt = "Enter your invention:";
-                            String initialInput = puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.puzzleDescription.getLengthString();
+                            String initialInput = puzzleManager.puzzleDescription.getSchlafliProduct() + " " + puzzleManager.getPrettyLength();
                             while(true) {
                                 String reply = JOptionPane.showInputDialog(prompt, initialInput);
                                 if(reply == null) {
                                     return; // Canceled
                                 }
                                 String schlafliAndLength[] = reply.trim().split("\\s+");
-                                // We validate length here to some extent here,
-                                // to avoid an exception in PuzzleManager when it doesn't begin with an int.
-                                if(schlafliAndLength.length != 2 || !schlafliAndLength[1].matches("^\\d+(\\(.*\\))?$")) {
+                                // We validate length here, to avoid an exception in PuzzleManager where it's not handled well.
+                                if(schlafliAndLength.length != 2 || !schlafliAndLength[1].matches("^\\d+$")) {
                                     prompt = "Can not build your invention.\nYou must specify the schlafli product symbol (with no spaces),\nfollowed by a space, followed by the puzzle length. Try again!";
                                     initialInput = reply;
                                     continue;
@@ -1103,9 +1102,7 @@ public class MC4DSwing extends JFrame {
                         progressView.setVisible(true);
                         System.out.println(newSchlafli + " " + newLengthString);
                         puzzleManager.initPuzzle(newSchlafli, newLengthString, progressView, label, true);
-                        // puzzleManager.puzzleDescription is now being created in background,
-                        // so we can't query puzzleManager.puzzleDescription.getIntLength() yet.
-                        hist.clear(predictIntLengthFromLengthString(newLengthString));
+                        hist.clear((int) Double.parseDouble(newLengthString));
                         updateTwistsLabel();
                         scrambleState = SCRAMBLE_NONE;
                         cancel(); // To at least assure we start in normal mode.
@@ -1116,17 +1113,6 @@ public class MC4DSwing extends JFrame {
         }
     } // initPuzzleMenu
 
-    // Quick hack for figuring out what puzzleManager.puzzleDescription.getIntLength()
-    // is going to be, before we can query it (that is, while puzzleManager.puzzleDescription
-    // is being computed in the background).
-    // That is, just peel off an int from the beginning of the length string.
-    // E.g. "4"->4,  "3(9.0)"->3.
-    // Note that this will throw if there is no int at the beginning.
-    private static int predictIntLengthFromLengthString(String lengthString)
-    {
-        String intLengthString = lengthString.replaceAll("[^\\d].*", "");
-        return Integer.parseInt(intLengthString);
-    }
 
     /**
      * Called whenever macro list in manager changes to keep "Apply" submenu up-to-date.
@@ -1207,8 +1193,8 @@ public class MC4DSwing extends JFrame {
 
     private void initPuzzle(String log) {
         scrambleState = SCRAMBLE_NONE;
-        String initial_edge_length_string = "" + MagicCube.DEFAULT_LENGTH;
-        int int_edge_length = MagicCube.DEFAULT_LENGTH;
+        double initial_edge_length = MagicCube.DEFAULT_LENGTH;
+        int int_edge_length = (int) Math.ceil(initial_edge_length);
         if(hist != null) // Stop listening to last History.
             hist.setHistoryListener(null);
         hist = new History(int_edge_length);
@@ -1231,7 +1217,7 @@ public class MC4DSwing extends JFrame {
                      * 2 - Scramble State
                      * 3 - Twist Count
                      * 4 - Schlafli Product
-                     * 5 - Edge Length String
+                     * 5 - Edge Length
                      */
                     if(firstline.length != 6 || !MagicCube.MAGIC_NUMBER.equals(firstline[0])) {
                         reader.close();
@@ -1246,11 +1232,9 @@ public class MC4DSwing extends JFrame {
                     scrambleState = Integer.parseInt(firstline[2]);
                     // int numTwists = Integer.parseInt(firstline[3]);
                     String schlafli = firstline[4];
-                    initial_edge_length_string = firstline[5];
-                    puzzleManager.initPuzzle(schlafli, initial_edge_length_string, progressBar, statusLabel, false);
-                    // Note: puzzleManager.puzzleDescription is now being created in background,
-                    // so we can't query puzzleManager.puzzleDescription.getIntLength() yet.
-                    int_edge_length = predictIntLengthFromLengthString(initial_edge_length_string);
+                    initial_edge_length = Double.parseDouble(firstline[5]);
+                    puzzleManager.initPuzzle(schlafli, "" + initial_edge_length, progressBar, statusLabel, false);
+                    int_edge_length = (int) Math.round(initial_edge_length);
                     hist = new History(int_edge_length);
                     String title = MagicCube.TITLE;
                     rotations.read(reader);
@@ -1324,7 +1308,7 @@ public class MC4DSwing extends JFrame {
             updateEditMenuItems();
             updateTwistsLabel();
             if((scrambleState == SCRAMBLE_PARTIAL || scrambleState == SCRAMBLE_FULL) && puzzleManager.isSolved()) {
-                int intlen = puzzleManager.puzzleDescription.getIntLength();
+                int intlen = (int) puzzleManager.puzzleDescription.getEdgeLength();
                 if(intlen <= 1)
                     return; // No soup for you!
                 switch(scrambleState) {
