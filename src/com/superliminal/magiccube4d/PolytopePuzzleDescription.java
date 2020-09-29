@@ -215,7 +215,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     private float faceCenters[/* nFaces */][/* nDims */];
 
     private double stickerCentersD[][];
-    private FuzzyPointHashTable<Integer> stickerCentersHashTable;
+    private FuzzyPointHashTable stickerCentersHashTable;
 
     private static void Assert(boolean condition) {
         if(!condition)
@@ -329,7 +329,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         {
             for(int iDim = 0; iDim < originalElements.length; ++iDim)
                 for(int iElt = 0; iElt < originalElements[iDim].length; ++iElt)
-                    originalElements[iDim][iElt].setAux(Integer.valueOf(iElt));
+                    originalElements[iDim][iElt].setAux(new Integer(iElt));
         }
 
         //
@@ -381,7 +381,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         //
         face2OppositeFace = new int[nFaces];
         {
-            FuzzyPointHashTable<CSG.Polytope> table = new FuzzyPointHashTable<CSG.Polytope>(1e-9, 1e-8, 1. / 128);
+            FuzzyPointHashTable table = new FuzzyPointHashTable(1e-9, 1e-8, 1. / 128);
             for(int iFace = 0; iFace < nFaces; ++iFace)
                 table.put(faceInwardNormals[iFace], originalFaces[iFace]);
             double oppositeNormalScratch[] = new double[nDims];
@@ -389,7 +389,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             for(int iFace = 0; iFace < nFaces; ++iFace)
             {
                 VecMath.vxs(oppositeNormalScratch, faceInwardNormals[iFace], -1.);
-                CSG.Polytope opposite = table.get(oppositeNormalScratch);
+                CSG.Polytope opposite = (CSG.Polytope) table.get(oppositeNormalScratch);
                 face2OppositeFace[iFace] = opposite == null ? -1 : ((Integer) opposite.getAux()).intValue();
                 //System.err.print("("+iFace+":"+face2OppositeFace[iFace]+")");
             }
@@ -643,12 +643,12 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 CSG.cgOfVerts(faceCentersD[iFace], originalFaces[iFace]);
         }
         stickerCentersD = new double[nStickers][nDims];
-        stickerCentersHashTable = new FuzzyPointHashTable<Integer>(1e-9, 1e-8, 1. / 128);
+        stickerCentersHashTable = new FuzzyPointHashTable(1e-9, 1e-8, 1. / 128);
         {
             for(int iSticker = 0; iSticker < nStickers; ++iSticker)
             {
                 CSG.cgOfVerts(stickerCentersD[iSticker], stickers[iSticker]);
-                stickerCentersHashTable.put(stickerCentersD[iSticker], Integer.valueOf(iSticker));
+                stickerCentersHashTable.put(stickerCentersD[iSticker], new Integer(iSticker));
             }
         }
 
@@ -1354,7 +1354,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 thisFaceCutOffsets))
             {
                 VecMath.vxm(scratchVert, stickerCentersD[iSticker], matD);
-                Integer whereIstickerGoes = stickerCentersHashTable.get(scratchVert);
+                Integer whereIstickerGoes = (Integer) stickerCentersHashTable.get(scratchVert);
                 Assert(whereIstickerGoes != null);
                 newState[whereIstickerGoes.intValue()] = state[iSticker];
             }

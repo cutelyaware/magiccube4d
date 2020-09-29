@@ -38,7 +38,7 @@ public class Math4d
 
         if(i < 0 || i >= 4)
             _assertionFailed("INRANGE(0 <=, ax, <4)", "Math4d.prejava", 44);
-        byte byte0 = af[i] >= 0.0F ? (af[i] <= 0.0F ? ((byte) (0)) : (byte)1) : (byte)-1;
+        byte byte0 = af[i] >= 0.0F ? ((byte) (af[i] <= 0.0F ? ((byte) (0)) : 1)) : -1;
         getCanonicalMatThatTakesAxisToMinusW(i, byte0, ai);
         Vec_h._TRANSPOSE4i(ai1, ai);
         Vec_h._VXM4(af3, af, ai);
