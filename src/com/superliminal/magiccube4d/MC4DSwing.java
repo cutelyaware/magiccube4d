@@ -1439,7 +1439,7 @@ public class MC4DSwing extends JFrame {
             };
             removeAll();
             final JRadioButton ctrlRotateByFace = new PropControls.PropRadioButton("by Face", "ctrlrotbyface", true, false, repainter, "Control-click will rotate clicked face to the center");
-            final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", true, true, repainter, "Control-click will rotate clicked cubie to the center");
+            final JRadioButton ctrlRotateByCubie = new PropControls.PropRadioButton("by Cubie", "ctrlrotbyface", false, true, repainter, "Control-click will rotate clicked cubie to the center");
             ButtonGroup ctrlRotateGroup = new ButtonGroup();
             ctrlRotateGroup.add(ctrlRotateByFace);
             ctrlRotateGroup.add(ctrlRotateByCubie);
@@ -1493,7 +1493,7 @@ public class MC4DSwing extends JFrame {
             final PropCheckBox quick = new PropCheckBox("Quick Moves:", "quickmoves", false, repainter, "Whether to skip some or all twist animation");
             modes.add(new LeftAlignedRow(quick));
             final JRadioButton allMoves = new PropRadioButton("All Moves", "quickmacros", false, true, repainter, "No twist animations at all");
-            final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", false, false, repainter, "No twist animations for macro sequences");
+            final JRadioButton justMacros = new PropRadioButton("Just Macros", "quickmacros", true, false, repainter, "No twist animations for macro sequences");
             allMoves.setEnabled(PropertyManager.getBoolean("quickmoves", false));
             justMacros.setEnabled(PropertyManager.getBoolean("quickmoves", false));
             ButtonGroup quickGroup = new ButtonGroup();
