@@ -12,6 +12,8 @@ import java.net.URISyntaxException;
  * 
  * @author Melinda Green
  */
+
+// do we actually need this? TODO: test by removing launcher and launching MC4DSwing directly
 public class MC4DLauncher {
     public static void main(String args[]) throws IOException, URISyntaxException {
         String thisjar = new File(MC4DLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).toString();
