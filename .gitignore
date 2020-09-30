@@ -1,2 +1,4 @@
-/bin
-/.settings
+bin/
+.settings
+.idea/
+.gradle/
