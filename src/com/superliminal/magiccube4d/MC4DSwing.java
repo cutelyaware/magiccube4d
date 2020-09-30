@@ -978,7 +978,7 @@ public class MC4DSwing extends JFrame {
         helpmenu.add(new JMenuItem("Debugging Console")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                Console.show("MC4D Debugging Console", MC4DSwing.this);
+                Console.show("MC4D Debugging Console");
                 if(Console.getLineCount() <= 1 && !debug_checkbox.isSelected())
                     System.out.println("Output text and error messages are redirected here when this window is showing. \nYou'll probably need to also turn on Help > debugging to see much.");
             }
