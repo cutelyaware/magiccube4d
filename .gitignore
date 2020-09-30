@@ -2,3 +2,4 @@ bin/
 .settings
 .idea/
 .gradle/
+build/
