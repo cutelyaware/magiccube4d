@@ -1,0 +1,296 @@
+com/superliminal/magiccube4d/PuzzleManager.java
+ com.superliminal.magiccube4d.PuzzleManager
+ com.superliminal.magiccube4d.PuzzleManager$1
+ com.superliminal.magiccube4d.PuzzleManager$1InterpFunc
+ com.superliminal.magiccube4d.PuzzleManager$2
+ com.superliminal.magiccube4d.PuzzleManager$3
+ com.superliminal.magiccube4d.PuzzleManager$Highlighter
+ com.superliminal.magiccube4d.PuzzleManager$PuzzleListener
+ com.superliminal.magiccube4d.PuzzleManager$ViewRotationInfo
+com/superliminal/util/PropControls.java
+ com.superliminal.util.PropControls
+ com.superliminal.util.PropControls$PropCheckBox
+ com.superliminal.util.PropControls$PropCheckBox$1
+ com.superliminal.util.PropControls$PropCheckBox$2
+ com.superliminal.util.PropControls$PropRadioButton
+ com.superliminal.util.PropControls$PropRadioButton$1
+ com.superliminal.util.PropControls$PropRadioButton$2
+ com.superliminal.util.PropControls$PropSlider
+ com.superliminal.util.PropControls$PropSlider$1
+com/superliminal/magiccube4d/Macro.java
+ com.superliminal.magiccube4d.Macro
+com/superliminal/magiccube4d/NdSolve.java
+ com.superliminal.magiccube4d.Arrays
+ com.superliminal.magiccube4d.NdSolve
+ com.superliminal.magiccube4d.NdSolve$PuzzleIO
+ com.superliminal.magiccube4d.NdSolve$PuzzleManipulation
+ com.superliminal.magiccube4d.NdSolve$SolveStuff
+ com.superliminal.magiccube4d.NdSolve$Utils
+ com.superliminal.magiccube4d._MagicCubeNdSolve_TestPuzzlePlayer
+com/donhatchsw/util/MergeFind.java
+ com.donhatchsw.util.MergeFind
+com/superliminal/util/ColorButton.java
+ com.superliminal.util.ColorButton
+ com.superliminal.util.ColorButton$1
+ com.superliminal.util.ColorButton$1$1
+ com.superliminal.util.ColorButton$1$2
+ com.superliminal.util.ColorButton$2
+ com.superliminal.util.ColorButton$3
+ com.superliminal.util.ColorButton$ColorChangeListener
+ com.superliminal.util.ColorizedButton
+com/superliminal/magiccube4d/Vec_h.java
+ com.superliminal.magiccube4d.Vec_h
+com/donhatchsw/util/MyMath.java
+ com.donhatchsw.util.MyMath
+com/superliminal/magiccube4d/Math4d.java
+ com.superliminal.magiccube4d.Math4d
+com/donhatchsw/util/FuzzyPointHashSet.java
+ com.donhatchsw.util.FuzzyPointHashSet
+com/superliminal/util/FloatSlider.java
+ com.superliminal.util.FloatSlider
+ com.superliminal.util.FloatSlider$1
+ com.superliminal.util.FloatSlider$2
+com/superliminal/util/Console.java
+ com.superliminal.util.Console
+ com.superliminal.util.Console$1
+ com.superliminal.util.Console$10
+ com.superliminal.util.Console$2
+ com.superliminal.util.Console$3
+ com.superliminal.util.Console$4
+ com.superliminal.util.Console$5
+ com.superliminal.util.Console$6
+ com.superliminal.util.Console$7
+ com.superliminal.util.Console$8
+ com.superliminal.util.Console$8$1
+ com.superliminal.util.Console$9
+ com.superliminal.util.Console$9$1
+ com.superliminal.util.Console$ExpertControlPanel
+ com.superliminal.util.Console$ExpertControlPanel$1
+ com.superliminal.util.Console$ExpertControlPanel$1$1
+ com.superliminal.util.Console$ExpertControlPanel$1$2
+ com.superliminal.util.Console$ExpertControlPanel$1$2$1
+ com.superliminal.util.Console$ExpertControlPanel$1$3
+ com.superliminal.util.Console$ExpertControlPanel$1$3$1
+ com.superliminal.util.Console$ExpertControlPanel$2
+ com.superliminal.util.Console$JCol
+ com.superliminal.util.Console$JCol$1
+ com.superliminal.util.Console$JRow
+ com.superliminal.util.Console$TextAreaOutputStream
+ com.superliminal.util.Console$TextAreaOutputStream$1
+com/superliminal/util/PropertyManager.java
+ com.superliminal.util.PropertyManager
+ com.superliminal.util.PropertyManager$1
+ com.superliminal.util.PropertyManager$LocalProps
+ com.superliminal.util.PropertyManager$PropertyListener
+ com.superliminal.util.PropertyManager$RemoteProps
+com/superliminal/magiccube4d/PolytopePuzzleDescription.java
+ com.superliminal.magiccube4d.PolytopePuzzleDescription
+ com.superliminal.magiccube4d.PolytopePuzzleDescription$1
+com/donhatchsw/util/TriangulationOptimizer.java
+ com.donhatchsw.util.TriangulationOptimizer
+ com.donhatchsw.util.TriangulationOptimizer$1
+ com.donhatchsw.util.TriangulationOptimizer$DirectedEdge
+ com.donhatchsw.util.TriangulationOptimizer$Heap
+ com.donhatchsw.util.TriangulationOptimizer$Heap$Item
+com/superliminal/magiccube4d/Audio.java
+ com.superliminal.magiccube4d.Audio
+ com.superliminal.magiccube4d.Audio$1
+ com.superliminal.magiccube4d.Audio$2
+ com.superliminal.magiccube4d.Audio$Sound
+com/donhatchsw/util/Arrays.java
+ com.donhatchsw.util.Arrays
+ com.donhatchsw.util.Arrays$ArrayFormat
+com/superliminal/magiccube4d/PipelineUtils.java
+ com.superliminal.magiccube4d.PipelineUtils
+ com.superliminal.magiccube4d.PipelineUtils$1
+ com.superliminal.magiccube4d.PipelineUtils$2
+ com.superliminal.magiccube4d.PipelineUtils$AnimFrame
+ com.superliminal.magiccube4d.PipelineUtils$Callback
+ com.superliminal.magiccube4d.PipelineUtils$PickInfo
+com/donhatchsw/util/SortStuff.java
+ com.donhatchsw.util.SortStuff
+ com.donhatchsw.util.SortStuff$Comparator
+ com.donhatchsw.util.SortStuff$DoubleComparator
+ com.donhatchsw.util.SortStuff$IntComparator
+com/superliminal/magiccube4d/MC4DView.java
+ com.superliminal.magiccube4d.MC4DView
+ com.superliminal.magiccube4d.MC4DView$1
+ com.superliminal.magiccube4d.MC4DView$2
+ com.superliminal.magiccube4d.MC4DView$3
+ com.superliminal.magiccube4d.MC4DView$4
+ com.superliminal.magiccube4d.MC4DView$5
+ com.superliminal.magiccube4d.MC4DView$6
+ com.superliminal.magiccube4d.MC4DView$7
+ com.superliminal.magiccube4d.MC4DView$8
+ com.superliminal.magiccube4d.MC4DView$8$1
+ com.superliminal.magiccube4d.MC4DView$AnimationQueue
+ com.superliminal.magiccube4d.MC4DView$AnimationQueue$QueueItem
+ com.superliminal.magiccube4d.MC4DView$ItemCompleteCallback
+ com.superliminal.magiccube4d.MC4DView$StickerListener
+com/superliminal/magiccube4d/ProgressManager.java
+ com.superliminal.magiccube4d.ProgressManager
+ com.superliminal.magiccube4d.ProgressManager$1
+ com.superliminal.magiccube4d.ProgressManager$2
+com/donhatchsw/util/Triangulator.java
+ com.donhatchsw.util.Triangulator
+ com.donhatchsw.util.Triangulator$1
+com/superliminal/magiccube4d/MagicCube.java
+ com.superliminal.magiccube4d.MagicCube
+ com.superliminal.magiccube4d.MagicCube$Stickerspec
+ com.superliminal.magiccube4d.MagicCube$TwistData
+com/superliminal/magiccube4d/RotationHandler.java
+ com.superliminal.magiccube4d.RotationHandler
+ com.superliminal.magiccube4d.RotationHandler$Snap
+com/superliminal/magiccube4d/MacroManager.java
+ com.superliminal.magiccube4d.MacroManager
+com/donhatchsw/util/VecMath.java
+ com.donhatchsw.util.VecMath
+ com.donhatchsw.util.VecMath$1
+com/superliminal/util/ColorUtils.java
+ com.superliminal.util.ColorUtils
+com/superliminal/util/SpringUtilities.java
+ com.superliminal.util.SpringUtilities
+com/superliminal/magiccube4d/PuzzleDescription.java
+ com.superliminal.magiccube4d.PuzzleDescription
+ com.superliminal.magiccube4d.PuzzleDescription$ProgressCallbacks
+com/superliminal/magiccube4d/Congratulations.java
+ com.superliminal.magiccube4d.Congratulations
+ com.superliminal.magiccube4d.Congratulations$1
+ com.superliminal.magiccube4d.Congratulations$2
+ com.superliminal.magiccube4d.Congratulations$3
+com/donhatchsw/util/FuzzyPointHashTable.java
+ com.donhatchsw.util.FuzzyPointHashTable
+ com.donhatchsw.util.FuzzyPointHashTable$FuzzyException
+ com.donhatchsw.util.FuzzyPointHashTable$FuzzyPoint
+com/donhatchsw/util/PolyCSG.java
+ com.donhatchsw.util.PolyCSG
+ com.donhatchsw.util.PolyCSG$1
+ com.donhatchsw.util.PolyCSG$2
+ com.donhatchsw.util.PolyCSG$3
+com/donhatchsw/util/TopSorter.java
+ com.donhatchsw.util.TopSorter
+ com.donhatchsw.util.TopSorter$1
+ com.donhatchsw.util.TopSorter$LinkedListOfInts
+com/superliminal/util/StaticUtils.java
+ com.superliminal.util.StaticUtils
+ com.superliminal.util.StaticUtils$1
+ com.superliminal.util.StaticUtils$2
+ com.superliminal.util.StaticUtils$3
+ com.superliminal.util.StaticUtils$ExtentionFilter
+ com.superliminal.util.StaticUtils$PopperUpper
+ com.superliminal.util.StaticUtils$QuickFrame
+com/superliminal/test/ModuleTest.java
+ com.superliminal.test.ModuleTest
+com/donhatchsw/util/Poly.java
+ com.donhatchsw.util.Poly
+ com.donhatchsw.util.Poly$1
+com/superliminal/magiccube4d/MC4DApplet.java
+ com.superliminal.magiccube4d.MC4DApplet
+ com.superliminal.magiccube4d.MC4DApplet$1
+ com.superliminal.magiccube4d.MC4DApplet$2
+com/superliminal/magiccube4d/MacroControls.java
+ com.superliminal.magiccube4d.MacroControls
+ com.superliminal.magiccube4d.MacroControls$1
+ com.superliminal.magiccube4d.MacroControls$2
+ com.superliminal.magiccube4d.MacroControls$3
+ com.superliminal.magiccube4d.MacroControls$4
+ com.superliminal.magiccube4d.MacroControls$5
+ com.superliminal.magiccube4d.MacroControls$6
+ com.superliminal.magiccube4d.MacroControls$7
+ com.superliminal.magiccube4d.MacroControls$8
+ com.superliminal.magiccube4d.MacroControls$Listener
+com/donhatchsw/util/SpecializedHashMap.java
+ com.donhatchsw.util.SpecializedHashMap
+ com.donhatchsw.util.SpecializedHashMap$1
+ com.donhatchsw.util.SpecializedHashMap$IntArrayHashMap
+ com.donhatchsw.util.SpecializedHashMap$KeyWrapper
+com/donhatchsw/util/CSG.java
+ com.donhatchsw.util.CSG
+ com.donhatchsw.util.CSG$1
+ com.donhatchsw.util.CSG$1ArrayList_Polytope
+ com.donhatchsw.util.CSG$1FuzzyPointHashTable_Integer
+ com.donhatchsw.util.CSG$2
+ com.donhatchsw.util.CSG$3
+ com.donhatchsw.util.CSG$4
+ com.donhatchsw.util.CSG$5
+ com.donhatchsw.util.CSG$6
+ com.donhatchsw.util.CSG$7
+ com.donhatchsw.util.CSG$HashCounter
+ com.donhatchsw.util.CSG$HashablePair
+ com.donhatchsw.util.CSG$HashableSortedArray
+ com.donhatchsw.util.CSG$Hyperplane
+ com.donhatchsw.util.CSG$IntHashCounter
+ com.donhatchsw.util.CSG$Polytope
+ com.donhatchsw.util.CSG$Polytope$1
+ com.donhatchsw.util.CSG$Polytope$1ArrayList_Polytope
+ com.donhatchsw.util.CSG$Polytope$1GlobalIndexAux
+ com.donhatchsw.util.CSG$Polytope$1VisitedAux
+ com.donhatchsw.util.CSG$Polytope$PushedAuxNext
+ com.donhatchsw.util.CSG$SPolytope
+ com.donhatchsw.util.CSG$StringHashCounter
+ com.donhatchsw.util.CSG$StringTable
+com/superliminal/util/ResourceUtils.java
+ com.superliminal.util.ResourceUtils
+com/superliminal/magiccube4d/History.java
+ com.superliminal.magiccube4d.History
+ com.superliminal.magiccube4d.History$1
+ com.superliminal.magiccube4d.History$2
+ com.superliminal.magiccube4d.History$HistoryListener
+ com.superliminal.magiccube4d.History$HistoryNode
+com/superliminal/magiccube4d/MC4DSwing.java
+ com.superliminal.magiccube4d.MC4DSwing
+ com.superliminal.magiccube4d.MC4DSwing$1
+ com.superliminal.magiccube4d.MC4DSwing$10
+ com.superliminal.magiccube4d.MC4DSwing$11
+ com.superliminal.magiccube4d.MC4DSwing$12
+ com.superliminal.magiccube4d.MC4DSwing$13
+ com.superliminal.magiccube4d.MC4DSwing$14
+ com.superliminal.magiccube4d.MC4DSwing$15
+ com.superliminal.magiccube4d.MC4DSwing$16
+ com.superliminal.magiccube4d.MC4DSwing$17
+ com.superliminal.magiccube4d.MC4DSwing$18
+ com.superliminal.magiccube4d.MC4DSwing$19
+ com.superliminal.magiccube4d.MC4DSwing$1Scrambler
+ com.superliminal.magiccube4d.MC4DSwing$2
+ com.superliminal.magiccube4d.MC4DSwing$20
+ com.superliminal.magiccube4d.MC4DSwing$21
+ com.superliminal.magiccube4d.MC4DSwing$22
+ com.superliminal.magiccube4d.MC4DSwing$23
+ com.superliminal.magiccube4d.MC4DSwing$24
+ com.superliminal.magiccube4d.MC4DSwing$25
+ com.superliminal.magiccube4d.MC4DSwing$26
+ com.superliminal.magiccube4d.MC4DSwing$27
+ com.superliminal.magiccube4d.MC4DSwing$28
+ com.superliminal.magiccube4d.MC4DSwing$29
+ com.superliminal.magiccube4d.MC4DSwing$3
+ com.superliminal.magiccube4d.MC4DSwing$30
+ com.superliminal.magiccube4d.MC4DSwing$31
+ com.superliminal.magiccube4d.MC4DSwing$32
+ com.superliminal.magiccube4d.MC4DSwing$33
+ com.superliminal.magiccube4d.MC4DSwing$34
+ com.superliminal.magiccube4d.MC4DSwing$35
+ com.superliminal.magiccube4d.MC4DSwing$36
+ com.superliminal.magiccube4d.MC4DSwing$36$1
+ com.superliminal.magiccube4d.MC4DSwing$37
+ com.superliminal.magiccube4d.MC4DSwing$38
+ com.superliminal.magiccube4d.MC4DSwing$39
+ com.superliminal.magiccube4d.MC4DSwing$4
+ com.superliminal.magiccube4d.MC4DSwing$40
+ com.superliminal.magiccube4d.MC4DSwing$40$1
+ com.superliminal.magiccube4d.MC4DSwing$40$2
+ com.superliminal.magiccube4d.MC4DSwing$5
+ com.superliminal.magiccube4d.MC4DSwing$6
+ com.superliminal.magiccube4d.MC4DSwing$7
+ com.superliminal.magiccube4d.MC4DSwing$8
+ com.superliminal.magiccube4d.MC4DSwing$9
+ com.superliminal.magiccube4d.MC4DSwing$PreferencesEditor
+ com.superliminal.magiccube4d.MC4DSwing$PreferencesEditor$1
+ com.superliminal.magiccube4d.MC4DSwing$PreferencesEditor$1MyLabel
+ com.superliminal.magiccube4d.MC4DSwing$PreferencesEditor$2
+ com.superliminal.magiccube4d.MC4DSwing$PreferencesEditor$3
+ com.superliminal.magiccube4d.MC4DSwing$PreferencesEditor$4
+ com.superliminal.magiccube4d.MC4DSwing$PreferencesEditor$5
+ com.superliminal.magiccube4d.MC4DSwing$PreferencesEditor$LeftAlignedRow
+ com.superliminal.magiccube4d.MC4DSwing$ProbableAction
+com/superliminal/magiccube4d/MC4DLauncher.java
+ com.superliminal.magiccube4d.MC4DLauncher
