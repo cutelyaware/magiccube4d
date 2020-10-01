@@ -81,7 +81,7 @@ public class RotationHandler {
         if(pixelsMoved <= .0001)
             return;
 
-        spinDelta = new double[4][4];  // zeros
+        spinDelta = VecMath.zeromat(4);
 
         if(left && !shift) {
             spinDelta[0][2] += dx;

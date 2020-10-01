@@ -2,7 +2,6 @@ package com.superliminal.magiccube4d;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -367,53 +366,23 @@ public class MC4DView extends Component {
             || (puzzleManager != null ? puzzleManager.isAnimating() : isAnimating());
     }
 
-    private int numPaints = 0;
-
     @Override
     public void paint(Graphics g) {
         frames++;
         if(animationQueue.isAnimating() && puzzleManager.iTwist == puzzleManager.nTwist) {
             // time to stop the animation
             animationQueue.finishedTwist(); // end animation
-            // Probable bug/inefficiency: This repaint() seems to be unnecessary,
-            // and results in an expensive extra paint() again (here at the end of a twist).
-            // Note that we do intentionally draw the final frame of a twist
-            // or rotation twice-ish, for a couple of reasons:
-            //  - We have higher confidence in the correctness of the rest frame
-            //    (both in color permutation and in geometry) than in the
-            //    final frame of a twist animation, even though those two things
-            //    *should* look the same.
-            //    Therefore, when an animation completes, we draw the final frame both ways:
-            //    first, we compute and draw the final frame
-            //    with the old permutation and fracIntoTwist=1.0,
-            //    then we compute and draw the rest frame
-            //    with the new permutation and fracIntoTwist=0.0.
-            //  - If antialias-when-still, the final frame needs to get drawn first non-antialiased
-            //    (to avoid a perceptible pause just before the animation ends),
-            //    and then antialiased.
-            // But, during that second-ish final frame of a twist (not rotate),
-            // we get here and call this repaint(),
-            // which causes yet a third draw of the same picture,
-            // completely identical to the second one
-            // (in particular, it's antialiased again, if antialias-when-still is on).
             repaint();
         }
         if(lastDrag == null && rotationHandler.continueSpin()) { // keep spinning
             repaint();
         }
+        // antialiasing makes for a beautiful image but can also be expensive to draw therefore
+        // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
         if(g instanceof Graphics2D) {
-            Graphics2D g2d = (Graphics2D) g;
-            // antialiasing makes for a beautiful image but can also be expensive to draw therefore
-            // we'll turn on antialiasing only when the the user allows it but keep it off when in motion.
             boolean okToAntialias = !isInMotion() && PropertyManager.getBoolean("antialiasing", true);
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+            ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
-            // Voodoo to remove 1/2 pixel lower-right bias so that all four modes match up:
-            // [antialiased,non-antialiased] x [fill,outlines].  Note that this works only
-            // when rendering directly to a visible Component (not a BufferedImage).
-            // For details, see Issue #138 and
-            // https://stackoverflow.com/questions/7701097/java-graphics-fillpolygon-how-to-also-render-right-and-bottom-edges/63645061#answer-63645061 .
-            g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         }
         // paint the background
         g.setColor(skyOverride == null ? PropertyManager.getColor("sky.color", MagicCube.SKY) : skyOverride);
@@ -453,16 +422,6 @@ public class MC4DView extends Component {
                 g.setColor(Color.black);
                 StaticUtils.fillString(" FPS: " + FPS + sb, 0, getHeight(), Color.white, g);
             }
-        }
-        ++numPaints; // before looking at it
-        if(PropertyManager.getBoolean(MagicCube.DEBUGGING, false)) {
-            // Show e.g. "(123 paints)" in upper right of the picture.
-            g.setColor(Color.black);
-            String text = "(" + numPaints + " paint" + (numPaints == 1 ? "" : "s") + ")";
-            FontMetrics fontMetrics = g.getFontMetrics();
-            g.drawString(text,
-                /* x= */getWidth() - 2 - fontMetrics.stringWidth(text),
-                /* y= */g.getFontMetrics().getAscent());
         }
     } // end paint()
 
@@ -583,11 +542,11 @@ public class MC4DView extends Component {
      */
     public static void main(String[] args) throws java.io.IOException {
         final String SCHLAFLI = "{4,3,3}";
-        final String LENGTHSTRING = "3";
+        final int LENGTH = 3;
         final int[] num_twists = new int[1];
         System.out.println("version " + System.getProperty("java.version"));
         JFrame frame = new StaticUtils.QuickFrame("test");
-        final MC4DView view = new MC4DView(new PuzzleManager(SCHLAFLI, LENGTHSTRING, new JProgressBar()), new RotationHandler());
+        final MC4DView view = new MC4DView(new PuzzleManager(SCHLAFLI, LENGTH, new JProgressBar()), new RotationHandler());
         view.addStickerListener(new MC4DView.StickerListener() {
             @Override
             public void stickerClicked(InputEvent e, MagicCube.TwistData twisted) {

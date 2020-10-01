@@ -499,7 +499,7 @@ public class PipelineUtils
             }
 
             final float finalPolyCentersZ[][] = polyCentersZ;
-            com.donhatchsw.util.SortStuff.sort(drawList, 0, drawListSize, new com.donhatchsw.util.SortStuff.Comparator() { // XXX ALLOCATION! (need to make sort smarter)
+            com.donhatchsw.util.SortStuff.sortRange(drawList, 0, drawListSize - 1, new com.donhatchsw.util.SortStuff.Comparator() { // XXX ALLOCATION! (need to make sort smarter)
                 @Override
                 public int compare(Object i, Object j)
                 {
@@ -631,7 +631,7 @@ public class PipelineUtils
         int faceIndex = puzzle.getSticker2Face()[stickerIndex];
 
         // If this is not a length-2 puzzle, our life is easy.
-        if(puzzle.getIntLength() > 2)
+        if(puzzle.getEdgeLength() > 2)
         {
             int ret[] = new int[1];
             ret[0] = puzzle.getClosestGrip(stickerCenter, faceIndex, stickerIndex, false);

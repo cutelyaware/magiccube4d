@@ -84,6 +84,13 @@ package com.superliminal.magiccube4d;
 
  - bleah, dodecahedron is not face first! (noticable in {}x{5,3})
 
+ - {5}x{5} 2 has sliver polygons-- I think the isPrismOfThisFace
+ hack isn't adequate.  Also it doesnt work for {5}x{} (but that's 3d).
+ I think I need to remove the slivers after the fact instead.
+ OH hmm... the slivers are kinda cool because they are
+ rotation handles!  Think about this... maybe draw them smaller
+ and white, or something!
+
  - 2x2x2x2 does corner twists, should do face (I think)
  - why is scale different before I touch the slider??
  - scale doesn't quite match original
@@ -183,16 +190,18 @@ import com.donhatchsw.util.*; // XXX get rid
 import com.superliminal.util.PropertyManager;
 
 public class PolytopePuzzleDescription implements PuzzleDescription {
+
+    // Warning! edit with caution (sliver removal heuristic is tuned to these values).
+    // If you edit, you should rerun the module test at a minimum.
+    private final static double SLICE_MULTIPLIER = 0.99999;
+    private final static double SLICE_MULTIPLIER_SIMPLEX = 0.995; // Special case because too close to 1 affecting drawing and too far from 1 was affecting grip detection.
+    private final static double SLIVER_VOLUME_PERCENT = 15; // Cull stickers with volumes < this % of average.
+
     private CSG.SPolytope originalPolytope;
     private CSG.SPolytope slicedPolytope;
 
     private String schlafliProduct;
-    private int intLength;
-    private double doubleLength;
-    private String lengthString;
-
-    private String topologicalFingerprintHumanReadable;
-    private String topologicalFingerprintDigest;
+    private double edgeLength;
 
     private float _circumRadius;
     private float _inRadius;
@@ -220,7 +229,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     private float faceCenters[/* nFaces */][/* nDims */];
 
     private double stickerCentersD[][];
-    private FuzzyPointHashTable<Integer> stickerCentersHashTable;
+    private FuzzyPointHashTable stickerCentersHashTable;
 
     private static void Assert(boolean condition) {
         if(!condition)
@@ -232,17 +241,6 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             throw new Error("Assumption failed");
     }
 
-    // split into lines, indent each line, and re-join.
-    private static String indented(String indent, String text) {
-        String[] lines = text.split("\n");
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < lines.length; ++i) {
-            sb.append(indent);
-            sb.append(lines[i]);
-            if (i != lines.length-1) sb.append("\n");
-        }
-        return sb.toString();
-    }
 
     /**
      * The following schlafli product symbols are supported;
@@ -282,58 +280,21 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
      * omnitruncated regular
      */
 
-    public PolytopePuzzleDescription(String prescription, ProgressCallbacks progress)
+    public PolytopePuzzleDescription(String schlafliProduct,
+        double length, // usually int but can experiment with different cut depths
+        ProgressManager progress)
     {
-        // Caller may have passed us "Grand Antiprism" from a menu,
-        // but the lower level function we're going go call doesn't allow spaces,
-        // and understands Grand_Antiprism as a special case, so convert.
-        prescription = prescription.replaceAll("Grand Antiprism",
-                                               "Grand_Antiprism");
-        java.util.regex.Matcher matcher =
-        java.util.regex.Pattern.compile(
-            "\\s*([^ ]+)\\s+((\\d+)(\\((.*)\\))?)"
-        ).matcher(prescription);
-        if (!matcher.matches())
-            throw new IllegalArgumentException("PolytopePuzzleDescription didn't understand prescription string "+com.donhatchsw.util.Arrays.toStringCompact(prescription)+"");
-        String schlafliProductString = matcher.group(1);
-        String lengthString = matcher.group(2);
-        String intLengthString = matcher.group(3);
-        String doubleLengthString = matcher.group(5);
+        this.schlafliProduct = schlafliProduct;
+        this.edgeLength = length;
 
-        int intLength = Integer.parseInt(intLengthString);
-        double doubleLength = (double)intLength; // but to be overridden by doubleLengthString if there is one
-        if (doubleLengthString != null)
-        {
-            // Allow fractions
-            int slashIndex = doubleLengthString.lastIndexOf('/');
-            if (slashIndex != -1)
-            {
-                String numeratorString = doubleLengthString.substring(0, slashIndex);
-                String denominatorString = doubleLengthString.substring(slashIndex+1);
-                doubleLength = Double.valueOf(numeratorString).doubleValue()
-                             / Double.valueOf(denominatorString).doubleValue();
-            }
-            else
-                doubleLength = Double.valueOf(doubleLengthString).doubleValue(); //  XXX should catch parse error and throw illegal arg exception
-        }
-
-        this.schlafliProduct = schlafliProductString;
-        this.lengthString = lengthString;
-        this.intLength = intLength;
-        this.doubleLength = doubleLength;
-
-        if (intLength < 1)
-            throw new IllegalArgumentException("PolytopePuzzleDescription called with intLength="+intLength+", min legal intLength is 1");
-        if (doubleLength <= 0)
-            throw new IllegalArgumentException("PolytopePuzzleDescription called with doubleLength="+doubleLength+", doubleLength must be positive");
+        if(length < 1)
+            throw new IllegalArgumentException("PolytopePuzzleDescription called with length=" + length + ", min legal length is 1");
 
         if(progress != null)
-            if (!progress.subtaskInit("Constructing polytope"))
-                return;
+            progress.init("Constructing polytope");
 
-        originalPolytope = CSG.makeRegularStarPolytopeProductJoinFromString(schlafliProduct);
-        CSG.orientDeepFunctional(originalPolytope); // XXX shouldn't be necessary!!!!
-        CSG.orientDeepCosmetic(originalPolytope); // XXX shouldn't be necessary!!!!
+        originalPolytope = CSG.makeRegularStarPolytopeCrossProductFromString(schlafliProduct);
+        CSG.orientDeep(originalPolytope); // XXX shouldn't be necessary!!!!
 
         int nDims = originalPolytope.p.dim; // == originalPolytope.fullDim
 
@@ -350,7 +311,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         {
             for(int iDim = 0; iDim < originalElements.length; ++iDim)
                 for(int iElt = 0; iElt < originalElements[iDim].length; ++iElt)
-                    originalElements[iDim][iElt].setAux(Integer.valueOf(iElt));
+                    originalElements[iDim][iElt].aux = new Integer(iElt);
         }
 
         //
@@ -402,7 +363,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         //
         face2OppositeFace = new int[nFaces];
         {
-            FuzzyPointHashTable<CSG.Polytope> table = new FuzzyPointHashTable<CSG.Polytope>(1e-9, 1e-8, 1. / 128);
+            FuzzyPointHashTable table = new FuzzyPointHashTable(1e-9, 1e-8, 1. / 128);
             for(int iFace = 0; iFace < nFaces; ++iFace)
                 table.put(faceInwardNormals[iFace], originalFaces[iFace]);
             double oppositeNormalScratch[] = new double[nDims];
@@ -410,8 +371,8 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             for(int iFace = 0; iFace < nFaces; ++iFace)
             {
                 VecMath.vxs(oppositeNormalScratch, faceInwardNormals[iFace], -1.);
-                CSG.Polytope opposite = table.get(oppositeNormalScratch);
-                face2OppositeFace[iFace] = opposite == null ? -1 : ((Integer) opposite.getAux()).intValue();
+                CSG.Polytope opposite = (CSG.Polytope) table.get(oppositeNormalScratch);
+                face2OppositeFace[iFace] = opposite == null ? -1 : ((Integer) opposite.aux).intValue();
                 //System.err.print("("+iFace+":"+face2OppositeFace[iFace]+")");
             }
         }
@@ -426,6 +387,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         // the corresponding cut offsets will be in increasing order,
         // for sanity.
         //
+        boolean needSliverRemoval = false;
         faceCutOffsets = new double[nFaces][];
         {
             for(int iFace = 0; iFace < nFaces; ++iFace)
@@ -434,121 +396,120 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 
                 double fullThickness = 0.;
                 {
-                    // In case of nonuniformity (e.g. pseudorhombicuboctahedron or frucht),
-                    // we need to do check *all* vertices on this facet, not just one.
-		    for (int iVert : originalIncidences[nDims-1][iFace][0]) {
-			// iVertEdges = indices of all edges incident on vert iVert
-			int iVertsEdges[] = originalIncidences[0][iVert][1];
-			// Find an edge incident on vertex iVert
-			// that is NOT incident on face iFace..
-			for(int i = 0; i < iVertsEdges.length; ++i)
-			{
-			    int iEdge = iVertsEdges[i];
-			    int iEdgesFaces[] = originalIncidences[1][iEdge][nDims - 1];
-			    int j;
-			    for(j = 0; j < iEdgesFaces.length; ++j)
-				if(iEdgesFaces[j] == iFace)
-				    break; // iEdge is incident on iFace-- no good
-			    if(j == iEdgesFaces.length)
-			    {
-				// iEdge is not incident on iFace-- good!
-				int jVert0 = originalIncidences[1][iEdge][0][0];
-				int jVert1 = originalIncidences[1][iEdge][0][1];
-				Assert((jVert0 == iVert) != (jVert1 == iVert));
+                    // iVert = index of some vertex on face iFace
+                    int iVert = originalIncidences[nDims - 1][iFace][0][0];
+                    // iVertEdges = indices of all edges incident on vert iVert
+                    int iVertsEdges[] = originalIncidences[0][iVert][1];
+                    // Find an edge incident on vertex iVert
+                    // that is NOT incident on face iFace..
+                    for(int i = 0; i < iVertsEdges.length; ++i)
+                    {
+                        int iEdge = iVertsEdges[i];
+                        int iEdgesFaces[] = originalIncidences[1][iEdge][nDims - 1];
+                        int j;
+                        for(j = 0; j < iEdgesFaces.length; ++j)
+                            if(iEdgesFaces[j] == iFace)
+                                break; // iEdge is incident on iFace-- no good
+                        if(j == iEdgesFaces.length)
+                        {
+                            // iEdge is not incident on iFace-- good!
+                            int jVert0 = originalIncidences[1][iEdge][0][0];
+                            int jVert1 = originalIncidences[1][iEdge][0][1];
+                            Assert((jVert0 == iVert) != (jVert1 == iVert));
 
-				double edgeVec[] = VecMath.vmv(
-				    originalVerts[jVert1].getCoords(),
-				    originalVerts[jVert0].getCoords());
-				double thisThickness = VecMath.dot(edgeVec, faceInwardNormals[iFace]);
-				if(thisThickness < 0.)
-				    thisThickness *= -1.;
+                            double edgeVec[] = VecMath.vmv(
+                                originalVerts[jVert1].getCoords(),
+                                originalVerts[jVert0].getCoords());
+                            double thisThickness = VecMath.dot(edgeVec, faceInwardNormals[iFace]);
+                            if(thisThickness < 0.)
+                                thisThickness *= -1.;
 
-				// If there are more than one neighbor vertex
-				// that's not on this face, pick one that's
-				// closest to the face plane.  This can only
-				// happen if the vertex figure is NOT a simplex
-				// (e.g. it happens for the icosahedron).
-				if(thisThickness > 1e-6
-				    && (fullThickness == 0. || thisThickness < fullThickness))
-				    fullThickness = thisThickness;
-			    }
-			}
-		    }
+                            // If there are more than one neighbor vertex
+                            // that's not on this face, pick one that's
+                            // closest to the face plane.  This can only
+                            // happen if the vertex figure is NOT a simplex
+                            // (e.g. it happens for the icosahedron).
+                            if(thisThickness > 1e-6
+                                && (fullThickness == 0. || thisThickness < fullThickness))
+                                fullThickness = thisThickness;
+                        }
+                    }
                 }
                 Assert(fullThickness != 0.); // XXX actually this fails if puzzle dimension <= 1, maybe should disallow
 
-                double sliceThickness = fullThickness / doubleLength;
+                int ceilLength = (int) Math.ceil(length);
+                int nNearCuts = 0, nFarCuts = 0;
+                double sliceThickness = 0;
 
-                int nNearCuts = intLength / 2;  // (n-1)/2 if odd, n/2 if even
-                int nFarCuts = face2OppositeFace[iFace]==-1 ? 0 : nNearCuts;
+                boolean isPrismOfThisFace = Math.abs(-1. - faceOffsets[iFace]) < 1e-6;
 
-                // In some cases, notably an even length prism or antiprism of this face,
-                // the middle cut is the same from either side: it goes through the origin.
-                // In that case, we'd like to do it only as a near cut, so nFarCuts
-                // should be nNearCuts-1 instead of nNearCuts.
-                //
-                // HOWEVER, there are other cases where the middle cut is the same from either side,
-                // notably truncated tetrahedron with carefully chosen cut depth: "(1)3(1)3(0) 2(1)"
-                // (and truncated simplex in 4d, too, probably), and there's no way
-                // of predicting when this will happen.
-                // In fact, we can cause similar problems even for odd numbers of slices on standard puzzles:
-                //      "{4,3,3} 7(6)"
-                //      "{4,3,3} 7(4)"
-                // Given that, what we do is as follows: make the list of cuts (even though nFarCuts may
-                // may be too many at this point), then sort and remove dups (and near dups) at the end.
+                // Special case the simplex puzzles and triangular duoprisms.
+                boolean isSimplex = schlafliProduct.equals("{3,3,3}");
+                boolean isTetrahedralPrism = schlafliProduct.indexOf("{3,3}") != -1;
+                boolean slicingTriangularPrism = (schlafliProduct.indexOf("{3}") != -1 && face.facets.length != 5);
+                boolean isUniformTriangularDuoprism = schlafliProduct.equals("{3}x{3}") || schlafliProduct.equals("{3}*{3}");
+                if(isSimplex || (isTetrahedralPrism && !isPrismOfThisFace) || slicingTriangularPrism || isUniformTriangularDuoprism)
+                {
+                    // Disallow fractional lengths for these puzzles.
+                    length = ceilLength;
+
+                    sliceThickness = fullThickness / length;
+
+                    // We need the sliver hack for these because the slicer can't handle it otherwise.
+                    if(isSimplex || isTetrahedralPrism)
+                        sliceThickness *= SLICE_MULTIPLIER_SIMPLEX;
+                    else
+                        sliceThickness *= SLICE_MULTIPLIER;
+                    needSliverRemoval = true;
+
+                    // There are no opposite faces for the simplex,
+                    // and so we need to do all the cuts on the near side.
+                    nNearCuts = ceilLength - 1;
+                    nFarCuts = 0;
+                }
+                else
+                {
+                    // Fractional lengths are basically a hack for pentagons
+                    // and higher gons
+                    // so that the middle edge width can be controlled
+                    // by the user; we don't want it to apply
+                    // to squares though
+                    if(isPrismOfThisFace)
+                        length = ceilLength;
+
+                    sliceThickness = fullThickness / length;
+
+                    // If even length and *not* a prism of this face,
+                    // then the middle-most cuts will meet,
+                    // but the slice function can't handle that.
+                    // So back off a little so they don't meet,
+                    // so we'll get tiny invisible sliver faces there instead.
+                    if(length == ceilLength
+                        && ceilLength % 2 == 0
+                        && !isPrismOfThisFace)
+                    {
+                        needSliverRemoval = true;
+                        sliceThickness *= SLICE_MULTIPLIER;
+                    }
+
+                    nNearCuts = ceilLength / 2; // (n-1)/2 if odd, n/2 if even
+                    nFarCuts = face2OppositeFace[iFace] == -1 ? 0 :
+                        ceilLength % 2 == 0 && isPrismOfThisFace ? nNearCuts - 1 :
+                            nNearCuts;
+                }
 
                 faceCutOffsets[iFace] = new double[nNearCuts + nFarCuts];
-                for (int iNearCut = 0; iNearCut < nNearCuts; ++iNearCut)
-                    faceCutOffsets[iFace][iNearCut] = faceOffsets[iFace] + (iNearCut+1)*sliceThickness;
-                // We'll fill in the far cuts in another pass
-            }  // for iFace
 
-            // Fill in far cuts of each face,
-            // from near cuts of the opposite face.
-            // Note the opposite face may have a different
-            // offset from the origin, and different slice thickness
-            // (e.g. the truncated simplex in 3 or 4 dimensions).
-            for(int iFace = 0; iFace < nFaces; ++iFace)
-            {
-                int iOppositeFace = face2OppositeFace[iFace];
-                if (iOppositeFace != -1) {
-                  int nNearCuts = intLength / 2;  // same reason in previous pass
-                  int nFarCuts = faceCutOffsets[iFace].length - nNearCuts;
-                  for (int iFarCut = 0; iFarCut < nFarCuts; ++iFarCut)
-                      faceCutOffsets[iFace][nNearCuts+nFarCuts-1-iFarCut] = -faceCutOffsets[iOppositeFace][iFarCut];
-                }
-            }
-            // Finally, make sure opposite cut sets are *exactly* opposite.  They might not be,
-            // if de-duping made different choices from the two directions.
-            for (int iFace = 0; iFace < nFaces; ++iFace)
-            {
-                int iOppositeFace = face2OppositeFace[iFace];
-                if (iOppositeFace > iFace)  // so we do this only once per pair, and only if there is an opposite
-                {
-                    int nCuts = faceCutOffsets[iFace].length;
-                    Assert(nCuts == faceCutOffsets[iOppositeFace].length); // careful analysis of the deduping probably would show this can't fail, but check anyway
-                    for (int iCut = 0; iCut < nCuts; ++iCut) {
-                        Assert(Math.abs(faceCutOffsets[iOppositeFace][nCuts-1-iCut] - -faceCutOffsets[iFace][iCut]) < 1e-3);  // rough sanity check, much coarser than the dedup tolerance that was used
-                        faceCutOffsets[iOppositeFace][nCuts-1-iCut] = -faceCutOffsets[iFace][iCut];
-                    }
-                }
+                for(int iNearCut = 0; iNearCut < nNearCuts; ++iNearCut)
+                    faceCutOffsets[iFace][iNearCut] = faceOffsets[iFace] + (iNearCut + 1) * sliceThickness;
+                for(int iFarCut = 0; iFarCut < nFarCuts; ++iFarCut)
+                    faceCutOffsets[iFace][nNearCuts + nFarCuts - 1 - iFarCut] = -faceOffsets[iFace] // offset of opposite face
+                        - (iFarCut + 1) * sliceThickness;
             }
         }
 
-        if(progress != null)
-            if (!progress.subtaskDone())  // "Constructing polytope"
-                return;
-
         //System.out.println("face inward normals = "+com.donhatchsw.util.Arrays.toStringCompact(faceInwardNormals));
         //System.out.println("cut offsets = "+com.donhatchsw.util.Arrays.toStringCompact(faceCutOffsets));
-
-	if(progress != null)
-	    if (!progress.subtaskInit("Computing fingerprint of original polytope"))
-		return;
-        String originalPolytopeTopologicalFingerprintHumanReadable = CSG.computeHumanReadableTopologicalFingerprint(originalPolytope.p);
-        if(progress != null)
-            if (!progress.subtaskDone())  // "Computing fingerprint of original polytope"
-                return;
 
         //
         // Slice!
@@ -565,8 +526,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 }
 
                 if(progress != null)
-                    if (!progress.subtaskInit("Slicing", totalCuts))
-                        return;
+                    progress.init("Slicing", totalCuts);
             }
             // Now do the actual work, updating the progress worker as we go.
             {
@@ -582,28 +542,56 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                             faceInwardNormals[iFace],
                             faceCutOffsets[iFace][iCut]);
                         Object auxOfCut = null; // we don't set any aux on the cut for now
-                        slicedPolytope = CSG.sliceElements(slicedPolytope, slicedPolytope.p.dim-1, cutHyperplane, auxOfCut, /*sizes=*/null);
+                        slicedPolytope = CSG.sliceFacets(slicedPolytope, cutHyperplane, auxOfCut);
 
                         if(progress != null)
-                            if (!progress.updateProgress(cut))
-                                return;
+                            progress.updateProgress(cut);
                         cut++;
                     }
                 }
             }
-            if(progress != null)
-                if (!progress.subtaskDone())  // "Slicing"
-                    return;
         }
 
         if(progress != null)
-            if (!progress.subtaskInit("Fixing orientations"))
-                return;
-        CSG.orientDeepFunctional(slicedPolytope); // XXX shouldn't be necessary!!!!
-        CSG.orientDeepCosmetic(slicedPolytope); // XXX shouldn't be necessary!!!!
-        if(progress != null)
-            if (!progress.subtaskDone())  // "Fixing orientations"
-                return;
+            progress.init("Fixing orientations");
+        CSG.orientDeep(slicedPolytope); // XXX shouldn't be necessary!!!!
+
+        // Remove slivers
+        // XXX - This is a hack for a hack.
+        // A better long term approach would be to improve the slice function.
+        if(needSliverRemoval)
+        {
+            CSG.SPolytope facets[] = slicedPolytope.p.facets;
+            CSG.SPolytope validFacets[] = new CSG.SPolytope[facets.length];
+
+            // Calculate a volume cutoff for slivers.
+            // Note: we needed to make this depend on the full volume of the puzzle.
+            // We'll make our cutoff a small percentage of the average volume of a sticker.
+            double fullVolume = Math.abs(slicedPolytope.volume());
+            double cutoff = (fullVolume / facets.length) * SLIVER_VOLUME_PERCENT / 100;
+            //System.out.println( "sliver cutoff = " + cutoff );
+
+            int nValidFacets = 0;
+            for(int i = 0; i < facets.length; i++)
+            {
+                double volume = Math.abs(facets[i].volume());
+                if(volume > cutoff)
+                    validFacets[nValidFacets++] = facets[i];
+
+                // Warn if close to the cutoff.
+                double fraction = volume / cutoff;
+                if(0.5 < fraction && fraction < 2)
+                {
+                    System.out.println("Warning! Sliver removal heuristic is cutting it too close (pun intended). v = " + volume + " c = " + cutoff);
+                }
+            }
+            validFacets = (CSG.SPolytope[]) com.donhatchsw.util.Arrays.subarray(
+                validFacets, 0, nValidFacets); // resize
+
+            // Setup the polytope with the valid facets.
+            slicedPolytope.p.facets = validFacets;
+            slicedPolytope.p.resetAllElements();
+        }
 
         CSG.Polytope stickers[] = slicedPolytope.p.getAllElements()[nDims - 1];
         int nStickers = stickers.length;
@@ -614,7 +602,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         sticker2face = new int[nStickers];
         {
             for(int iSticker = 0; iSticker < nStickers; ++iSticker)
-                sticker2face[iSticker] = ((Integer) stickers[iSticker].getAux()).intValue();
+                sticker2face[iSticker] = ((Integer) stickers[iSticker].aux).intValue();
         }
         sticker2faceShadow = VecMath.copyvec(sticker2face);
 
@@ -637,15 +625,15 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             for(int iSlicedRidge = 0; iSlicedRidge < slicedRidges.length; ++iSlicedRidge)
             {
                 CSG.Polytope ridge = slicedRidges[iSlicedRidge];
-                boolean ridgeIsFromOriginal = (ridge.getAux() != null);
+                boolean ridgeIsFromOriginal = (ridge.aux != null);
                 if(ridgeIsFromOriginal) // if it's not a cut
                 {
                     // Find the two stickers that meet at this ridge...
                     int indsOfStickersContainingThisRidge[] = allSlicedIncidences[nDims - 2][iSlicedRidge][nDims - 1];
 
                     // NOTE: This assert was a check until we started filtering out slivers.
-                    //       Slivers will just make cubies with other slivers though,
-                    //       so this should be ok.
+                    // 		 Slivers will just make cubies with other slivers though, 
+                    //		 so this should be ok.
                     //Assert(indsOfStickersContainingThisRidge.length == 2);
                     if(indsOfStickersContainingThisRidge.length == 2)
                     {
@@ -681,12 +669,12 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 CSG.cgOfVerts(faceCentersD[iFace], originalFaces[iFace]);
         }
         stickerCentersD = new double[nStickers][nDims];
-        stickerCentersHashTable = new FuzzyPointHashTable<Integer>(1e-9, 1e-8, 1. / 128);
+        stickerCentersHashTable = new FuzzyPointHashTable(1e-9, 1e-8, 1. / 128);
         {
             for(int iSticker = 0; iSticker < nStickers; ++iSticker)
             {
                 CSG.cgOfVerts(stickerCentersD[iSticker], stickers[iSticker]);
-                stickerCentersHashTable.put(stickerCentersD[iSticker], Integer.valueOf(iSticker));
+                stickerCentersHashTable.put(stickerCentersD[iSticker], new Integer(iSticker));
             }
         }
 
@@ -697,18 +685,6 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 stickerCentersMinusFaceCentersF[iSticker] = VecMath.doubleToFloat(
                     VecMath.vmv(stickerCentersD[iSticker], faceCentersD[sticker2face[iSticker]]));
         }
-
-        if (progress != null && !progress.subtaskInit("Computing fingerprint of polytope")) return;
-        this.topologicalFingerprintHumanReadable = computeTopologicalFingerprintHumanReadable(
-          this.originalPolytope, originalPolytopeTopologicalFingerprintHumanReadable, new int[] {intLength}, nStickers, this.faceInwardNormals, this.faceCutOffsets, this.stickerCentersD);
-        this.topologicalFingerprintDigest =
-            this.topologicalFingerprintHumanReadable.contains("NOT FINGERPRINTABLE")
-              ? null
-              : CSG.sha1(this.topologicalFingerprintHumanReadable);
-        if (progress != null && !progress.subtaskDone()) return;  // "Computing puzzle fingerprint"
-
-        System.out.println("topologicalFingerprintHumanReadable = \n"+indented("    ", this.topologicalFingerprintHumanReadable));
-        System.out.println("topologicalFingerprintDigest = "+this.topologicalFingerprintDigest);
 
 
         //
@@ -722,7 +698,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
             CSG.Polytope allElements[][] = slicedPolytope.p.getAllElements();
             for(int iDim = 0; iDim < allElements.length; ++iDim)
                 for(int iElt = 0; iElt < allElements[iDim].length; ++iElt)
-                    allElements[iDim][iElt].setAux(null);
+                    allElements[iDim][iElt].aux = null;
         }
 
         //
@@ -879,8 +855,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                     nGrips += allElementsOfCell[iDim].length;
             }
             if(progress != null)
-                if (!progress.subtaskInit("Calculating possible twists", nGrips))
-                    return;
+                progress.init("Calculating possible twists", nGrips);
 
             // Now do the actual work, updating the progress manager as we go.
             gripSymmetryOrders = new int[nGrips];
@@ -899,7 +874,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                     for(int iElt = 0; iElt < allElementsOfCell[iDim].length; ++iElt)
                     {
                         CSG.Polytope elt = allElementsOfCell[iDim][iElt];
-                        gripSymmetryOrders[iGrip] = CSG.calcRotationGroupOrderDEPRECATED(
+                        gripSymmetryOrders[iGrip] = CSG.calcRotationGroupOrder(
                             originalPolytope.p, cell, elt,
                             gripUsefulMats[iGrip]);
 
@@ -916,17 +891,13 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                         grip2face[iGrip] = iFace;
 
                         if(progress != null)
-                            if (!progress.updateProgress(iGrip))
-                                return;
+                            progress.updateProgress(iGrip);
                         //System.out.println("("+iDim+":"+gripSymmetryOrders[iGrip]+")");
 
                         iGrip++;
                     }
                 }
             }
-            if(progress != null)
-                if (!progress.subtaskDone())  // "Calculating possible twists"
-                    return;
             Assert(iGrip == nGrips);
 
             /*
@@ -1002,175 +973,22 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     } // getTwistMat
 
 
-    // Make the topological fingerprint, consisting of the following:
-    // - fingerprint of original polytope
-    // - "number of cuts" that is, floor(intLength/2).
-    // - nStickers
-    // - for each different type of facet, a histogram of slice-to-number-of-stickers for slices parallel to a facet of that type.
-    // Note that, in particular, this correctly recognizes (even without counts):
-    //     "{5,3,3} 2" == "{5,3,3} 3"
-    //     "{4,3,3} 2" != "{4,3,3} 3"
-    // And furthermore, the face-to-slice-sticker-counts mapping allows correctly recognizing:
-    //     "{3}x{4} 3(2.75)" != "{3}x{4} 3(3.25}"
-    // Note: if ultimately not fingerprintable, this function
-    // still returns a summary of much of the structure,
-    // but it will contain the substring "NOT FINGERPRINTABLE".
-    // In this case the caller should not make the digest of it.
-    private static String computeTopologicalFingerprintHumanReadable(
-	CSG.SPolytope originalPolytope,
-	String originalPolytopeHumanReadableTopologicalFingerprint,
-	int[] intLengths,
-	int nStickers,
-	double[][] facetInwardNormals,
-	double[][] facetCutOffsets,
-	double[][] stickerCentersD)
-    {
-	StringBuilder topologicalFingerprintHumanReadableBuilder = new StringBuilder();
-	topologicalFingerprintHumanReadableBuilder.append("original polytope:\n");
-	topologicalFingerprintHumanReadableBuilder.append(indented("    ", originalPolytopeHumanReadableTopologicalFingerprint) + "\n");
-	topologicalFingerprintHumanReadableBuilder.append("floor(intLength/2) = ");
-	for (int i = 0; i < intLengths.length; ++i) {
-	  if (i > 0) topologicalFingerprintHumanReadableBuilder.append(",");
-	  topologicalFingerprintHumanReadableBuilder.append(intLengths[i]/2);
-	}
-	topologicalFingerprintHumanReadableBuilder.append("\n");
-	topologicalFingerprintHumanReadableBuilder.append("number of stickers: " + nStickers);
-
-	if (true) {
-	  // We need more information,
-	  // so that we don't mistakenly think "{3}x{4} 3(2.75)" is the same as "{3}x{4} 3(3.25)".
-	  // So, make a mapping from face type to slice sticker counts.
-
-	  // First of all, check whether all edges in the original polytope
-	  // are the same length. If not, this method won't work, in which case
-	  // we just mark the whole thing "NOT FINGERPRINTABLE".
-	  // Examples of non-uniform edge lengths:
-	  //    "(1.0)3(0)3(2.0) 3"  (3d)
-	  //    "(1.0)3(0)3(0)3(2.0) 3"  (4d)
-	  //    "frucht 3"  (3d)
-	  //    "frucht*{} 3"  (4d)
-	  //    "(1.2)x(1.3) 3"  (2d)
-	  // Note, it's probably still possible to fool it,
-	  // by making a nonuniform polytope with uniform edge lengths.
-	  boolean edgeLengthsAreUniform;
-	  double minEdgeLength;
-	  double maxEdgeLength;
-	  {
-	    CSG.Polytope[] originalEdges = originalPolytope.p.getAllElements()[1];
-	    double minEdgeLength2 = Double.POSITIVE_INFINITY;
-	    double maxEdgeLength2 = 0.;
-	    for (int iEdge = 0; iEdge < originalEdges.length; ++iEdge) {
-	      double[] v0 = originalEdges[iEdge].facets[0].p.getCoords();
-	      double[] v1 = originalEdges[iEdge].facets[1].p.getCoords();
-	      double thisEdgeLength2 = VecMath.distsqrd(v0, v1);
-	      if (thisEdgeLength2 < minEdgeLength2) minEdgeLength2 = thisEdgeLength2;
-	      if (thisEdgeLength2 > maxEdgeLength2) maxEdgeLength2 = thisEdgeLength2;
-	    }
-	    minEdgeLength = Math.sqrt(minEdgeLength2);
-	    maxEdgeLength = Math.sqrt(maxEdgeLength2);
-	    edgeLengthsAreUniform = (maxEdgeLength <= minEdgeLength * (1. + 1e-12));
-	  }
-
-	  if (intLengths.length > 1) {
-	    topologicalFingerprintHumanReadableBuilder.append("\nface type to slice sticker counts: UNKNOWN because intLengths are not uniform: "+com.donhatchsw.util.Arrays.toStringCompact(intLengths));
-	    topologicalFingerprintHumanReadableBuilder.append("\nNOT FINGERPRINTABLE!");
-	  } else if (!edgeLengthsAreUniform) {
-	    topologicalFingerprintHumanReadableBuilder.append("\nface type to slice sticker counts: UNKNOWN because edge lengths are nonuniform: min "+minEdgeLength+", max "+maxEdgeLength);
-	    topologicalFingerprintHumanReadableBuilder.append("\nNOT FINGERPRINTABLE!");
-	  } else {
-	    // TreeMap rather than HashMap, so iterating comes out in sorted order
-	    java.util.TreeMap<String,int[]> facetType2Counts = new java.util.TreeMap<String,int[]>();
-	    {
-	      // CBB: this re-performs all the analysis done already when computing
-	      // originalPolytopeHumanReadableTopologicalFingerprint.
-	      // At least this part isn't too slow.
-	      String[][] allElementTypes = CSG.computeAllElementTopologicalishSummaries(originalPolytope.p,
-											/*mainSeparator=*/",\n",
-											/*isVertexFigure=*/false);
-	      String[] allFacetTypes = allElementTypes[originalPolytope.p.dim-1];
-	      for (int iFacet = 0; iFacet < allFacetTypes.length; ++iFacet) {
-		// NOTE: this assumes our facet ordering is the same as the original polytope's internal ordering.
-		// This seems to be the case, for now, but we may want to canonicalize it
-		// so that we aren't at the mercy of whatever arbitrary order the CSG module produces.
-		String facetType = allFacetTypes[iFacet];
-		int[] oldCounts = facetType2Counts.get(facetType);
-
-		boolean sanityCheckMode = false;  // set this to true to confirm that facets of the same type do indeed have the same counts. expensive.
-		// E.g. for "(1)5(1)3(1)3(1) 3":
-		//     sanityCheckMode=false: 0.038760642s
-		//     sanityCheckMode=true: 19.608136629s
-
-		// CBB: could do at least a half-hearted sanity check mode-- that is, take a small handful (maybe 2) of each type and make sure we get the same answer for each
-
-		if (oldCounts == null || sanityCheckMode) {
-		   double[] thisFacetInwardNormal = facetInwardNormals[iFacet];
-		   double[] thisFacetCutOffsets = facetCutOffsets[iFacet];
-		   int[] counts = new int[thisFacetCutOffsets.length+1];  // all zeros initially
-		   for (int iSticker = 0; iSticker < nStickers; ++iSticker) {
-		     int whichSlice = whichSlice(stickerCentersD[iSticker],
-						 thisFacetInwardNormal,
-						 thisFacetCutOffsets);
-		     counts[whichSlice]++;
-		   }
-		   //System.out.println(com.donhatchsw.util.Arrays.toStringCompact(facetType)+" -> "+com.donhatchsw.util.Arrays.toStringCompact(counts));
-		   if (oldCounts == null) {
-		     facetType2Counts.put(facetType, counts);
-		   } else {
-		     Assert(VecMath.equals(counts, oldCounts));
-		   }
-		}
-	      }
-	    }
-	    topologicalFingerprintHumanReadableBuilder.append("\nface type to slice sticker counts:");
-	    for (java.util.Map.Entry<String,int[]> kv : facetType2Counts.entrySet()) {
-	      topologicalFingerprintHumanReadableBuilder.append("\n    ");
-	      topologicalFingerprintHumanReadableBuilder.append(com.donhatchsw.util.Arrays.toStringCompact(kv.getKey()));
-	      topologicalFingerprintHumanReadableBuilder.append(": ");
-	      int value[] = kv.getValue();
-	      for (int i = 0; i < value.length; ++i) {
-		if (i > 0) topologicalFingerprintHumanReadableBuilder.append(",");
-		topologicalFingerprintHumanReadableBuilder.append(value[i]);
-	      }
-	    }
-	  }  // edge lengths are uniform
-	}
-	return topologicalFingerprintHumanReadableBuilder.toString();
-    }  // computeTopologicalFingerprintHumanReadable
-
     //======================================================================
     // BEGIN GENERICPUZZLEDESCRIPTION INTERFACE METHODS
     //
 
-    @Override
-    public String getTopologicalFingerprintHumanReadable()
-    {
-        return topologicalFingerprintHumanReadable;
-    }
-    @Override
-    public String getTopologicalFingerprintDigest()
-    {
-        return topologicalFingerprintDigest;
-    }
     @Override
     public String getSchlafliProduct()
     {
         return schlafliProduct;
     }
     @Override
-    public String getLengthString() {
-        return lengthString;
-    }
-    @Override
-    public int getIntLength() {
-        return intLength;
-    }
-    @Override
-    public double getDoubleLength() {
-        return doubleLength;
+    public double getEdgeLength() {
+        return edgeLength;
     }
     @Override
     public String getFullPuzzleString() {
-        return schlafliProduct + " " + lengthString;
+        return schlafliProduct + " " + edgeLength;
     }
     @Override
     public int nDims()
@@ -1557,7 +1375,7 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
                 thisFaceCutOffsets))
             {
                 VecMath.vxm(scratchVert, stickerCentersD[iSticker], matD);
-                Integer whereIstickerGoes = stickerCentersHashTable.get(scratchVert);
+                Integer whereIstickerGoes = (Integer) stickerCentersHashTable.get(scratchVert);
                 Assert(whereIstickerGoes != null);
                 newState[whereIstickerGoes.intValue()] = state[iSticker];
             }
@@ -1568,34 +1386,29 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
         newState = null;
     } // applyTwistToState
 
+
+    // does NOT do the slicemask 0->1 correction
+    private static boolean pointIsInSliceMask(double point[],
+        int slicemask,
+        double cutNormal[],
+        double cutOffsets[])
+    {
+        // XXX a binary search would work better if num cuts is big.
+        // XXX really only need to check offsets between differing
+        // XXX bits of slicmask.
+        double pointHeight = VecMath.dot(point, cutNormal);
+        int iSlice = 0;
+        while(iSlice < cutOffsets.length
+            && pointHeight > cutOffsets[iSlice])
+            iSlice++;
+        boolean answer = (slicemask & (1 << iSlice)) != 0;
+        return answer;
+    }
+
+
     //
     // END OF GENERICPUZZLEDESCRIPTION INTERFACE METHODS
     //======================================================================
-
-    private static int whichSlice(double point[],
-				  double cutNormal[],
-				  double cutOffsets[])
-    {
-	// XXX a binary search would work better if num cuts is big.
-	// XXX really need to check offsets only between differing
-	// XXX bits of slicmask.
-	double pointHeight = VecMath.dot(point, cutNormal);
-	int iSlice = 0;
-	while (iSlice < cutOffsets.length
-	    && pointHeight > cutOffsets[iSlice])
-	    iSlice++;
-	return iSlice;
-    }
-    // does NOT do the slicemask 0->1 correction
-    private static boolean pointIsInSliceMask(double point[],
-					      int slicemask,
-					      double cutNormal[],
-					      double cutOffsets[])
-    {
-	int whichSlice = whichSlice(point, cutNormal, cutOffsets);
-	boolean answer = (slicemask & (1<<whichSlice)) != 0;
-	return answer;
-    }
 
 
     //
@@ -1603,13 +1416,10 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
     //
     public static void main(String args[])
     {
-        if(args.length != 1)
+        if(args.length != 2)
         {
             System.err.println();
-            System.err.println("    Usage: PolytopePuzzleDescription \"<schlafliProduct> <length>[(<doubleLength>)]\"");
-            System.err.println("    Example: PolytopePuzzleDescription \"{4,3,3} 3\"");
-            System.err.println("    Example: PolytopePuzzleDescription \"{3,3,3} 3(5.0)\"");
-            System.err.println("    Example: PolytopePuzzleDescription \"{5}x{4} 3\"");
+            System.err.println("    Usage: PolytopePuzzleDescription \"<schlafliProduct>\" <puzzleLength>");
             System.err.println();
             System.exit(1);
         }
@@ -1617,56 +1427,18 @@ public class PolytopePuzzleDescription implements PuzzleDescription {
 
         //CSG.verboseLevel = 2;
 
-        String prescription = args[0];
-
-        final boolean[] cancelledHolder = {false};
-        PuzzleDescription descr = new PolytopePuzzleDescription(prescription,
-            new ProgressCallbacks() {
-                private long initTimeNanos = 0;
-                @Override public boolean subtaskInit(String string, int max) {
-                    System.out.print(string+" ("+max+") ...");
-                    initTimeNanos = System.nanoTime();
-                    return true;  // keep going
-                }
-                @Override public boolean subtaskInit(String string) {
-                    System.out.println(string+"...");
-                    initTimeNanos = System.nanoTime();
-                    return true;  // keep going
-                }
-                @Override public boolean updateProgress(int progress) {
-                    System.out.print("..."+progress);
-                    System.out.flush();
-                    // Silly and disruptive exercise of the cancellation feature
-                    if (progress == 1000) {
-                        System.out.println();
-                        System.out.print("This is taking a while.  Want to keep going? (y/n)[Y] ");
-                        System.out.flush();
-                        try {
-                            char c = (char)System.in.read();
-                            if (c == 'n') {
-                                cancelledHolder[0] = true;
-                                return false;  // cancel
-                            }
-                        } catch (java.io.IOException e) {
-                            System.out.println("Caught: "+e);
-                            cancelledHolder[0] = true;
-                            return false;  // cancel
-                        }
-                    }
-                    return true;  // keep going
-                }
-                @Override public boolean subtaskDone() {
-                    long doneTimeNanos = System.nanoTime();
-                    System.out.printf("  done (%.4gs).\n", (doneTimeNanos-initTimeNanos)/1e9);
-                    return true;  // keep going (done with subtask)
+        String schlafliProduct = args[0];
+        int length = Integer.parseInt(args[1]);
+        PuzzleDescription descr = new PolytopePuzzleDescription(schlafliProduct, length,
+            new ProgressManager(new javax.swing.JProgressBar()) {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    // TODO Auto-generated method stub
+                    return null;
                 }
             }
             );
-        if (cancelledHolder[0]) {
-            System.out.println("Cancelled!");
-        } else {
-            System.out.println("description = " + descr);
-        }
+        System.out.println("description = " + descr);
 
         System.out.println("out main");
     } // main
