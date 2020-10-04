@@ -1581,7 +1581,7 @@ public class MC4DSwing extends JFrame {
                 System.out.println("version " + System.getProperty("java.version"));
                 PropertyManager.loadProps(args, PropertyManager.top);
                 try {
-                    UIManager.setLookAndFeel("de.javasoft.plaf.synthetica.SyntheticaStandardLookAndFeel");
+                    UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
                 }
                 catch(Exception e) {
                     e.printStackTrace();

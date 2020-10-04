@@ -5,8 +5,11 @@ import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
+import javax.swing.JFrame;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 
 @SuppressWarnings("serial")
@@ -39,7 +42,7 @@ public class ColorButton extends JButton {
     public interface ColorChangeListener {
         public void colorChanged(Color newColor);
     }
-    private final static int ALPHA = 128;
+    private final static int ALPHA = 96;
     private Color color;
     private String prefKey;
     private JColorChooser tcc = new JColorChooser();
@@ -112,7 +115,7 @@ public class ColorButton extends JButton {
         super.paintComponent(g);
         // colorize complete button
         g.setColor(color);
-        g.fillRect(0, 0, this.getWidth() - 1, this.getHeight() - 1);
+        g.fillRoundRect(0, 0, this.getWidth() - 1, this.getHeight() - 1, 8, 8);
     }
 
     public static void main(String args[]) {
