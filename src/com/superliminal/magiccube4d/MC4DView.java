@@ -372,7 +372,6 @@ public class MC4DView extends Component {
         if(animationQueue.isAnimating() && puzzleManager.iTwist == puzzleManager.nTwist) {
             // time to stop the animation
             animationQueue.finishedTwist(); // end animation
-            repaint();
         }
         if(lastDrag == null && rotationHandler.continueSpin()) { // keep spinning
             repaint();
