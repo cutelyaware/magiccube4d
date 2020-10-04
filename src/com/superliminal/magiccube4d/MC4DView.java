@@ -383,6 +383,9 @@ public class MC4DView extends Component {
             boolean okToAntialias = !isInMotion() && PropertyManager.getBoolean("antialiasing", true);
             ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 okToAntialias ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
+            // Don's fix for 1/2 pixel jump. See issue #138
+            ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+
         }
         // paint the background
         g.setColor(skyOverride == null ? PropertyManager.getColor("sky.color", MagicCube.SKY) : skyOverride);
