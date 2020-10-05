@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
@@ -27,6 +28,8 @@ import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -926,6 +929,18 @@ public class MC4DSwing extends JFrame {
         // Help
         //
         JMenu helpmenu = new JMenu("Help");
+        helpmenu.add(new JMenuItem("Frequently Asked Questions...")).addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                try {
+                    Desktop.getDesktop().browse(new URI("http://superliminal.com/cube/faq.html"));
+                } catch(IOException e) {
+                    e.printStackTrace();
+                } catch(URISyntaxException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         helpmenu.add(new JMenuItem("About...")).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
@@ -1035,6 +1050,7 @@ public class MC4DSwing extends JFrame {
         // Do this after loading initial puzzle to avoid console spam while loading long log file.
         History.setDebugging(debug_checkbox.isSelected());
     } // end MC4DSwing
+
     private void initPuzzleMenu(JMenu puzzlemenu, final JLabel label, final JProgressBar progressView) {
         final String[][] table = MagicCube.SUPPORTED_PUZZLES;
         for(int i = 0; i < table.length; ++i) {
