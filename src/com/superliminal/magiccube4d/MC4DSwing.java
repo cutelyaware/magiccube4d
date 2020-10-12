@@ -1415,7 +1415,7 @@ public class MC4DSwing extends JFrame {
             rotateMode.setLayout(new BoxLayout(rotateMode, BoxLayout.X_AXIS));
             rotateMode.add(ctrlClickLabel);
             rotateMode.add(Box.createHorizontalGlue());
-            final JCheckBox blindfoldbox = new PropCheckBox("Blindfold", MagicCube.BLINDFOLD, false, repainter, "Whether to gray out sticker colors");
+            final JCheckBox blindfoldbox = new PropCheckBox("Blindfold", MagicCube.BLINDFOLD, false, repainter, "Whether to gray out sticker colors (Ctrl+D)");
             StaticUtils.addHotKey(KeyEvent.VK_D, blindfoldbox, MagicCube.BLINDFOLD, new ProbableAction("Blind") {
                 @Override
                 public void doit(ActionEvent ae) {
@@ -1425,26 +1425,27 @@ public class MC4DSwing extends JFrame {
                 }
             });
             class MyLabel extends JLabel {
-                public MyLabel(String text) {
+                public MyLabel(String text, String tooltip) {
                     super(text);
                     setPreferredSize(new Dimension(100, super.getPreferredSize().height));
+                    setToolTipText(tooltip);
                 }
             }
             JPanel sliders = new JPanel(new SpringLayout());
             sliders.setBorder(new TitledBorder("Adjustments"));
-            sliders.add(new MyLabel("Twist Speed"));
+            sliders.add(new MyLabel("Twist Speed", "Tip: Adjust during long Edit > Solve or Edit > Play"));
             sliders.add(new PropSlider("twistfactor", repainter, 1, .05f, 5, "Speed of twisting animation"));
-            sliders.add(new MyLabel("Drag Speed"));
+            sliders.add(new MyLabel("Drag Speed", "Amount of rotation per mouse motion"));
             sliders.add(new PropSlider("dragfactor", repainter, 1, .05f, 5, "Amount of rotation per drag distance"));
-            sliders.add(new MyLabel("View Scale"));
+            sliders.add(new MyLabel("View Scale", "Tip: Also controlled by mouse wheel"));
             JSlider scaler = new PropSlider("scale", repainter, 1, .1f, 5, "Size of puzzle in window");
             viewScaleModel = scaler.getModel();
             sliders.add(scaler);
-            sliders.add(new MyLabel("Face Shrink"));
+            sliders.add(new MyLabel("Face Shrink", "Space between faces"));
             sliders.add(new PropSlider("faceshrink", repainter, MagicCube.FACESHRINK, .1f, 1.5f, "Size of faces within puzzle"));
-            sliders.add(new MyLabel("Sticker Shrink"));
+            sliders.add(new MyLabel("Sticker Shrink", "Space between stickers within faces"));
             sliders.add(new PropSlider("stickershrink", repainter, MagicCube.STICKERSHRINK, .1f, 1.5f, "Size of stickers within faces"));
-            sliders.add(new MyLabel("Eye W Scale"));
+            sliders.add(new MyLabel("Eye W Scale", "Distance between puzzle and eye in the 4th dimension"));
             sliders.add(new PropSlider("eyew", repainter, MagicCube.EYEW, .75f, 4, "Focal length of 4D camera"));
             SpringUtilities.makeCompactGrid(sliders, 6, 2, 0, 0, 0, 0);
             JPanel modes = new JPanel();
