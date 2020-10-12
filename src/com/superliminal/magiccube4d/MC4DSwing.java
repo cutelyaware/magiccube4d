@@ -849,7 +849,6 @@ public class MC4DSwing extends JFrame {
                     setStatus("Can't scramble puzzles with edge length < 2", true);
                     return;
                 }
-                System.out.println("Max order " + maxOrder);
                 scrambleState = SCRAMBLE_NONE; // do first to avoid issue 62 (fanfare on scramble).
                 reset.actionPerformed(e);
                 int previous_face = -1;
@@ -1315,11 +1314,15 @@ public class MC4DSwing extends JFrame {
                         // TIP: To help debug full solution handling, comment out these lines 
                         // including the break statement and then solve a single random twist. 
                         setStatus("Solved!");
+                        if(PropertyManager.getBoolean(MagicCube.BLINDFOLD, false))
+                            PropertyManager.userprefs.setProperty(MagicCube.BLINDFOLD, "" + false);
                         Audio.play(Audio.Sound.CORRECT); // Just a little "attaboy" sound.
                         break;
                     case SCRAMBLE_FULL:
                         scrambleState = SCRAMBLE_SOLVED; // Credit the user for solving.
                         setStatus("Solved!");
+                        if(PropertyManager.getBoolean(MagicCube.BLINDFOLD, false))
+                            PropertyManager.userprefs.setProperty(MagicCube.BLINDFOLD, "" + false);
                         String puzzle = puzzleManager.puzzleDescription.getSchlafliProduct() + intlen;
                         int previous_full_solves = PropertyManager.getInt("full" + puzzle, 0);
                         PropertyManager.userprefs.setProperty("full" + puzzle, "" + (previous_full_solves + 1)); // Remember solved puzzles.
@@ -1416,10 +1419,8 @@ public class MC4DSwing extends JFrame {
             StaticUtils.addHotKey(KeyEvent.VK_D, blindfoldbox, MagicCube.BLINDFOLD, new ProbableAction("Blind") {
                 @Override
                 public void doit(ActionEvent ae) {
-                    // All the below seems like it should happen automatically. Maybe needs Don's 2-way PropControls.
                     boolean is_checked = PropertyManager.getBoolean(MagicCube.BLINDFOLD, false);
                     PropertyManager.userprefs.setProperty(MagicCube.BLINDFOLD, !is_checked + "");
-                    blindfoldbox.setSelected(!is_checked);
                     view.repaint();
                 }
             });

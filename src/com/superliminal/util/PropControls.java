@@ -33,14 +33,26 @@ public class PropControls {
             super(SwingConstants.HORIZONTAL, PropertyManager.getFloat(propname, (float) dflt), min, max);
             setToolTipText(tooltip);
             setPreferredSize(new Dimension(200, 20));
+            // Sync the property to the control
             addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(ChangeEvent e) {
                     PropertyManager.userprefs.setProperty(propname, "" + (float) getFloatValue());
-                    //System.out.println(propname + ": " + (float)getFloatValue());
                     dependent.repaint();
                 }
             });
+            // Sync the control to the property
+            PropertyManager.top.addPropertyListener(
+                new PropertyManager.PropertyListener() {
+                    @Override
+                    public void propertyChanged(String property, String newval) {
+                        String oldval = "" + PropSlider.this.getFloatValue();
+                        if(oldval.equals(newval))
+                            return; // no change
+                        PropSlider.this.setFloatValue(Double.parseDouble(newval));
+                    }
+                },
+                propname);
         }
     }
 
@@ -51,6 +63,7 @@ public class PropControls {
         public PropCheckBox(String title, final String propname, boolean dflt, final Component dependent, String tooltip) {
             super(title, PropertyManager.getBoolean(propname, dflt));
             setToolTipText(tooltip);
+            // Sync the property to the control
             addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
@@ -58,6 +71,17 @@ public class PropControls {
                     dependent.repaint();
                 }
             });
+            // Sync the control to the property
+            PropertyManager.top.addPropertyListener(
+                new PropertyManager.PropertyListener() {
+                    @Override
+                    public void propertyChanged(String property, String newval) {
+                        if(("" + PropCheckBox.this.isSelected()).equals(newval))
+                            return; // No change
+                        PropCheckBox.this.setSelected("true".equals(newval));
+                    }
+                },
+                propname);
         }
     }
 
@@ -72,6 +96,7 @@ public class PropControls {
             if(invert)
                 on = !on;
             setSelected(on);
+            // Sync the property to the control
             addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -82,6 +107,21 @@ public class PropControls {
                     dependent.repaint();
                 }
             });
+
+            // Sync the control to the property - TODO: make this work
+//            PropertyManager.top.addPropertyListener(
+//                new PropertyManager.PropertyListener() {
+//                    @Override
+//                    public void propertyChanged(String property, String newval) {
+//                        boolean is_on = isSelected();
+//                        if(invert)
+//                            is_on = !is_on;
+//                        if(("" + is_on).equals(newval))
+//                            return; // No change
+//                        PropRadioButton.this.setSelected("true".equals(newval));
+//                    }
+//                },
+//                propname);
         }
     }
 
