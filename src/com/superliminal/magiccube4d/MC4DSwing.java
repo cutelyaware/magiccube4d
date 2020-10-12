@@ -80,8 +80,6 @@ import com.superliminal.util.ResourceUtils;
 import com.superliminal.util.SpringUtilities;
 import com.superliminal.util.StaticUtils;
 
-//import de.javasoft.plaf.synthetica.SyntheticaLookAndFeel;
-
 
 /**
  * The main desktop application.
