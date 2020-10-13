@@ -57,6 +57,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -918,9 +919,9 @@ public class MC4DSwing extends JFrame {
         item = new JMenuItem("Apply Last Macro");
         StaticUtils.addHotKey(KeyEvent.VK_A, item, "Last", last);
         macromenu.add(item);
-        macromenu.add(new JMenuItem("Read Macro File...")).addActionListener(read);
-        macromenu.add(new JMenuItem("Write Macro File")).addActionListener(write);
-        macromenu.add(new JMenuItem("Write Macro File As...")).addActionListener(writeas);
+        macromenu.add(new JMenuItem("Open Macro File...")).addActionListener(read);
+        macromenu.add(new JMenuItem("Save Macro File")).addActionListener(write);
+        macromenu.add(new JMenuItem("Save Macro File As...")).addActionListener(writeas);
         initMacroMenu(); // create controls for any macro definitions.
 
         // Help
@@ -1177,7 +1178,7 @@ public class MC4DSwing extends JFrame {
             return;
         tabs.removeChangeListener(tabListener); // so as not to pick up tab change events due to adding tabs.
         tabs.removeAll();
-        tabs.add("Preferences", preferencesEditor);
+        tabs.add("Preferences", new JScrollPane(preferencesEditor));
         tabs.add("Macros", macroControls);
         tabs.setSelectedIndex(PropertyManager.getInt("lasttab", 0));
         tabs.addChangeListener(tabListener);
