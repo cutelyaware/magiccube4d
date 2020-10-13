@@ -1596,12 +1596,8 @@ public class MC4DSwing extends JFrame {
             public void run() {
                 System.out.println("version " + System.getProperty("java.version"));
                 PropertyManager.loadProps(args, PropertyManager.top);
-                try {
-                    UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-                }
-                catch(Exception e) {
-                    e.printStackTrace();
-                }
+                trySetLookAndFeel();
+
                 final JFrame frame = new MC4DSwing();
                 configureNormal(frame);
                 frame.addComponentListener(new ComponentAdapter() {
@@ -1634,6 +1630,21 @@ public class MC4DSwing extends JFrame {
                 });
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setVisible(true);
+            }
+
+            void trySetLookAndFeel() {
+                // First set some properties to enable font antialiasing
+                // (copied from https://batsov.com/articles/2010/02/26/enable-aa-in-swing/).
+                // Note: this needs to happen before the call to `setLookAndFeel` below
+                System.setProperty("awt.useSystemAAFontSettings","on");
+                System.setProperty("swing.aatext", "true");
+
+                try {
+                    UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+                }
+                catch(Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             void configureNormal(Frame frame) {
