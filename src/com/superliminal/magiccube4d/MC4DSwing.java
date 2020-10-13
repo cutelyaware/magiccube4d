@@ -1596,6 +1596,10 @@ public class MC4DSwing extends JFrame {
             @Override
             public void run() {
                 System.out.println("version " + System.getProperty("java.version"));
+                // Enable font antialiasing before the call to setLookAndFeel.
+                // From https://batsov.com/articles/2010/02/26/enable-aa-in-swing/.
+                System.setProperty("awt.useSystemAAFontSettings", "on");
+                System.setProperty("swing.aatext", "true");
                 PropertyManager.loadProps(args, PropertyManager.top);
                 try {
                     UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
