@@ -118,7 +118,13 @@ public class PuzzleManager
                 if(newPuzzle != null) {
                     succeeded = true;
                     puzzleDescription = newPuzzle;
-                    faceColors = ColorUtils.generateVisuallyDistinctColors(puzzleDescription.nFaces(), .7f, .1f);
+                    Color[] userColors = MC4DSwing.findColors(
+                        puzzleDescription.getSchlafliProduct(),
+                        puzzleDescription.nFaces());
+                    if(userColors != null)
+                        faceColors = userColors;
+                    else
+                    	faceColors = ColorUtils.generateVisuallyDistinctColors(puzzleDescription.nFaces(), .7f, .1f);
                     resetPuzzleStateNoEvent();
                 }
                 return null;

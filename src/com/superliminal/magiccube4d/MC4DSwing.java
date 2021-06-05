@@ -1031,11 +1031,6 @@ public class MC4DSwing extends JFrame {
                 progressBar.setVisible(false);
                 hist.clear((int) puzzleManager.puzzleDescription.getEdgeLength());
                 updateTwistsLabel();
-                Color[] userColors = findColors(
-                    puzzleManager.puzzleDescription.getSchlafliProduct(),
-                    puzzleManager.puzzleDescription.nFaces());
-                if(userColors != null)
-                    puzzleManager.faceColors = userColors;
                 if(view != null)
                     view.repaint();
             }
@@ -1565,7 +1560,7 @@ public class MC4DSwing extends JFrame {
         return "facecolors" + File.separator + schlafli + ".txt";
     }
 
-    private static Color[] findColors(String schlafli, int len)
+    public static Color[] findColors(String schlafli, int len)
     {
         String filename = colorFilename(schlafli);
         Color[] colors = findColors(len, filename);
