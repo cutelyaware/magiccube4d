@@ -26,16 +26,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PushbackReader;
-import java.io.StringReader;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Random;
-import java.util.StringTokenizer;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -1521,62 +1517,6 @@ public class MC4DSwing extends JFrame {
             //add(tmp, "South");
         } // end init()
     } // end class PreferencesEditor
-
-
-    private static Color[][] readColorLists(String fname) {
-        URL furl = ResourceUtils.getResource(fname);
-        if(furl == null)
-            return new Color[0][];
-        String contents = ResourceUtils.readFileFromURL(furl);
-        //JOptionPane.showMessageDialog(null, contents);
-        if(contents == null)
-            return new Color[0][];
-        ArrayList<Color[]> colorlines = new ArrayList<Color[]>();
-        try {
-            BufferedReader br = new BufferedReader(new StringReader(contents));
-            for(String line = br.readLine(); line != null;) {
-                StringTokenizer st = new StringTokenizer(line);
-                Color[] colorlist = new Color[st.countTokens()];
-                for(int i = 0; i < colorlist.length; i++) {
-                    String colstr = st.nextToken();
-                    colorlist[i] = PropertyManager.parseColor(colstr);
-                    if(colorlist[i] == null) {
-                        colorlist = null;
-                        break; // bad line
-                    }
-                }
-                if(colorlist != null)
-                    colorlines.add(colorlist);
-                line = br.readLine();
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-        return colorlines.toArray(new Color[0][]);
-    } // end readColorLists()
-
-    private static String colorFilename(String schlafli)
-    {
-        return "facecolors" + File.separator + schlafli + ".txt";
-    }
-
-    public static Color[] findColors(String schlafli, int len)
-    {
-        String filename = colorFilename(schlafli);
-        Color[] colors = findColors(len, filename);
-        if(colors != null)
-            return colors;
-
-        return findColors(len, MagicCube.FACE_COLORS_FILE);
-    }
-
-    private static Color[] findColors(int len, String fname) {
-        for(Color[] cols : readColorLists(fname)) {
-            if(cols.length == len)
-                return cols;
-        }
-        return null;
-    }
 
 
     /**

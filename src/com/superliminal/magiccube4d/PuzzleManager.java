@@ -118,9 +118,9 @@ public class PuzzleManager
                 if(newPuzzle != null) {
                     succeeded = true;
                     puzzleDescription = newPuzzle;
-                    Color[] userColors = MC4DSwing.findColors(
-                        puzzleDescription.getSchlafliProduct(),
-                        puzzleDescription.nFaces());
+                    Color[] userColors = ColorUtils.findColors(
+                        puzzleDescription.nFaces(),
+                        MagicCube.FACE_COLORS_FILE);
                     if(userColors != null)
                         faceColors = userColors;
                     else

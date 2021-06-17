@@ -1,11 +1,17 @@
 package com.superliminal.util;
 
 import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.StringReader;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Random;
+import java.util.StringTokenizer;
 
 
 public class ColorUtils {
-    private ColorUtils() {} // To disallow instantiation.
+    private ColorUtils() {
+    } // To disallow instantiation.
     private final static float
         U_OFF = .436f,
         V_OFF = .615f;
@@ -185,6 +191,46 @@ public class ColorUtils {
         }
         return null; // after a bunch of passes, couldn't find a candidate that beat the best.
     }
+
+    public static Color[] findColors(int len, String fname) {
+        for(Color[] cols : readColorLists(fname)) {
+            if(cols.length == len)
+                return cols;
+        }
+        return null;
+    }
+
+    private static Color[][] readColorLists(String fname) {
+        URL furl = ResourceUtils.getResource(fname);
+        if(furl == null)
+            return new Color[0][];
+        String contents = ResourceUtils.readFileFromURL(furl);
+        //JOptionPane.showMessageDialog(null, contents);
+        if(contents == null)
+            return new Color[0][];
+        ArrayList<Color[]> colorlines = new ArrayList<Color[]>();
+        try {
+            BufferedReader br = new BufferedReader(new StringReader(contents));
+            for(String line = br.readLine(); line != null;) {
+                StringTokenizer st = new StringTokenizer(line);
+                Color[] colorlist = new Color[st.countTokens()];
+                for(int i = 0; i < colorlist.length; i++) {
+                    String colstr = st.nextToken();
+                    colorlist[i] = PropertyManager.parseColor(colstr);
+                    if(colorlist[i] == null) {
+                        colorlist = null;
+                        break; // bad line
+                    }
+                }
+                if(colorlist != null)
+                    colorlines.add(colorlist);
+                line = br.readLine();
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return colorlines.toArray(new Color[0][]);
+    } // end readColorLists()
 
 
     /**
