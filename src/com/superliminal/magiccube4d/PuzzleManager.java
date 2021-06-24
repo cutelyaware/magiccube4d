@@ -123,6 +123,8 @@ public class PuzzleManager
                         MagicCube.FACE_COLORS_FILE);
                     if(userColors != null)
                         faceColors = userColors;
+                    else if(puzzleDescription.nFaces() == 8)
+                        faceColors = MagicCube.DEFAULT_FACE_COLORS;
                     else
                         faceColors = ColorUtils.generateVisuallyDistinctColors(puzzleDescription.nFaces(), .7f, .1f);
                     resetPuzzleStateNoEvent();

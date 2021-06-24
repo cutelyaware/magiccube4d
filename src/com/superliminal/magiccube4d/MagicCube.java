@@ -164,7 +164,17 @@ public class MagicCube {
 
     public final static Color
         SKY = new Color(20, 170, 235),
-        GROUND = new Color(20, 130, 20);
+        GROUND = new Color(20, 130, 20),
+        DEFAULT_FACE_COLORS[] = {
+            new Color(153, 102, 255), // Purple
+            new Color(221, 255, 68), // Yellow
+            new Color(102, 255, 102), // Green
+            new Color(255, 102, 0), // Orange
+            new Color(255, 0, 17), // Red
+            new Color(0, 153, 255), // Blue
+            new Color(255, 255, 255), // White
+            new Color(238, 187, 255), // Pink
+        };
 
     /*
      * Main window defaults.
