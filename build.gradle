@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+}
+
+group 'com.superliminal'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.superliminal.magiccube4d.MC4DSwing'
+        )
+    }
+}
