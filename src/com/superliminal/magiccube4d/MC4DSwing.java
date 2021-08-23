@@ -887,7 +887,8 @@ public class MC4DSwing extends JFrame {
         for(int i = 1; i <= 8; i++) {
             scrambler = new Scrambler(i);
             scrambleItem = new JMenuItem("" + i);
-            StaticUtils.addHotKey(KeyEvent.VK_0 + i, scrambleItem, "Scramble" + i, scrambler);
+            // no hotkey
+            scrambleItem.addActionListener(scrambler);
             scramblemenu.add(scrambleItem);
         }
         scramblemenu.addSeparator();
