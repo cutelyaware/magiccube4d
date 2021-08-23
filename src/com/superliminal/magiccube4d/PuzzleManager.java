@@ -119,8 +119,8 @@ public class PuzzleManager
                     succeeded = true;
                     puzzleDescription = newPuzzle;
                     Color[] userColors = ColorUtils.findColors(
-                        puzzleDescription.nFaces(),
-                        MagicCube.FACE_COLORS_FILE);
+                        puzzleDescription.getSchlafliProduct(),
+                        puzzleDescription.nFaces());
                     if(userColors != null)
                         faceColors = userColors;
                     else if(puzzleDescription.nFaces() == 8)

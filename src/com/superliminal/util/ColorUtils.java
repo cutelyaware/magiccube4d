@@ -2,11 +2,16 @@ package com.superliminal.util;
 
 import java.awt.Color;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.StringReader;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.StringTokenizer;
+
+import com.superliminal.magiccube4d.MagicCube;
 
 
 public class ColorUtils {
@@ -191,13 +196,24 @@ public class ColorUtils {
         }
         return null; // after a bunch of passes, couldn't find a candidate that beat the best.
     }
-
-    public static Color[] findColors(int len, String fname) {
+    
+    private static String colorFilename(String schlafli) {
+    	return "facecolors" + File.separator + schlafli + ".txt";
+    }
+    
+    private static Color[] findColors(int len, String fname) {
         for(Color[] cols : readColorLists(fname)) {
             if(cols.length == len)
                 return cols;
         }
         return null;
+    }
+    
+    public static Color[] findColors(String schlafli, int len) {
+    	String filename = colorFilename(schlafli);
+    	if (!Files.exists(Paths.get(filename)))
+    		filename = MagicCube.FACE_COLORS_FILE;
+    	return findColors(len, filename);
     }
 
     private static Color[][] readColorLists(String fname) {
