@@ -4,6 +4,8 @@ import java.util.*;
 import java.io.*;
 import java.awt.*;
 import java.net.*;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
 
 /**
  * Title: PropertyManager
@@ -101,8 +103,19 @@ public class PropertyManager extends Properties {
      * Applications should load any user-specific property overrides directly into this object
      * and then call setProperty whenever a user action needs to change one.
      */
-    public final static PropertyManager userprefs = new LocalProps(new File(StaticUtils.getBinDir(), PRODUCT_NAME + ".props"));
+    public final static PropertyManager userprefs;
     static {
+        File propsFile = Paths.get(StaticUtils.getBinDir(), PRODUCT_NAME + ".props").toFile();
+
+        if (!propsFile.canWrite() && !System.getProperty("os.name").startsWith("Windows")) {
+            try {
+                propsFile = Paths.get(System.getenv("XDG_CONFIG_HOME"), PRODUCT_NAME + ".props").toFile();
+            } catch (NullPointerException | InvalidPathException e) {
+                propsFile = Paths.get(System.getProperty("user.home"), ".config", PRODUCT_NAME + ".props").toFile();
+            }
+        }
+
+        userprefs = new LocalProps(propsFile);
         System.out.println("Launch dir: " + StaticUtils.getBinDir());
     }
 
@@ -256,8 +269,9 @@ public class PropertyManager extends Properties {
             if(localPropFile == null || storeFailed)
                 return;
             try {
+                localPropFile.getParentFile().mkdirs();
                 this.store(new FileOutputStream(localPropFile), PRODUCT_NAME + " User Preferences");
-            } catch(IOException e) {
+            } catch(IOException | SecurityException e) {
                 storeFailed = true; // so as to only give fail msg once
                 if(!localPropFile.canWrite())
                     System.err.println("Can't write");
